@@ -146,10 +146,7 @@
   text-align: center;
   font-size: 2.75rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #1e3c72 0%, #7e22ce 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
   margin-bottom: 0.5rem;
   letter-spacing: -0.5px;
 }
@@ -157,7 +154,7 @@
 .login-subtitle {
   text-align: center;
   font-size: 1.05rem;
-  color: #64748b;
+  color: #ffffff;
   margin-bottom: 2.5rem;
   font-weight: 500;
 }
@@ -169,7 +166,7 @@
 }
 
 .form-label {
-  color: #1e293b;
+  color: #ffffff;
   font-weight: 600;
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
@@ -316,8 +313,9 @@
 }
 
 .google-signin-button:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
   transform: translateY(-3px);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
 }
@@ -346,7 +344,7 @@
 }
 
 .divider-text {
-  color: #64748b;
+  color: #ffffff;
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -354,9 +352,9 @@
 
 /* Manual Login Toggle Button */
 .manual-login-toggle {
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  color: #475569;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
   border-radius: 14px;
   padding: 1rem;
   font-size: 1rem;
@@ -368,9 +366,9 @@
 }
 
 .manual-login-toggle:hover {
-  background: #ffffff;
-  border-color: #7e22ce;
-  color: #7e22ce;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+  border-color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(126, 34, 206, 0.15);
 }

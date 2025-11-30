@@ -24,6 +24,14 @@ const ownerUserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  cnic: {
+    type: String,
+    default: 'N/A'
+  },
+  instituteID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'InstituteInformation'
+  },
   role: {
     type: String,
     default: 'Owner'

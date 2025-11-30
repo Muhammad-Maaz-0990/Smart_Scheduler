@@ -12,6 +12,7 @@ module.exports = function(passport) {
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails[0].value;
+        const userName = profile.displayName;
         
         // Check if user exists in OwnerUser collection
         let user = await OwnerUser.findOne({ email });
@@ -26,22 +27,12 @@ module.exports = function(passport) {
           return done(null, user);
         }
         
-        // Get first available institute for new users
-        const firstInstitute = await InstituteInformation.findOne();
-        
-        // If user doesn't exist, create new user in Users collection as Student by default
-        const newUser = new Users({
-          userName: profile.displayName,
+        // If user doesn't exist, return error with user info to redirect to register page
+        return done(null, false, { 
+          message: 'account_not_found', 
           email: email,
-          password: 'google-oauth-' + Date.now(), // Placeholder password
-          designation: 'Student',
-          phoneNumber: 'N/A',
-          cnic: 'N/A',
-          instituteID: firstInstitute ? firstInstitute._id : null
+          name: userName 
         });
-        
-        await newUser.save();
-        return done(null, newUser);
       } catch (err) {
         console.error('Google OAuth Error:', err);
         return done(err, null);

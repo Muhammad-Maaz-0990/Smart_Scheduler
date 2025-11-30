@@ -31,7 +31,16 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const response = await axios.get('/api/auth/verify');
-          setUser(response.data.user);
+          const verifiedUser = response.data.user || null;
+          if (verifiedUser) {
+            const normalized = {
+              ...verifiedUser,
+              designation: verifiedUser.designation || verifiedUser.role
+            };
+            setUser(normalized);
+          } else {
+            setUser(null);
+          }
         } catch (error) {
           console.error('Token verification failed:', error);
           localStorage.removeItem('token');
@@ -86,6 +95,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Login directly with an existing token and optional user payload
+  const loginWithToken = (newToken, userData) => {
+    if (!newToken) return;
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    if (userData) {
+      setUser(userData);
+    }
+  };
+
   const value = {
     user,
     setUser,
@@ -93,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    loginWithToken,
     isAuthenticated: !!user,
   };
 

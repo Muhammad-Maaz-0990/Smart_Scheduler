@@ -46,6 +46,9 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smart_sch
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/rooms', require('./routes/rooms'));
+app.use('/api/classes', require('./routes/classes'));
+app.use('/api/courses', require('./routes/courses'));
 
 // Health Check
 app.get('/api/health', (req, res) => {

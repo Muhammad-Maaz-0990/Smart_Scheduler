@@ -13,26 +13,29 @@ const Login = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, user, setUser } = useAuth();
+  const { login, user, loginWithToken, loading: authLoading } = useAuth();
 
+  // Redirect if already logged in (separate effect)
   useEffect(() => {
-    // Handle Google OAuth callback
+    if (user && user.designation && !authLoading) {
+      redirectToDashboard(user.designation);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading]);
+
+  // Handle Google OAuth callback (separate effect)
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
     const designation = params.get('designation');
 
     if (token && designation) {
-      localStorage.setItem('token', token);
-      setUser({ designation });
+      // Ensure AuthContext token state updates so axios headers and verification are set
+      loginWithToken(token, { designation });
       redirectToDashboard(designation);
     }
-
-    // Redirect if already logged in
-    if (user) {
-      redirectToDashboard(user.designation);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, location]);
+  }, [location.search]);
 
   const redirectToDashboard = (designation) => {
     const routes = {
@@ -65,7 +68,12 @@ const Login = () => {
       if (result.success) {
         redirectToDashboard(result.user.designation);
       } else {
-        setError(result.message || 'Invalid credentials');
+        // Check if user needs to register
+        if (result.redirectTo === 'register') {
+          navigate('/register', { state: { email } });
+        } else {
+          setError(result.message || 'Invalid credentials');
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred');

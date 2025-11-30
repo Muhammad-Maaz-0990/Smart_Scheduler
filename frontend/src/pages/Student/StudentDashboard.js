@@ -1,10 +1,10 @@
 import React from 'react';
 import { Container, Row, Col, Card, Button, Navbar, Nav, Table } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import './Dashboard.css';
+import '../Dashboard.css';
 
-const TeacherDashboard = () => {
+const StudentDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -24,7 +24,7 @@ const TeacherDashboard = () => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-center">
               <Nav.Link className="nav-link-custom">
-                <span className="user-badge teacher-badge">Teacher</span>
+                <span className="user-badge student-badge">Student</span>
               </Nav.Link>
               <Nav.Link className="nav-link-custom">
                 👤 {user?.userName}
@@ -45,7 +45,7 @@ const TeacherDashboard = () => {
 
       <Container className="dashboard-content py-5">
         <div className="welcome-section mb-5">
-          <h1 className="dashboard-title">Teacher Dashboard 👨‍🏫</h1>
+          <h1 className="dashboard-title">Student Dashboard 🎓</h1>
           <p className="dashboard-subtitle">Welcome, {user?.userName}!</p>
         </div>
 
@@ -55,7 +55,7 @@ const TeacherDashboard = () => {
               <Card.Body>
                 <div className="stat-icon">📚</div>
                 <h3 className="stat-value">0</h3>
-                <p className="stat-label">Courses</p>
+                <p className="stat-label">Enrolled Courses</p>
               </Card.Body>
             </Card>
           </Col>
@@ -63,9 +63,9 @@ const TeacherDashboard = () => {
           <Col md={6} lg={3}>
             <Card className="stat-card glass-effect">
               <Card.Body>
-                <div className="stat-icon">🎓</div>
+                <div className="stat-icon">✅</div>
                 <h3 className="stat-value">0</h3>
-                <p className="stat-label">Students</p>
+                <p className="stat-label">Completed</p>
               </Card.Body>
             </Card>
           </Col>
@@ -83,9 +83,9 @@ const TeacherDashboard = () => {
           <Col md={6} lg={3}>
             <Card className="stat-card glass-effect">
               <Card.Body>
-                <div className="stat-icon">📅</div>
+                <div className="stat-icon">⭐</div>
                 <h3 className="stat-value">0</h3>
-                <p className="stat-label">Classes Today</p>
+                <p className="stat-label">Average Grade</p>
               </Card.Body>
             </Card>
           </Col>
@@ -104,7 +104,7 @@ const TeacherDashboard = () => {
                       <tr>
                         <th>Time</th>
                         <th>Subject</th>
-                        <th>Class</th>
+                        <th>Teacher</th>
                         <th>Room</th>
                       </tr>
                     </thead>
@@ -134,20 +134,20 @@ const TeacherDashboard = () => {
                   </Col>
                   <Col md={6}>
                     <Button variant="primary" className="action-btn btn-futuristic w-100">
-                      <span className="btn-icon">➕</span>
-                      Create Assignment
+                      <span className="btn-icon">📝</span>
+                      Assignments
                     </Button>
                   </Col>
                   <Col md={6}>
                     <Button variant="primary" className="action-btn btn-futuristic w-100">
                       <span className="btn-icon">📊</span>
-                      Grade Students
+                      My Grades
                     </Button>
                   </Col>
                   <Col md={6}>
                     <Button variant="primary" className="action-btn btn-futuristic w-100">
                       <span className="btn-icon">📅</span>
-                      View Schedule
+                      Full Schedule
                     </Button>
                   </Col>
                 </Row>
@@ -162,14 +162,14 @@ const TeacherDashboard = () => {
               </Card.Header>
               <Card.Body>
                 <div className="profile-info">
-                  <div className="profile-avatar teacher-avatar">
+                  <div className="profile-avatar student-avatar">
                     {user?.userName?.charAt(0).toUpperCase()}
                   </div>
                   <div className="profile-details">
                     <p><strong>Name:</strong> {user?.userName}</p>
                     <p><strong>Email:</strong> {user?.email}</p>
                     <p><strong>Institute:</strong> {user?.instituteName}</p>
-                    <p><strong>Role:</strong> <span className="role-badge teacher-badge">Teacher</span></p>
+                    <p><strong>Role:</strong> <span className="role-badge student-badge">Student</span></p>
                   </div>
                 </div>
               </Card.Body>
@@ -181,4 +181,4 @@ const TeacherDashboard = () => {
   );
 };
 
-export default TeacherDashboard;
+export default StudentDashboard;

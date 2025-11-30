@@ -1,8 +1,9 @@
 import React from 'react';
-import { Container, Row, Col, Card, Button, Navbar, Nav } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import './Dashboard.css';
+import '../Dashboard.css';
+import Sidebar from '../../components/Sidebar';
 
 const OwnerDashboard = () => {
   const { user, logout } = useAuth();
@@ -15,28 +16,7 @@ const OwnerDashboard = () => {
 
   return (
     <div className="dashboard-page">
-      {/* Navbar */}
-      <Navbar className="dashboard-navbar glass-effect" variant="dark" expand="lg">
-        <Container fluid>
-          <Navbar.Brand className="navbar-brand-custom">
-            <span className="brand-icon">⚡</span> Smart Scheduler
-          </Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto align-items-center">
-              <Nav.Link className="nav-link-custom">
-                <span className="user-badge">Owner</span>
-              </Nav.Link>
-              <Nav.Link className="nav-link-custom">
-                👤 {user?.userName}
-              </Nav.Link>
-              <Button variant="outline-light" size="sm" onClick={handleLogout} className="logout-btn">
-                Logout
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+      <Sidebar activeMenu="dashboard" />
 
       {/* Background Effects */}
       <div className="bg-animation">

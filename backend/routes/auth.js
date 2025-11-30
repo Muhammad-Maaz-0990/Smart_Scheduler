@@ -6,6 +6,7 @@ const passport = require('passport');
 const Users = require('../models/Users');
 const OwnerUser = require('../models/OwnerUser');
 const InstituteInformation = require('../models/InstituteInformation');
+const Subscription = require('../models/Subscription');
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -184,6 +185,140 @@ router.post('/register', [
   }
 });
 
+// @route   POST /api/auth/register-institute
+// @desc    Register new institute with owner
+// @access  Public
+router.post('/register-institute', [
+  body('instituteID').trim().notEmpty().withMessage('Institute ID is required'),
+  body('instituteName').trim().notEmpty().withMessage('Institute name is required'),
+  body('instituteAddress').trim().notEmpty().withMessage('Institute address is required'),
+  body('institutePhone').trim().notEmpty().withMessage('Institute phone is required'),
+  body('instituteType').isIn(['School', 'College', 'University']).withMessage('Invalid institute type'),
+  body('userName').trim().notEmpty().withMessage('Name is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('phoneNumber').trim().notEmpty().withMessage('Phone number is required'),
+  body('cnic').trim().notEmpty().withMessage('National ID is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const {
+    instituteID,
+    instituteName,
+    instituteAddress,
+    institutePhone,
+    instituteType,
+    userName,
+    email,
+    phoneNumber,
+    cnic,
+    password,
+    country
+  } = req.body;
+
+  try {
+    // Check if owner email already exists
+    let existingUser = await OwnerUser.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    // Check if institute ID already exists
+    let existingInstituteByID = await InstituteInformation.findOne({ instituteID });
+    if (existingInstituteByID) {
+      return res.status(400).json({ message: 'Institute ID already registered' });
+    }
+
+    // Check if institute name already exists
+    let existingInstitute = await InstituteInformation.findOne({ instituteName });
+    if (existingInstitute) {
+      return res.status(400).json({ message: 'Institute name already registered' });
+    }
+
+    // Create Institute Information
+    const newInstitute = new InstituteInformation({
+      instituteID,
+      instituteName,
+      instituteAddress,
+      instituteContact: institutePhone,
+      instituteType
+    });
+
+    await newInstitute.save();
+
+    // Create 7-day trial subscription
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 7);
+
+    const newSubscription = new Subscription({
+      instituteID: newInstitute._id,
+      subscriptionType: 'trial',
+      status: 'active',
+      startDate: new Date(),
+      endDate: trialEndDate,
+      trialUsed: true,
+      autoRenew: false
+    });
+
+    await newSubscription.save();
+
+    // Create Owner User
+    const newOwner = new OwnerUser({
+      userName,
+      email,
+      password,
+      phoneNumber,
+      cnic,
+      role: 'Owner',
+      instituteID: newInstitute._id
+    });
+
+    await newOwner.save();
+
+    // Create Admin User in Users table
+    const newAdmin = new Users({
+      userName,
+      email,
+      password,
+      phoneNumber,
+      cnic: cnic || 'N/A',
+      designation: 'Admin',
+      instituteID: newInstitute._id
+    });
+
+    await newAdmin.save();
+
+    // Generate token for Admin user
+    const token = generateToken(newAdmin);
+
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        id: newAdmin._id,
+        userName: newAdmin.userName,
+        email: newAdmin.email,
+        phoneNumber: newAdmin.phoneNumber,
+        designation: 'Admin',
+        instituteID: newInstitute._id,
+        instituteName: newInstitute.instituteName
+      },
+      subscription: {
+        type: 'trial',
+        status: 'active',
+        endDate: trialEndDate
+      },
+      message: 'Institute registered successfully with 7-day trial'
+    });
+  } catch (error) {
+    console.error('Institute registration error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+});
+
 // @route   GET /api/auth/google
 // @desc    Google OAuth authentication
 // @access  Public
@@ -195,14 +330,33 @@ router.get('/google',
 // @desc    Google OAuth callback
 // @access  Public
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: process.env.FRONTEND_URL + '/login' }),
-  (req, res) => {
-    // Generate JWT token
-    const token = generateToken(req.user);
-    
-    // Redirect to frontend with token and user info
-    const designation = req.user.designation || req.user.role || 'Student';
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&designation=${designation}`);
+  (req, res, next) => {
+    passport.authenticate('google', (err, user, info) => {
+      if (err) {
+        return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+      }
+      
+      // If no user, redirect to register with Google info
+      if (!user) {
+        const email = info?.email || '';
+        const name = info?.name || '';
+        return res.redirect(`${process.env.FRONTEND_URL}/register?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
+      }
+      
+      // If user exists, log them in
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.redirect(`${process.env.FRONTEND_URL}/login?error=login_failed`);
+        }
+        
+        // Generate JWT token
+        const token = generateToken(user);
+        
+        // Redirect to frontend with token and user info
+        const designation = user.designation || user.role || 'Student';
+        res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&designation=${designation}`);
+      });
+    })(req, res, next);
   }
 );
 
@@ -233,6 +387,23 @@ router.get('/verify', async (req, res) => {
   } catch (error) {
     console.error('Verification error:', error);
     res.status(401).json({ message: 'Invalid token' });
+  }
+});
+
+// @route   GET /api/auth/institute/:instituteID
+// @desc    Get institute information
+// @access  Private
+router.get('/institute/:instituteID', async (req, res) => {
+  try {
+    const institute = await InstituteInformation.findOne({ instituteID: req.params.instituteID });
+    
+    if (!institute) {
+      return res.status(404).json({ message: 'Institute not found' });
+    }
+
+    res.json(institute);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
