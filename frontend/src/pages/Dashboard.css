@@ -440,6 +440,82 @@
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
+/* Institute Card */
+.institute-card {
+  color: #ffffff;
+}
+
+.institute-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.institute-logo-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.institute-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.institute-logo.placeholder {
+  font-size: 1.8rem;
+}
+
+.institute-meta .institute-id {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.institute-details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 992px) {
+  .institute-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .institute-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.detail-value {
+  font-size: 1rem;
+  color: #ffffff;
+}
+
+.detail-hint {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.detail-error {
+  font-size: 0.9rem;
+  color: #ffdddd;
+}
+
 /* Table Styling */
 .table-custom {
   color: rgba(255, 255, 255, 0.9);

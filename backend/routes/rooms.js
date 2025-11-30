@@ -3,6 +3,28 @@ const router = express.Router();
 const Room = require('../models/Room');
 const { body, validationResult } = require('express-validator');
 
+// Get rooms via query param (fallback when no path param used)
+router.get('/', async (req, res) => {
+  try {
+    const { instituteID } = req.query;
+    if (!instituteID) {
+      return res.status(400).json({ message: 'instituteID query is required' });
+    }
+    
+    // Validate ObjectId format
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(instituteID)) {
+      return res.status(400).json({ message: 'Invalid institute ID format' });
+    }
+    
+    const rooms = await Room.find({ instituteID }).sort({ roomID: 1 });
+    res.json(rooms);
+  } catch (err) {
+    console.error('GET /api/rooms error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // Get all rooms for an institute
 router.get('/:instituteID', async (req, res) => {
   try {
@@ -25,20 +47,34 @@ router.post('/', [
   }
 
   try {
+    const { roomNumber, roomStatus, instituteID } = req.body;
+
+    // Validate ObjectId format
+    if (!require('mongoose').Types.ObjectId.isValid(instituteID)) {
+      return res.status(400).json({ message: 'Invalid institute ID format' });
+    }
+
     // Get the highest roomID for auto-increment
     const lastRoom = await Room.findOne().sort({ roomID: -1 });
-    const newRoomID = lastRoom ? lastRoom.roomID + 1 : 1;
+    const newRoomID = lastRoom && lastRoom.roomID ? Number(lastRoom.roomID) + 1 : 1;
+    
+    // Ensure newRoomID is a valid number
+    if (isNaN(newRoomID)) {
+      console.error('Invalid roomID calculation:', { lastRoom, newRoomID });
+      return res.status(500).json({ message: 'Failed to generate room ID' });
+    }
 
     const room = new Room({
       roomID: newRoomID,
-      roomNumber: req.body.roomNumber,
-      roomStatus: req.body.roomStatus,
-      instituteID: req.body.instituteID
+      roomNumber,
+      roomStatus,
+      instituteID
     });
 
     await room.save();
     res.status(201).json(room);
   } catch (err) {
+    console.error('Room creation error:', err);
     if (err.code === 11000) {
       return res.status(400).json({ message: 'Room number already exists for this institute' });
     }

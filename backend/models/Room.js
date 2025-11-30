@@ -16,7 +16,7 @@ const roomSchema = new mongoose.Schema({
     required: true
   },
   instituteID: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: 'InstituteInformation'
   }

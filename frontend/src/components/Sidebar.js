@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = ({ activeMenu }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, logout } = useAuth();
   const [instituteInfo, setInstituteInfo] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -17,7 +16,12 @@ const Sidebar = ({ activeMenu }) => {
     const fetchInstituteInfo = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/auth/institute/${user?.instituteID}`, {
+        const instituteRef = user?.instituteID;
+        const instituteParam = typeof instituteRef === 'object'
+          ? (instituteRef._id || instituteRef.instituteID || instituteRef)
+          : instituteRef;
+        if (!instituteParam) return;
+        const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(instituteParam)}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -61,19 +65,17 @@ const Sidebar = ({ activeMenu }) => {
   };
 
   const adminMenu = [
-    { icon: '🏠', label: 'Dashboard', value: 'dashboard' },
     { icon: '🏢', label: 'Rooms', value: 'rooms' },
     { icon: '👥', label: 'Classes', value: 'classes' },
     { icon: '📚', label: 'Courses', value: 'courses' },
     { icon: '⏰', label: 'TimeSlots', value: 'timeslots' },
-    { icon: '💬', label: 'Feedback', value: 'feedback' },
+    { icon: '💬', label: 'FeedBacks', value: 'feedbacks' },
     { icon: '📅', label: 'TimeTables', value: 'timetables' },
     { icon: '👤', label: 'Institute Users', value: 'users' },
     { icon: '🔧', label: 'Profile', value: 'profile' }
   ];
 
   const ownerMenu = [
-    { icon: '🏠', label: 'Dashboard', value: 'dashboard' },
     { icon: '🏢', label: 'Institutes', value: 'institutes' },
     { icon: '👥', label: 'Users', value: 'users' },
     { icon: '📊', label: 'Analytics', value: 'analytics' },
@@ -114,8 +116,8 @@ const Sidebar = ({ activeMenu }) => {
       {/* Sidebar */}
       {isVisible && (
       <div className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
-        {/* Institute Info */}
-        <div className="sidebar-header">
+        {/* Institute Info (click to go to dashboard) */}
+        <div className="sidebar-header" onClick={() => handleMenuClick('dashboard')} style={{cursor:'pointer'}}>
           {instituteInfo?.instituteLogo && (
             <img 
               src={instituteInfo.instituteLogo} 
@@ -126,7 +128,7 @@ const Sidebar = ({ activeMenu }) => {
           {!isCollapsed && (
             <div className="institute-info">
               <div className="institute-name">
-                {instituteInfo?.instituteName || 'Smart Scheduler'}
+                {instituteInfo?.instituteName || user?.instituteName || ''}
               </div>
               <div className="institute-subtitle">{role} Panel</div>
             </div>
@@ -157,7 +159,7 @@ const Sidebar = ({ activeMenu }) => {
             {!isCollapsed && (
               <div className="user-details">
                 <div className="user-name">{user?.userName}</div>
-                <div className="user-role">{role}</div>
+                <div className="user-role">{role === 'Admin' ? 'Admin' : role}</div>
               </div>
             )}
           </div>

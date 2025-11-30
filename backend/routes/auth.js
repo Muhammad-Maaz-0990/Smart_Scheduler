@@ -6,7 +6,6 @@ const passport = require('passport');
 const Users = require('../models/Users');
 const OwnerUser = require('../models/OwnerUser');
 const InstituteInformation = require('../models/InstituteInformation');
-const Subscription = require('../models/Subscription');
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -36,14 +35,14 @@ router.post('/login', [
   const { email, password } = req.body;
 
   try {
-    // Check in OwnerUser first
-    let user = await OwnerUser.findOne({ email });
-    let userType = 'Owner';
+    // Prefer regular Users (Admin/Student/Teacher) first so Admin dashboard shows correctly
+    let user = await Users.findOne({ email });
+    let userType = 'User';
 
-    // If not found in OwnerUser, check in Users
+    // If not found in Users, fallback to OwnerUser
     if (!user) {
-      user = await Users.findOne({ email }).populate('instituteID', 'instituteName');
-      userType = 'User';
+      user = await OwnerUser.findOne({ email });
+      userType = 'Owner';
     }
 
     // If user not found in both collections
@@ -63,18 +62,27 @@ router.post('/login', [
     // Generate token
     const token = generateToken(user);
 
-    // Prepare response
+    // Prepare response (fetch institute name if applicable)
+    let instituteName;
+    if (userType === 'User' && user.instituteID) {
+      try {
+        const inst = await InstituteInformation.findOne({ instituteID: user.instituteID }, 'instituteName');
+        instituteName = inst?.instituteName;
+      } catch {}
+    }
+
     const responseData = {
       token,
       user: {
         id: user._id,
+        userID: user.userID, // numeric ID
         userName: user.userName,
         email: user.email,
         phoneNumber: user.phoneNumber,
         designation: user.designation || user.role,
-        ...(userType === 'User' && { 
-          instituteID: user.instituteID?._id,
-          instituteName: user.instituteID?.instituteName 
+        ...(userType === 'User' && {
+          instituteID: user.instituteID,
+          instituteName
         })
       }
     };
@@ -94,7 +102,7 @@ router.post('/register', [
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('phoneNumber').notEmpty().withMessage('Phone number is required'),
-  body('designation').isIn(['Admin', 'Student', 'Teacher', 'Owner']).withMessage('Invalid designation')
+  body('designation').isIn(['Admin', 'Student', 'Teacher']).withMessage('Invalid designation')
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -116,39 +124,15 @@ router.post('/register', [
       });
     }
 
-    // If designation is Owner, create OwnerUser
-    if (designation === 'Owner') {
-      const newOwner = new OwnerUser({
-        userName,
-        email,
-        password,
-        phoneNumber,
-        role: 'Owner'
-      });
-
-      await newOwner.save();
-
-      const token = generateToken(newOwner);
-
-      return res.status(201).json({
-        token,
-        user: {
-          id: newOwner._id,
-          userName: newOwner.userName,
-          email: newOwner.email,
-          phoneNumber: newOwner.phoneNumber,
-          designation: 'Owner'
-        }
-      });
-    }
+    // Only create regular Users accounts (Admin/Student/Teacher)
 
     // For other designations, create regular User
     if (!instituteID) {
       return res.status(400).json({ message: 'Institute ID is required for this designation' });
     }
 
-    // Verify institute exists
-    const institute = await InstituteInformation.findById(instituteID);
+    // Verify institute exists (by business key)
+    const institute = await InstituteInformation.findOne({ instituteID });
     if (!institute) {
       return res.status(404).json({ message: 'Institute not found' });
     }
@@ -180,6 +164,9 @@ router.post('/register', [
       }
     });
   } catch (error) {
+    if (error && error.code === 11000) {
+      return res.status(400).json({ message: 'Duplicate user (email or username) already exists' });
+    }
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Server error during registration' });
   }
@@ -191,8 +178,8 @@ router.post('/register', [
 router.post('/register-institute', [
   body('instituteID').trim().notEmpty().withMessage('Institute ID is required'),
   body('instituteName').trim().notEmpty().withMessage('Institute name is required'),
-  body('instituteAddress').trim().notEmpty().withMessage('Institute address is required'),
-  body('institutePhone').trim().notEmpty().withMessage('Institute phone is required'),
+  body('address').trim().notEmpty().withMessage('Institute address is required'),
+  body('contactNumber').trim().notEmpty().withMessage('Contact number is required'),
   body('instituteType').isIn(['School', 'College', 'University']).withMessage('Invalid institute type'),
   body('userName').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
@@ -208,15 +195,15 @@ router.post('/register-institute', [
   const {
     instituteID,
     instituteName,
-    instituteAddress,
-    institutePhone,
+    address,
+    contactNumber,
     instituteType,
     userName,
     email,
     phoneNumber,
     cnic,
     password,
-    country
+    instituteLogo
   } = req.body;
 
   try {
@@ -238,47 +225,36 @@ router.post('/register-institute', [
       return res.status(400).json({ message: 'Institute name already registered' });
     }
 
+    // Prepare binary logo from data URL if provided
+    let logoData, logoContentType;
+    if (typeof instituteLogo === 'string' && instituteLogo.startsWith('data:')) {
+      try {
+        const match = instituteLogo.match(/^data:(.*?);base64,(.*)$/);
+        if (match) {
+          logoContentType = match[1] || 'image/png';
+          const b64 = match[2];
+          logoData = Buffer.from(b64, 'base64');
+        }
+      } catch {}
+    }
+
     // Create Institute Information
     const newInstitute = new InstituteInformation({
       instituteID,
       instituteName,
-      instituteAddress,
-      instituteContact: institutePhone,
-      instituteType
+      address,
+      contactNumber,
+      instituteType,
+      // Keep legacy string for backward compatibility only if it's a non-data URL string
+      instituteLogo: (typeof instituteLogo === 'string' && !instituteLogo.startsWith('data:')) ? instituteLogo : '',
+      logoData,
+      logoContentType,
+      subscription: 'Trial'
     });
 
     await newInstitute.save();
 
-    // Create 7-day trial subscription
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 7);
-
-    const newSubscription = new Subscription({
-      instituteID: newInstitute._id,
-      subscriptionType: 'trial',
-      status: 'active',
-      startDate: new Date(),
-      endDate: trialEndDate,
-      trialUsed: true,
-      autoRenew: false
-    });
-
-    await newSubscription.save();
-
-    // Create Owner User
-    const newOwner = new OwnerUser({
-      userName,
-      email,
-      password,
-      phoneNumber,
-      cnic,
-      role: 'Owner',
-      instituteID: newInstitute._id
-    });
-
-    await newOwner.save();
-
-    // Create Admin User in Users table
+    // Create Admin User in Users table (only Users table)
     const newAdmin = new Users({
       userName,
       email,
@@ -286,7 +262,7 @@ router.post('/register-institute', [
       phoneNumber,
       cnic: cnic || 'N/A',
       designation: 'Admin',
-      instituteID: newInstitute._id
+      instituteID: newInstitute.instituteID
     });
 
     await newAdmin.save();
@@ -303,15 +279,10 @@ router.post('/register-institute', [
         email: newAdmin.email,
         phoneNumber: newAdmin.phoneNumber,
         designation: 'Admin',
-        instituteID: newInstitute._id,
+        instituteID: newInstitute.instituteID,
         instituteName: newInstitute.instituteName
       },
-      subscription: {
-        type: 'trial',
-        status: 'active',
-        endDate: trialEndDate
-      },
-      message: 'Institute registered successfully with 7-day trial'
+      message: 'Institute registered successfully with Trial subscription'
     });
   } catch (error) {
     console.error('Institute registration error:', error);
@@ -376,13 +347,22 @@ router.get('/verify', async (req, res) => {
     let user = await OwnerUser.findById(decoded.id).select('-password');
     
     if (!user) {
-      user = await Users.findById(decoded.id).select('-password').populate('instituteID', 'instituteName');
+      user = await Users.findById(decoded.id).select('-password');
     }
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Attach instituteName for Users
+    if (user && user.instituteID) {
+      try {
+        const inst = await InstituteInformation.findOne({ instituteID: user.instituteID }, 'instituteName');
+        if (inst) {
+          return res.json({ user: { ...user.toObject(), instituteName: inst.instituteName } });
+        }
+      } catch {}
+    }
     res.json({ user });
   } catch (error) {
     console.error('Verification error:', error);
@@ -395,15 +375,60 @@ router.get('/verify', async (req, res) => {
 // @access  Private
 router.get('/institute/:instituteID', async (req, res) => {
   try {
-    const institute = await InstituteInformation.findOne({ instituteID: req.params.instituteID });
+    const { instituteID } = req.params;
+    let institute = null;
+
+    // Try by business key `instituteID`
+    institute = await InstituteInformation.findOne({ instituteID });
+
+    // If not found, and looks like ObjectId, try by _id
+    if (!institute) {
+      const isObjectId = /^[a-fA-F0-9]{24}$/.test(instituteID);
+      if (isObjectId) {
+        institute = await InstituteInformation.findById(instituteID);
+      }
+    }
     
     if (!institute) {
       return res.status(404).json({ message: 'Institute not found' });
     }
 
-    res.json(institute);
+    // Serialize: if binary logo exists, expose a URL for frontend compatibility
+    const obj = institute.toObject();
+    if (obj.logoData && obj.logoData.length) {
+      obj.instituteLogo = `/api/auth/institute/${encodeURIComponent(instituteID)}/logo`;
+      delete obj.logoData; // don't send binary in JSON
+      // keep logoContentType if needed by clients
+    }
+
+    res.json(obj);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// @route   GET /api/auth/institute/:instituteID/logo
+// @desc    Get institute logo binary
+// @access  Private
+router.get('/institute/:instituteID/logo', async (req, res) => {
+  try {
+    const { instituteID } = req.params;
+    let institute = await InstituteInformation.findOne({ instituteID });
+    if (!institute) {
+      const isObjectId = /^[a-fA-F0-9]{24}$/.test(instituteID);
+      if (isObjectId) {
+        institute = await InstituteInformation.findById(instituteID);
+      }
+    }
+
+    if (!institute || !institute.logoData) {
+      return res.status(404).send('Logo not found');
+    }
+
+    res.set('Content-Type', institute.logoContentType || 'image/png');
+    return res.send(institute.logoData);
+  } catch (err) {
+    res.status(500).send('Server error');
   }
 });
 

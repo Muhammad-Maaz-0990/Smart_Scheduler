@@ -1,7 +1,14 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const Counter = require('./Counter');
+
 const userSchema = new mongoose.Schema({
+  userID: {
+    type: Number,
+    unique: true,
+    index: true
+  },
   userName: {
     type: String,
     required: [true, 'Username is required'],
@@ -36,7 +43,7 @@ const userSchema = new mongoose.Schema({
     enum: ['Admin', 'Student', 'Teacher']
   },
   instituteID: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'InstituteInformation',
     required: false
   },
@@ -48,10 +55,20 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
+  // Auto-increment userID if not set
+  if (this.isNew && !this.userID) {
+    const counter = await Counter.findByIdAndUpdate(
+      'users_userID',
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    this.userID = counter.seq;
+  }
+
   if (!this.isModified('password')) {
     return next();
   }
-  
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();

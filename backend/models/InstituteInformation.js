@@ -11,27 +11,38 @@ const instituteSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  instituteAddress: {
+  // Backward-compatible string logo (legacy). New binary fields below.
+  instituteLogo: {
+    type: String,
+    default: ''
+  },
+  logoData: {
+    type: Buffer,
+    required: false
+  },
+  logoContentType: {
+    type: String,
+    required: false
+  },
+  address: {
     type: String,
     required: true
   },
-  instituteContact: {
+  contactNumber: {
     type: String,
     required: true
+  },
+  subscription: {
+    type: String,
+    enum: ['Monthly', 'Yearly', 'Trial'],
+    default: 'Trial'
   },
   instituteType: {
     type: String,
     enum: ['School', 'College', 'University'],
     required: true
   },
-  instituteLogo: {
-    type: String,
-    default: ''
-  },
-  address: String,
-  contactEmail: String,
-  contactPhone: String,
-  createdAt: {
+  created_at: {
     type: Date,
     default: Date.now
   }

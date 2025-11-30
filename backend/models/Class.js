@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const classSchema = new mongoose.Schema({
   classID: {
     type: Number,
-    required: true
+    required: true,
+    unique: true
   },
   degree: {
     type: String,
@@ -16,7 +17,6 @@ const classSchema = new mongoose.Schema({
   },
   section: {
     type: String,
-    enum: ['A', 'B'],
     required: true
   },
   year: {

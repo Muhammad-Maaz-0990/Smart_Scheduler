@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const courseSchema = new mongoose.Schema({
   courseID: {
     type: Number,
-    required: true
+    required: true,
+    unique: true
   },
   courseCode: {
     type: String,
@@ -31,7 +32,7 @@ const courseSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index to ensure unique course code per institute
+// Ensure unique courseCode per institute (courseID is globally unique)
 courseSchema.index({ courseCode: 1, instituteID: 1 }, { unique: true });
 
 module.exports = mongoose.model('Course', courseSchema);

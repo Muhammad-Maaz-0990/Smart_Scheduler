@@ -1,13 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Container, Row, Col, Card, Image, Badge } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const { user, token } = useAuth();
+  const [institute, setInstitute] = useState(null);
+  const [loadingInstitute, setLoadingInstitute] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchInstitute = async () => {
+      if (!user) return;
+      const idVal = typeof user.instituteID === 'object' ? user.instituteID?._id : user.instituteID;
+      if (!idVal) return;
+      setLoadingInstitute(true);
+      setError('');
+      try {
+        const res = await fetch(`/api/auth/institute/${encodeURIComponent(idVal)}`, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : ''
+          }
+        });
+        if (!res.ok) throw new Error('Failed to load institute');
+        const data = await res.json();
+        setInstitute(data);
+      } catch (e) {
+        setError(e.message || 'Error loading institute');
+      } finally {
+        setLoadingInstitute(false);
+      }
+    };
+    fetchInstitute();
+  }, [user, token]);
 
   return (
     <>
@@ -67,60 +93,51 @@ const AdminDashboard = () => {
             </Col>
           </Row>
 
-          <Row className="g-4 mt-4">
-            <Col xs={12} lg={8}>
-              <Card className="action-card glass-effect">
-                <Card.Header>
-                  <h4 className="card-title">Quick Actions</h4>
-                </Card.Header>
+          {/* Institute Details Card */}
+          <Row className="mt-4">
+            <Col xs={12}>
+              <Card className="glass-effect institute-card">
                 <Card.Body>
-                  <Row className="g-3">
-                    <Col xs={12} sm={6}>
-                      <Button variant="primary" className="action-btn btn-futuristic w-100">
-                        <span className="btn-icon">➕</span>
-                        Add Teacher
-                      </Button>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <Button variant="primary" className="action-btn btn-futuristic w-100">
-                        <span className="btn-icon">➕</span>
-                        Add Student
-                      </Button>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <Button variant="primary" className="action-btn btn-futuristic w-100">
-                        <span className="btn-icon">📅</span>
-                        Create Schedule
-                      </Button>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <Button variant="primary" className="action-btn btn-futuristic w-100">
-                        <span className="btn-icon">📊</span>
-                        View Reports
-                      </Button>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col xs={12} lg={4}>
-              <Card className="profile-card glass-effect">
-                <Card.Header>
-                  <h4 className="card-title">Profile</h4>
-                </Card.Header>
-                <Card.Body>
-                  <div className="profile-info">
-                    <div className="profile-avatar admin-avatar">
-                      {user?.userName?.charAt(0).toUpperCase()}
+                  <div className="institute-card-header">
+                    <div className="institute-logo-wrap">
+                      {institute?.instituteLogo ? (
+                        <Image src={institute.instituteLogo} rounded className="institute-logo" alt="Institute Logo" />
+                      ) : (
+                        <div className="institute-logo placeholder">🏫</div>
+                      )}
                     </div>
-                    <div className="profile-details">
-                      <p><strong>Name:</strong> {user?.userName}</p>
-                      <p><strong>Email:</strong> {user?.email}</p>
-                      <p><strong>Institute:</strong> {user?.instituteName}</p>
-                      <p><strong>Role:</strong> <span className="role-badge admin-badge">Admin</span></p>
+                    <div className="institute-meta">
+                      <h3 className="institute-name mb-1">
+                        {institute?.instituteName || user?.instituteName || 'Institute'}
+                        {institute?.instituteType && (
+                          <Badge bg="info" className="ms-2">{institute.instituteType}</Badge>
+                        )}
+                      </h3>
+                      <div className="institute-id">ID: {institute?.instituteID || (typeof user?.instituteID === 'string' ? user.instituteID : user?.instituteID?._id) }</div>
                     </div>
                   </div>
+
+                  <div className="institute-details-grid mt-3">
+                    <div>
+                      <div className="detail-label">Address</div>
+                      <div className="detail-value">{institute?.address || '—'}</div>
+                    </div>
+                    <div>
+                      <div className="detail-label">Contact</div>
+                      <div className="detail-value">{institute?.contactNumber || '—'}</div>
+                    </div>
+                    <div>
+                      <div className="detail-label">Subscription</div>
+                      <div className="detail-value">{institute?.subscription || '—'}</div>
+                    </div>
+                    <div>
+                      <div className="detail-label">Created</div>
+                      <div className="detail-value">{institute?.created_at ? new Date(institute.created_at).toLocaleString() : '—'}</div>
+                    </div>
+                  </div>
+
+                  {loadingInstitute && <div className="detail-hint mt-2">Loading institute details…</div>}
+                  {error && <div className="detail-error mt-2">{error}</div>}
                 </Card.Body>
               </Card>
             </Col>

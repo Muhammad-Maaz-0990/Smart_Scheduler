@@ -23,8 +23,8 @@ const Register = () => {
     instituteLogoPreview: '',
     instituteID: '',
     instituteName: '',
-    instituteAddress: '',
-    institutePhone: '+92',
+    address: '',
+    contactNumber: '+92',
     instituteType: '',
     
     // Step 3: Terms and Conditions
@@ -36,7 +36,7 @@ const Register = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { loginWithToken } = useAuth();
 
   // Get user info from Google OAuth if available
   useEffect(() => {
@@ -64,25 +64,32 @@ const Register = () => {
 
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please upload an image file');
-        return;
-      }
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image size should be less than 5MB');
-        return;
-      }
-      
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
       setFormData(prev => ({
         ...prev,
-        instituteLogo: file,
-        instituteLogoPreview: URL.createObjectURL(file)
+        // Store as base64 data URL string so backend saves binary
+        instituteLogo: typeof dataUrl === 'string' ? dataUrl : '',
+        instituteLogoPreview: typeof dataUrl === 'string' ? dataUrl : ''
       }));
       setError('');
-    }
+    };
+    reader.onerror = () => {
+      setError('Failed to read image. Please try another file.');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handlePhoneChange = (value) => {
@@ -102,31 +109,24 @@ const Register = () => {
     setError('');
   };
 
-  const handleInstitutePhoneChange = (value) => {
+  const handleContactNumberChange = (value) => {
     // Remove any non-digit characters except the + sign at the start
     if (value) {
       const cleaned = value.replace(/[^\d+]/g, '');
       setFormData(prev => ({
         ...prev,
-        institutePhone: cleaned
+        contactNumber: cleaned
       }));
     } else {
       setFormData(prev => ({
         ...prev,
-        institutePhone: ''
+        contactNumber: ''
       }));
     }
     setError('');
   };
 
-  const handleCheckboxChange = (day) => {
-    setFormData(prev => ({
-      ...prev,
-      workingDays: prev.workingDays.includes(day)
-        ? prev.workingDays.filter(d => d !== day)
-        : [...prev.workingDays, day]
-    }));
-  };
+  // Removed unused working days checkbox handler
 
   const handleTermsChange = (field) => {
     setFormData(prev => ({
@@ -276,8 +276,13 @@ const Register = () => {
         }
         break;
       case 1:
-        if (!formData.instituteID || !formData.instituteName || !formData.instituteAddress || !formData.institutePhone) {
+        if (!formData.instituteID || !formData.instituteName || !formData.address || !formData.contactNumber) {
           setError('Please fill in all institute information');
+          return false;
+        }
+        // Require logo upload
+        if (!formData.instituteLogo) {
+          setError('Please upload your institute logo');
           return false;
         }
         if (!formData.instituteType) {
@@ -318,21 +323,31 @@ const Register = () => {
 
     setLoading(true);
     try {
+      // Prepare data, converting null instituteLogo to empty string
+      const submitData = {
+        ...formData,
+        instituteLogo: formData.instituteLogo || ''
+      };
+      
       // Submit registration data to backend
       const response = await fetch('http://localhost:5000/api/auth/register-institute', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        await login(data.token);
-        
-        // Redirect to admin dashboard
+        // Set token and minimal user context so PrivateRoute allows access immediately
+        const userPayload = {
+          designation: 'Admin',
+          userName: formData.userName,
+          email: formData.email
+        };
+        loginWithToken(data.token, userPayload);
         navigate('/admin');
       } else {
         setError(data.message || 'Registration failed');
@@ -410,7 +425,6 @@ const Register = () => {
                 className="phone-input-custom"
                 placeholder="Enter phone number"
                 smartCaret={true}
-                useNationalFormatForDefaultCountryValue={true}
                 countryCallingCodeEditable={false}
                 limitMaxLength={true}
               />
@@ -524,8 +538,8 @@ const Register = () => {
               <Form.Control
                 as="textarea"
                 rows={3}
-                name="instituteAddress"
-                value={formData.instituteAddress}
+                name="address"
+                value={formData.address}
                 onChange={handleInputChange}
                 placeholder="Enter institute address"
                 className="futuristic-input"
@@ -533,16 +547,15 @@ const Register = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label className="form-label">Institute Phone Number</Form.Label>
+              <Form.Label className="form-label">Institute Contact Number</Form.Label>
               <PhoneInput
                 international
                 defaultCountry="PK"
-                value={formData.institutePhone}
-                onChange={handleInstitutePhoneChange}
+                value={formData.contactNumber}
+                onChange={handleContactNumberChange}
                 className="phone-input-custom"
-                placeholder="Enter institute phone number"
+                placeholder="Enter institute contact number"
                 smartCaret={true}
-                useNationalFormatForDefaultCountryValue={true}
                 countryCallingCodeEditable={false}
                 limitMaxLength={true}
               />
@@ -589,7 +602,7 @@ const Register = () => {
                   className="custom-checkbox-terms"
                   label={
                     <span className="terms-label">
-                      I agree to the <a href="#" className="terms-link">Terms and Conditions</a>
+                      I agree to the <button type="button" className="terms-link btn btn-link p-0" onClick={(e) => e.preventDefault()}>Terms and Conditions</button>
                     </span>
                   }
                 />
@@ -603,7 +616,7 @@ const Register = () => {
                   className="custom-checkbox-terms"
                   label={
                     <span className="terms-label">
-                      I agree to the <a href="#" className="terms-link">Privacy Policy</a>
+                      I agree to the <button type="button" className="terms-link btn btn-link p-0" onClick={(e) => e.preventDefault()}>Privacy Policy</button>
                     </span>
                   }
                 />

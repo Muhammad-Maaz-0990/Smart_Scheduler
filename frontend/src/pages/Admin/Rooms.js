@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Table, Modal, Form, Alert } from 'react-bootstrap';
+import { Container, Card, Button, Table, Modal, Form, Alert } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
 const Rooms = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
@@ -20,14 +18,31 @@ const Rooms = () => {
 
   useEffect(() => {
     fetchRooms();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const fetchRooms = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/rooms/${user?.instituteID}`);
+      const token = localStorage.getItem('token');
+      const instituteRef = user?.instituteID;
+      // Extract _id if object, otherwise use string
+      const instituteParam = typeof instituteRef === 'object' && instituteRef !== null
+        ? instituteRef._id
+        : instituteRef;
+      
+      if (!instituteParam) {
+        setError('Institute ID not found');
+        return;
+      }
+      const response = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(instituteParam)}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (response.ok) {
         const data = await response.json();
         setRooms(data);
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        setError(errData.message || 'Failed to fetch rooms');
       }
     } catch (err) {
       setError('Failed to fetch rooms');
@@ -64,12 +79,27 @@ const Rooms = () => {
       
       const method = modalMode === 'add' ? 'POST' : 'PUT';
       
+      const token = localStorage.getItem('token');
+      const instituteRef = user?.instituteID;
+      // Extract _id if object, otherwise use string
+      const instituteParam = typeof instituteRef === 'object' && instituteRef !== null
+        ? instituteRef._id
+        : instituteRef;
+      
+      if (!instituteParam) {
+        setError('Institute ID not found');
+        return;
+      }
+
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           ...currentRoom,
-          instituteID: user?.instituteID
+          instituteID: instituteParam
         })
       });
 

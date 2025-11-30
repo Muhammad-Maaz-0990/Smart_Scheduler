@@ -1,7 +1,14 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const Counter = require('./Counter');
+
 const ownerUserSchema = new mongoose.Schema({
+  userID: {
+    type: Number,
+    unique: true,
+    index: true
+  },
   userName: {
     type: String,
     required: [true, 'Username is required'],
@@ -24,14 +31,6 @@ const ownerUserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  cnic: {
-    type: String,
-    default: 'N/A'
-  },
-  instituteID: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'InstituteInformation'
-  },
   role: {
     type: String,
     default: 'Owner'
@@ -44,6 +43,16 @@ const ownerUserSchema = new mongoose.Schema({
 
 // Hash password before saving
 ownerUserSchema.pre('save', async function(next) {
+  // Auto-increment userID if not set
+  if (this.isNew && !this.userID) {
+    const counter = await Counter.findByIdAndUpdate(
+      'owneruser_userID',
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    this.userID = counter.seq;
+  }
+
   if (!this.isModified('password')) {
     return next();
   }
