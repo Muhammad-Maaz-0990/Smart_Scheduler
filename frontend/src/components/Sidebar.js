@@ -152,17 +152,6 @@ const Sidebar = ({ activeMenu }) => {
 
         {/* User Info & Logout */}
         <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">
-              {user?.userName?.charAt(0).toUpperCase()}
-            </div>
-            {!isCollapsed && (
-              <div className="user-details">
-                <div className="user-name">{user?.userName}</div>
-                <div className="user-role">{role === 'Admin' ? 'Admin' : role}</div>
-              </div>
-            )}
-          </div>
           <button 
             className="logout-btn-sidebar" 
             onClick={handleLogout}

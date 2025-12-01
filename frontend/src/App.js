@@ -9,7 +9,9 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import Rooms from './pages/Admin/Rooms';
 import Classes from './pages/Admin/Classes';
 import Courses from './pages/Admin/Courses';
+import TimeSlots from './pages/Admin/TimeSlots';
 import Users from './pages/Admin/Users';
+import AdminProfilePage from './pages/Admin/Profile';
 import StudentDashboard from './pages/Student/StudentDashboard';
 import TeacherDashboard from './pages/Teacher/TeacherDashboard';
 import './App.css';
@@ -76,10 +78,28 @@ function App() {
             />
 
             <Route 
+              path="/admin/timeslots" 
+              element={
+                <PrivateRoute allowedRoles={['Admin']}>
+                  <TimeSlots />
+                </PrivateRoute>
+              } 
+            />
+
+            <Route 
               path="/admin/users" 
               element={
                 <PrivateRoute allowedRoles={['Admin']}>
                   <Users />
+                </PrivateRoute>
+              } 
+            />
+            
+            <Route 
+              path="/admin/profile" 
+              element={
+                <PrivateRoute allowedRoles={['Admin']}>
+                  <AdminProfilePage />
                 </PrivateRoute>
               } 
             />

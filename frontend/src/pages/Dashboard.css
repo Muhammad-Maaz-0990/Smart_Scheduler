@@ -532,7 +532,8 @@
 
 .table-custom tbody td {
   border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  /* Use dark text for readability on light card backgrounds */
+  color: #212529;
   padding: 1rem;
   vertical-align: middle;
 }

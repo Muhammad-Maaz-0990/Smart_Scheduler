@@ -14,8 +14,9 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Increase body size limits to handle base64 logos (max ~6.7MB for 5MB image)
+app.use(express.json({ limit: process.env.BODY_LIMIT || '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: process.env.BODY_LIMIT || '10mb' }));
 
 // Session middleware
 app.use(session({
@@ -49,6 +50,8 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/classes', require('./routes/classes'));
 app.use('/api/courses', require('./routes/courses'));
+app.use('/api/timeslots', require('./routes/timeslots'));
+app.use('/api/subscription', require('./routes/subscription'));
 
 // Health Check
 app.get('/api/health', (req, res) => {
