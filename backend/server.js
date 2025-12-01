@@ -6,8 +6,12 @@ const session = require('express-session');
 const passport = require('passport');
 
 dotenv.config();
+// Env configured via .env (Stripe, FRONTEND_URL, etc.)
 
 const app = express();
+// Load payments webhook early with raw body (before JSON parser)
+const paymentsModule = require('./routes/payments');
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), paymentsModule.webhookHandler);
 
 // Middleware
 app.use(cors({
@@ -51,7 +55,9 @@ app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/classes', require('./routes/classes'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/timeslots', require('./routes/timeslots'));
+app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/subscription', require('./routes/subscription'));
+app.use('/api/payments', paymentsModule.router);
 
 // Health Check
 app.get('/api/health', (req, res) => {

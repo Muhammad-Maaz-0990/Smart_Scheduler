@@ -1,49 +1,47 @@
-import React from 'react';
-import { Container, Row, Col, Card, Button, Navbar, Nav, Table } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Container, Row, Col, Card, Table, Button } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
+import Sidebar from '../../components/Sidebar';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../Dashboard.css';
 
 const TeacherDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [today, setToday] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await axios.get('/api/timeslots/my/today');
+        setToday(res.data || null);
+      } catch (e) {
+        setError(e?.response?.data?.message || 'Failed to load today\'s schedule');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const classesToday = today && today.startTime ? 1 : 0;
 
   return (
-    <div className="dashboard-page">
-      <Navbar className="dashboard-navbar glass-effect" variant="dark" expand="lg">
-        <Container fluid>
-          <Navbar.Brand className="navbar-brand-custom">
-            <span className="brand-icon">⚡</span> Smart Scheduler
-          </Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto align-items-center">
-              <Nav.Link className="nav-link-custom">
-                <span className="user-badge teacher-badge">Teacher</span>
-              </Nav.Link>
-              <Nav.Link className="nav-link-custom">
-                👤 {user?.userName}
-              </Nav.Link>
-              <Button variant="outline-light" size="sm" onClick={handleLogout} className="logout-btn">
-                Logout
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-
+    <>
+      <Sidebar activeMenu="dashboard" />
+      <div className="dashboard-page">
       <div className="bg-animation">
         <div className="floating-shape shape-1"></div>
         <div className="floating-shape shape-2"></div>
         <div className="floating-shape shape-3"></div>
       </div>
 
-      <Container className="dashboard-content py-5">
+      <Container fluid className="dashboard-content">
         <div className="welcome-section mb-5">
           <h1 className="dashboard-title">Teacher Dashboard 👨‍🏫</h1>
           <p className="dashboard-subtitle">Welcome, {user?.userName}!</p>
@@ -84,7 +82,7 @@ const TeacherDashboard = () => {
             <Card className="stat-card glass-effect">
               <Card.Body>
                 <div className="stat-icon">📅</div>
-                <h3 className="stat-value">0</h3>
+                <h3 className="stat-value">{classesToday}</h3>
                 <p className="stat-label">Classes Today</p>
               </Card.Body>
             </Card>
@@ -102,18 +100,27 @@ const TeacherDashboard = () => {
                   <Table variant="dark" className="schedule-table">
                     <thead>
                       <tr>
-                        <th>Time</th>
-                        <th>Subject</th>
-                        <th>Class</th>
-                        <th>Room</th>
+                        <th>Day</th>
+                        <th>Start</th>
+                        <th>End</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td colSpan="4" className="text-center text-white-50">
-                          No classes scheduled for today
-                        </td>
-                      </tr>
+                      {loading ? (
+                        <tr><td colSpan="3" className="text-center text-white-50">Loading…</td></tr>
+                      ) : today && today.startTime ? (
+                        <tr>
+                          <td>{today.days}</td>
+                          <td>{today.startTime}</td>
+                          <td>{today.endTime}</td>
+                        </tr>
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="text-center text-white-50">
+                            {error || 'No schedule found for today'}
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </Table>
                 </div>
@@ -126,28 +133,22 @@ const TeacherDashboard = () => {
               </Card.Header>
               <Card.Body>
                 <Row className="g-3">
-                  <Col md={6}>
-                    <Button variant="primary" className="action-btn btn-futuristic w-100">
-                      <span className="btn-icon">📚</span>
-                      My Courses
-                    </Button>
-                  </Col>
-                  <Col md={6}>
-                    <Button variant="primary" className="action-btn btn-futuristic w-100">
-                      <span className="btn-icon">➕</span>
-                      Create Assignment
-                    </Button>
-                  </Col>
-                  <Col md={6}>
-                    <Button variant="primary" className="action-btn btn-futuristic w-100">
-                      <span className="btn-icon">📊</span>
-                      Grade Students
-                    </Button>
-                  </Col>
-                  <Col md={6}>
-                    <Button variant="primary" className="action-btn btn-futuristic w-100">
+                  <Col md={4}>
+                    <Button variant="primary" className="action-btn btn-futuristic w-100" onClick={() => navigate('/teacher/timetables')}>
                       <span className="btn-icon">📅</span>
                       View Schedule
+                    </Button>
+                  </Col>
+                  <Col md={4}>
+                    <Button variant="primary" className="action-btn btn-futuristic w-100" onClick={() => navigate('/teacher/feedbacks')}>
+                      <span className="btn-icon">💬</span>
+                      Feedbacks
+                    </Button>
+                  </Col>
+                  <Col md={4}>
+                    <Button variant="primary" className="action-btn btn-futuristic w-100" onClick={() => navigate('/teacher/profile')}>
+                      <span className="btn-icon">👤</span>
+                      My Profile
                     </Button>
                   </Col>
                 </Row>
@@ -177,7 +178,8 @@ const TeacherDashboard = () => {
           </Col>
         </Row>
       </Container>
-    </div>
+      </div>
+    </>
   );
 };
 

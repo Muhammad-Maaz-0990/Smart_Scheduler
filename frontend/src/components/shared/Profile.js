@@ -8,6 +8,9 @@ const Profile = () => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [paying, setPaying] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     const load = async () => {
@@ -19,7 +22,7 @@ const Profile = () => {
         if (user.instituteID) {
           const instRes = await axios.get(`/api/auth/institute/${encodeURIComponent(user.instituteID)}`);
           setInstitute(instRes.data);
-          // Fetch subscription/payment status
+          // Fetch subscription/payment status for all roles
           const statusRes = await axios.get(`/api/subscription/status/${encodeURIComponent(user.instituteID)}`);
           setStatus(statusRes.data);
         }
@@ -30,6 +33,76 @@ const Profile = () => {
       }
     };
     load();
+  }, [user]);
+
+  // If redirected back from Stripe Checkout success, confirm and record payment
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const checkout = url.searchParams.get('checkout');
+    const sessionId = url.searchParams.get('session_id');
+    if (checkout === 'success' && sessionId) {
+      const confirm = async () => {
+        try {
+          setPaying(true);
+          setNotice('Finalizing payment...');
+          const res = await axios.get(`/api/payments/confirm`, { params: { session_id: sessionId } });
+          if (res.data?.ok) {
+            setNotice('Payment recorded successfully. Refreshing status...');
+            // Refresh status
+            if (user?.instituteID) {
+              const statusRes = await axios.get(`/api/subscription/status/${encodeURIComponent(user.instituteID)}`);
+              setStatus(statusRes.data);
+              // Refresh payment history too
+              try {
+                const hRes = await axios.get(`/api/payments/history/${encodeURIComponent(user.instituteID)}`);
+                setHistory(hRes.data?.items || []);
+              } catch {}
+            }
+          }
+        } catch (err) {
+          setError(err?.response?.data?.message || 'Failed to confirm payment');
+        } finally {
+          setPaying(false);
+          // Clean URL params
+          url.searchParams.delete('checkout');
+          url.searchParams.delete('session_id');
+          window.history.replaceState({}, '', url.pathname + url.search);
+        }
+      };
+      confirm();
+    }
+  }, [user]);
+
+  const startPayment = async (plan) => {
+    try {
+      setPaying(true);
+      setNotice('Redirecting to Stripe Checkout...');
+      const res = await axios.post('/api/payments/checkout', { plan });
+      const url = res.data?.url;
+      if (url) {
+        window.location.href = url;
+      } else {
+        setError('Failed to start checkout');
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to begin payment');
+    } finally {
+      // don't clear paying here because we redirect on success
+    }
+  };
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        if (user?.instituteID && (user?.designation || '').toLowerCase() === 'admin') {
+          const hRes = await axios.get(`/api/payments/history/${encodeURIComponent(user.instituteID)}`);
+          setHistory(hRes.data?.items || []);
+        }
+      } catch (e) {
+        // silently ignore history errors
+      }
+    };
+    loadHistory();
   }, [user]);
 
   const renderPersonal = () => {
@@ -78,6 +151,8 @@ const Profile = () => {
   };
 
   const renderPayment = () => {
+    // Only Admins can view Billing section
+    if ((user?.designation || '').toLowerCase() !== 'admin') return null;
     if (!status) return null;
     const showBtn = !!status.showPaymentButton;
     const note = status.subscriptionType === 'Trial'
@@ -101,17 +176,40 @@ const Profile = () => {
               Last Payment: {new Date(status.lastPayment.paymentDate).toLocaleDateString()} • Amount: {status.lastPayment.amount}
             </div>
           )}
+          {notice && (
+            <div className="alert alert-info" style={{ marginBottom: 8 }}>{notice}</div>
+          )}
+          {history && history.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>Recent Payments</div>
+              <ul style={{ margin: 0 }}>
+                {history.slice(0, 5).map((p) => (
+                  <li key={p.paymentID} style={{ color: '#555' }}>
+                    {new Date(p.paymentDate).toLocaleDateString()} • PaymentID: {p.paymentID} • Amount: {p.amount}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {showBtn && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
-                // Placeholder: hook your payment flow here
-                alert('Redirecting to payment...');
-              }}
-            >
-              Pay Now
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                className="btn btn-outline-primary"
+                disabled={paying}
+                onClick={() => startPayment('Monthly')}
+              >
+                Pay Monthly (PKR 100)
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={paying}
+                onClick={() => startPayment('Yearly')}
+              >
+                Pay Yearly (PKR 1200)
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -125,6 +223,12 @@ const Profile = () => {
     <div style={{ maxWidth: 840, margin: '24px auto', padding: '0 16px' }}>
       {renderPersonal()}
       {renderInstitute()}
+      {/* Non-admin expired notice */}
+      {status && status.isExpired && (user?.designation || '').toLowerCase() !== 'admin' && (
+        <div className="alert alert-warning" role="alert" style={{ marginBottom: 16 }}>
+          Your institute subscription has expired. Please contact your Admin to renew.
+        </div>
+      )}
       {renderPayment()}
     </div>
   );

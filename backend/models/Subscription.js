@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const instituteSubscriptionSchema = new mongoose.Schema({
   paymentID: {
-    type: Number,
+    type: String,
     required: true,
     unique: true
   },

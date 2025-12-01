@@ -16,7 +16,7 @@ const feedBackMessagesSchema = new mongoose.Schema({
   },
   sender: {
     type: String,
-    enum: ['Admin', 'Yes', 'No'],
+    enum: ['Admin', 'User'],
     required: true
   },
   feedBackID: {

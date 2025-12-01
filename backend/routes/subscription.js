@@ -32,11 +32,20 @@ router.get('/status/:instituteID', protect, async (req, res) => {
     const subscriptionType = institute.subscription || 'Trial';
 
     if (subscriptionType === 'Trial') {
+      const trialDays = Number(process.env.TRIAL_DAYS || 14);
+      const created = institute.created_at || institute.createdAt || institute.createdAt || new Date();
+      const start = new Date(created);
+      const end = new Date(start.getTime() + trialDays * 24 * 60 * 60 * 1000);
+      const nowMs = Date.now();
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const daysLeft = Math.ceil((end.getTime() - nowMs) / msPerDay);
+      const isExpired = nowMs > end.getTime();
       return res.json({
         subscriptionType,
-        currentPeriod: null,
+        currentPeriod: { type: 'Trial', label: `${trialDays}-day Trial`, start, end },
         hasPaymentThisPeriod: false,
-        daysLeft: null,
+        daysLeft,
+        isExpired,
         showPaymentButton: true,
         reason: 'trial'
       });
@@ -54,6 +63,7 @@ router.get('/status/:instituteID', protect, async (req, res) => {
     const hasPaymentThisPeriod = !!payment;
     const msPerDay = 24 * 60 * 60 * 1000;
     const daysLeft = Math.ceil((end.getTime() - now.getTime()) / msPerDay);
+    const isExpired = (!hasPaymentThisPeriod && now.getTime() > end.getTime());
     const showPaymentButton = !hasPaymentThisPeriod || daysLeft <= 2;
 
     return res.json({
@@ -66,6 +76,7 @@ router.get('/status/:instituteID', protect, async (req, res) => {
       },
       hasPaymentThisPeriod,
       daysLeft,
+      isExpired,
       showPaymentButton,
       lastPayment: payment ? {
         paymentID: payment.paymentID,

@@ -43,6 +43,37 @@ router.get('/institute', protect, authorizeRoles('Admin'), async (req, res) => {
   }
 });
 
+// GET today's timeslot for the current authenticated user's institute (Admin/Teacher/Student)
+router.get('/my/today', protect, async (req, res) => {
+  try {
+    const me = await Users.findById(req.user.id).select('instituteID');
+    if (!me || !me.instituteID) return res.status(404).json({ message: 'User or institute not found' });
+
+    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const today = dayNames[new Date().getDay()];
+    const ts = await TimeSlot.findOne({ instituteID: me.instituteID, days: today });
+    if (!ts) return res.json({ days: today, startTime: null, endTime: null, instituteID: me.instituteID });
+    res.json(ts);
+  } catch (err) {
+    console.error('GET my today timeslot error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET week timeslots for the current authenticated user's institute
+router.get('/my/week', protect, async (req, res) => {
+  try {
+    const me = await Users.findById(req.user.id).select('instituteID');
+    if (!me || !me.instituteID) return res.status(404).json({ message: 'User or institute not found' });
+    const list = await TimeSlot.find({ instituteID: me.instituteID }).sort({ timeSlotID: 1 });
+    const byDay = list.sort((a, b) => ALLOWED_DAYS.indexOf(a.days) - ALLOWED_DAYS.indexOf(b.days));
+    res.json(byDay);
+  } catch (err) {
+    console.error('GET my week timeslots error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // CREATE timeslot for a day
 router.post('/',
   protect,

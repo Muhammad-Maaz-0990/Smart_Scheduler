@@ -50,7 +50,7 @@ const Sidebar = ({ activeMenu }) => {
   }, [isVisible]);
 
   const handleMenuClick = (menu) => {
-    const basePath = role === 'Admin' ? '/admin' : '/owner';
+    const basePath = (role === 'Admin') ? '/admin' : (role === 'Student') ? '/student' : (role === 'Teacher') ? '/teacher' : '/owner';
     if (menu === 'dashboard') {
       navigate(basePath);
     } else {
@@ -83,7 +83,19 @@ const Sidebar = ({ activeMenu }) => {
     { icon: '🔧', label: 'Profile', value: 'profile' }
   ];
 
-  const menuItems = role === 'Admin' ? adminMenu : ownerMenu;
+  const studentMenu = [
+    { icon: '📅', label: 'TimeTables', value: 'timetables' },
+    { icon: '💬', label: 'Feedbacks', value: 'feedbacks' },
+    { icon: '🔧', label: 'Profile', value: 'profile' }
+  ];
+
+  const teacherMenu = [
+    { icon: '📅', label: 'TimeTables', value: 'timetables' },
+    { icon: '💬', label: 'Feedbacks', value: 'feedbacks' },
+    { icon: '🔧', label: 'Profile', value: 'profile' }
+  ];
+
+  const menuItems = role === 'Admin' ? adminMenu : role === 'Student' ? studentMenu : role === 'Teacher' ? teacherMenu : ownerMenu;
 
   return (
     <>

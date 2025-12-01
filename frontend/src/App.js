@@ -11,9 +11,16 @@ import Classes from './pages/Admin/Classes';
 import Courses from './pages/Admin/Courses';
 import TimeSlots from './pages/Admin/TimeSlots';
 import Users from './pages/Admin/Users';
+import AdminFeedbacksPage from './pages/Admin/Feedbacks';
 import AdminProfilePage from './pages/Admin/Profile';
 import StudentDashboard from './pages/Student/StudentDashboard';
 import TeacherDashboard from './pages/Teacher/TeacherDashboard';
+import TeacherFeedbacksPage from './pages/Teacher/Feedbacks';
+import TeacherProfilePage from './pages/Teacher/Profile';
+import TeacherTimeTablesPage from './pages/Teacher/TimeTables';
+import StudentFeedbacksPage from './pages/Student/Feedbacks';
+import StudentProfilePage from './pages/Student/Profile';
+import StudentTimeTablesPage from './pages/Student/TimeTables';
 import './App.css';
 
 function App() {
@@ -94,11 +101,20 @@ function App() {
                 </PrivateRoute>
               } 
             />
+
+            <Route 
+              path="/admin/feedbacks" 
+              element={
+                <PrivateRoute allowedRoles={['Admin']}>
+                  <AdminFeedbacksPage />
+                </PrivateRoute>
+              } 
+            />
             
             <Route 
               path="/admin/profile" 
               element={
-                <PrivateRoute allowedRoles={['Admin']}>
+                <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
                   <AdminProfilePage />
                 </PrivateRoute>
               } 
@@ -112,12 +128,60 @@ function App() {
                 </PrivateRoute>
               } 
             />
+            <Route 
+              path="/student/feedbacks" 
+              element={
+                <PrivateRoute allowedRoles={['Student']}>
+                  <StudentFeedbacksPage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/student/profile" 
+              element={
+                <PrivateRoute allowedRoles={['Student']} allowWhenExpired={true}>
+                  <StudentProfilePage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/student/timetables" 
+              element={
+                <PrivateRoute allowedRoles={['Student']}>
+                  <StudentTimeTablesPage />
+                </PrivateRoute>
+              } 
+            />
             
             <Route 
               path="/teacher" 
               element={
                 <PrivateRoute allowedRoles={['Teacher']}>
                   <TeacherDashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/feedbacks" 
+              element={
+                <PrivateRoute allowedRoles={['Teacher']}>
+                  <TeacherFeedbacksPage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/profile" 
+              element={
+                <PrivateRoute allowedRoles={['Teacher']} allowWhenExpired={true}>
+                  <TeacherProfilePage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/teacher/timetables" 
+              element={
+                <PrivateRoute allowedRoles={['Teacher']}>
+                  <TeacherTimeTablesPage />
                 </PrivateRoute>
               } 
             />
