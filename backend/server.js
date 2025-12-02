@@ -57,6 +57,7 @@ app.use('/api/courses', require('./routes/courses'));
 app.use('/api/timeslots', require('./routes/timeslots'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/subscription', require('./routes/subscription'));
+app.use('/api/timetables-gen', require('./routes/timetables_gen'));
 app.use('/api/payments', paymentsModule.router);
 
 // Health Check

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
 function GenerateTimetable() {
+  const navigate = useNavigate();
   const { instituteObjectId } = useAuth();
   const [step, setStep] = useState(1);
   const [rooms, setRooms] = useState([]);
@@ -16,6 +18,8 @@ function GenerateTimetable() {
   const [courseTeacherMap, setCourseTeacherMap] = useState({}); // Key: "classId_courseId", Value: teacherId
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [candidates, setCandidates] = useState([]); // array of { header, details }
+  const [selectedCandidateIndex, setSelectedCandidateIndex] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -171,13 +175,126 @@ function GenerateTimetable() {
   };
 
   const handleGenerate = () => {
-    setLoading(true);
-    // TODO: Call backend API to generate timetable
-    setTimeout(() => {
-      setLoading(false);
-      alert('Timetable generation logic will be implemented here');
-      // Navigate back to timetable view
-    }, 1500);
+    const run = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const token = localStorage.getItem('token');
+
+        // Build payload expected by backend generator
+        const allClasses = [];
+        const allCourses = [];
+        const allInstructors = [];
+        const allRoomNumbers = [];
+
+        selectedRooms.forEach((roomId) => {
+          const roomObj = rooms.find(r => r._id === roomId);
+          const clsId = roomClassMap[roomId];
+          const clsObj = classes.find(c => c._id === clsId);
+          const courseIds = (classCoursesMap[clsId] || []);
+          
+          const className = clsObj ? `${clsObj.degree} ${clsObj.year}-${clsObj.section}` : 'Unknown';
+          if (!allClasses.includes(className)) allClasses.push(className);
+          if (roomObj?.roomNumber && !allRoomNumbers.includes(roomObj.roomNumber)) {
+            allRoomNumbers.push(roomObj.roomNumber);
+          }
+
+          courseIds.forEach(cid => {
+            const cObj = courses.find(c => c._id === cid);
+            const teacherId = courseTeacherMap[`${clsId}_${cid}`];
+            const tObj = teachers.find(t => t._id === teacherId);
+            
+            const courseType = /lab/i.test(cObj?.courseTitle || '') ? 'Lab' : 'Lecture';
+            const courseName = cObj?.courseTitle || 'Course';
+            const creditHours = courseType === 'Lab' ? 3 : (cObj?.creditHours || 3);
+            
+            const courseEntry = { name: courseName, type: courseType, creditHours };
+            if (!allCourses.find(c => c.name === courseName && c.type === courseType)) {
+              allCourses.push(courseEntry);
+            }
+            
+            const instructorName = tObj?.userName || 'Instructor';
+            if (!allInstructors.includes(instructorName)) allInstructors.push(instructorName);
+          });
+        });
+
+        const currentYear = new Date().getFullYear();
+        const body = {
+          instituteID: instituteObjectId,
+          session: `${currentYear}-${currentYear + 1}`,
+          year: currentYear,
+          classes: allClasses,
+          courses: allCourses,
+          instructors: allInstructors,
+          rooms: allRoomNumbers,
+          timeslots: [
+            { day: 'Mon', start: '08:00', end: '09:00' },
+            { day: 'Mon', start: '09:00', end: '10:00' },
+            { day: 'Mon', start: '10:00', end: '11:00' },
+            { day: 'Mon', start: '11:00', end: '12:00' },
+            { day: 'Mon', start: '13:00', end: '14:00' },
+            { day: 'Mon', start: '14:00', end: '15:00' },
+            { day: 'Mon', start: '15:00', end: '16:00' },
+            { day: 'Tue', start: '08:00', end: '09:00' },
+            { day: 'Tue', start: '09:00', end: '10:00' },
+            { day: 'Tue', start: '10:00', end: '11:00' },
+            { day: 'Tue', start: '11:00', end: '12:00' },
+            { day: 'Tue', start: '13:00', end: '14:00' },
+            { day: 'Tue', start: '14:00', end: '15:00' },
+            { day: 'Tue', start: '15:00', end: '16:00' },
+            { day: 'Wed', start: '08:00', end: '09:00' },
+            { day: 'Wed', start: '09:00', end: '10:00' },
+            { day: 'Wed', start: '10:00', end: '11:00' },
+            { day: 'Wed', start: '11:00', end: '12:00' },
+            { day: 'Wed', start: '13:00', end: '14:00' },
+            { day: 'Wed', start: '14:00', end: '15:00' },
+            { day: 'Wed', start: '15:00', end: '16:00' },
+            { day: 'Thu', start: '08:00', end: '09:00' },
+            { day: 'Thu', start: '09:00', end: '10:00' },
+            { day: 'Thu', start: '10:00', end: '11:00' },
+            { day: 'Thu', start: '11:00', end: '12:00' },
+            { day: 'Thu', start: '13:00', end: '14:00' },
+            { day: 'Thu', start: '14:00', end: '15:00' },
+            { day: 'Thu', start: '15:00', end: '16:00' },
+            { day: 'Fri', start: '08:00', end: '09:00' },
+            { day: 'Fri', start: '09:00', end: '10:00' },
+            { day: 'Fri', start: '10:00', end: '11:00' },
+            { day: 'Fri', start: '11:00', end: '12:00' },
+            { day: 'Fri', start: '13:00', end: '14:00' },
+            { day: 'Fri', start: '14:00', end: '15:00' },
+            { day: 'Fri', start: '15:00', end: '16:00' },
+          ],
+          breaks: { mode: 'same', same: { start: '12:00', end: '13:00' } },
+        };
+
+        const res = await fetch('http://localhost:5000/api/timetables-gen/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || 'Failed to generate timetables');
+        }
+        const data = await res.json();
+        const list = Array.isArray(data?.candidates) ? data.candidates : (Array.isArray(data) ? data : []);
+        if (!list.length) {
+          throw new Error('No candidates returned');
+        }
+        setCandidates(list);
+        setSelectedCandidateIndex(0);
+        setStep(6); // show candidates selection step
+      } catch (e) {
+        console.error(e);
+        setError(e.message || 'Generation failed');
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
   };
 
   const assignedClasses = Object.values(roomClassMap);
@@ -216,6 +333,7 @@ function GenerateTimetable() {
                 { num: 3, label: 'Assign Courses' },
                 { num: 4, label: 'Assign Teachers' },
                 { num: 5, label: 'Review & Generate' },
+                { num: 6, label: 'Select Candidate' },
               ].map((s, idx) => (
                 <React.Fragment key={s.num}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -241,7 +359,7 @@ function GenerateTimetable() {
                       </div>
                     </div>
                   </div>
-                  {idx < 4 && (
+                  {idx < 5 && (
                     <div
                       style={{
                         flex: 1,
@@ -623,6 +741,59 @@ function GenerateTimetable() {
                   </div>
                 </div>
               )}
+
+              {/* Step 6: Select Candidate */}
+              {step === 6 && (
+                <div>
+                  <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
+                    Step 6: Select a Timetable Candidate
+                  </h2>
+                  <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
+                    Review the generated candidates and choose one to save.
+                  </p>
+                  {candidates.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                      No candidates available. Go back and try again.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+                      {candidates.map((cand, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedCandidateIndex(idx)}
+                          style={{
+                            border: selectedCandidateIndex === idx ? '3px solid #10b981' : '2px solid #e5e7eb',
+                            borderRadius: '12px',
+                            padding: '16px',
+                            background: selectedCandidateIndex === idx ? '#ecfeff' : '#fff',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <div style={{ fontWeight: 700, color: '#1f2937' }}>Candidate {idx + 1}</div>
+                            {selectedCandidateIndex === idx && <div style={{ color: '#10b981' }}>✓ Selected</div>}
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>
+                            {cand?.header?.session || 'Session'} • {cand?.header?.year || 'Year'}
+                          </div>
+                          <div style={{ maxHeight: '220px', overflowY: 'auto', borderTop: '1px solid #e5e7eb', paddingTop: '8px' }}>
+                            {(cand?.details || []).slice(0, 12).map((d, i) => (
+                              <div key={i} style={{ fontSize: '12px', color: '#374151', marginBottom: '6px' }}>
+                                {d.day} {d.time} • {d.class} • {d.course} • {d.roomNumber}
+                              </div>
+                            ))}
+                            {(cand?.details || []).length > 12 && (
+                              <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                +{(cand?.details || []).length - 12} more rows
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               </>
               )}
             </div>
@@ -646,7 +817,9 @@ function GenerateTimetable() {
               >
                 Back
               </button>
-              {step < 5 ? (
+
+              {/* Steps 1-4: Next */}
+              {step >= 1 && step <= 4 && (
                 <button
                   onClick={handleNext}
                   style={{
@@ -662,7 +835,10 @@ function GenerateTimetable() {
                 >
                   Next
                 </button>
-              ) : (
+              )}
+
+              {/* Step 5: Generate */}
+              {step === 5 && (
                 <button
                   onClick={handleGenerate}
                   disabled={loading}
@@ -679,6 +855,64 @@ function GenerateTimetable() {
                   }}
                 >
                   {loading ? 'Generating...' : 'Generate Timetable'}
+                </button>
+              )}
+
+              {/* Step 6: Save */}
+              {step === 6 && (
+                <button
+                  onClick={async () => {
+                    try {
+                      if (selectedCandidateIndex == null) {
+                        alert('Please select a candidate first');
+                        return;
+                      }
+                      setLoading(true);
+                      setError('');
+                      const token = localStorage.getItem('token');
+                      const chosen = candidates[selectedCandidateIndex];
+                      const res = await fetch('http://localhost:5000/api/timetables-gen/save', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                        },
+                        body: JSON.stringify({
+                          instituteID: instituteObjectId,
+                          // include session/year for compatibility with older backend versions
+                          session: chosen.header?.session,
+                          year: chosen.header?.year,
+                          header: chosen.header,
+                          details: chosen.details,
+                        })
+                      });
+                      if (!res.ok) {
+                        const txt = await res.text();
+                        throw new Error(txt || 'Failed to save timetable');
+                      }
+                      alert('Timetable saved successfully');
+                      navigate('/admin/timetables');
+                    } catch (e) {
+                      console.error(e);
+                      setError(e.message || 'Save failed');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading || selectedCandidateIndex == null}
+                  style={{
+                    padding: '12px 32px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: '#10b981',
+                    color: '#fff',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    opacity: loading ? 0.6 : 1,
+                  }}
+                >
+                  {loading ? 'Saving...' : 'Save Selected'}
                 </button>
               )}
             </div>

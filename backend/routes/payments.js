@@ -3,6 +3,17 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const InstituteSubscription = require('../models/Subscription');
 const InstituteInformation = require('../models/InstituteInformation');
+const Users = require('../models/Users');
+async function resolveInstituteIDFromUser(user) {
+  if (user?.instituteID) return user.instituteID;
+  if (!user?.id) return null;
+  try {
+    const u = await Users.findById(user.id).select('instituteID');
+    return u?.instituteID || null;
+  } catch {
+    return null;
+  }
+}
 const Stripe = require('stripe');
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
@@ -10,6 +21,7 @@ const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const CURRENCY = (process.env.STRIPE_CURRENCY || 'pkr').toLowerCase();
 
 function getAmountForPlan(plan) {
   // PKR values; Stripe amount is in paisa (x100)
@@ -49,7 +61,7 @@ router.post('/checkout', protect, async (req, res) => {
     if (role !== 'admin') return res.status(403).json({ message: 'Only admin can initiate payments' });
 
     const { plan } = req.body || {};
-    const instituteID = user.instituteID;
+    const instituteID = await resolveInstituteIDFromUser(user);
 
     if (!instituteID) return res.status(400).json({ message: 'User has no institute' });
     if (!plan || !['Monthly', 'Yearly'].includes(plan)) {
@@ -58,29 +70,34 @@ router.post('/checkout', protect, async (req, res) => {
 
     const amount = getAmountForPlan(plan);
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'pkr',
-            product_data: {
-              name: `Smart Scheduler ${plan} Subscription`,
-              description: `${plan} plan for institute ${instituteID}`,
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        line_items: [
+          {
+            price_data: {
+              currency: CURRENCY,
+              product_data: {
+                name: `Smart Scheduler ${plan} Subscription`,
+                description: `${plan} plan for institute ${instituteID}`,
+              },
+              unit_amount: amount,
             },
-            unit_amount: amount,
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        metadata: {
+          instituteID,
+          plan,
         },
-      ],
-      metadata: {
-        instituteID,
-        plan,
-      },
-      success_url: `${FRONTEND_URL}/admin/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${FRONTEND_URL}/admin/profile?checkout=canceled`,
-    });
+        success_url: `${FRONTEND_URL}/admin/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${FRONTEND_URL}/admin/profile?checkout=canceled`,
+      });
+    } catch (stripeErr) {
+      console.error('Stripe create session error:', stripeErr?.message || stripeErr);
+      return res.status(500).json({ message: stripeErr?.message || 'Stripe error creating session' });
+    }
 
     return res.json({ url: session.url });
   } catch (err) {
@@ -147,7 +164,8 @@ router.get('/history/:instituteID', protect, async (req, res) => {
       return res.status(403).json({ message: 'Only admin can view payment history' });
     }
     const { instituteID } = req.params;
-    if (!instituteID || instituteID !== req.user?.instituteID) {
+    const resolvedInstituteID = await resolveInstituteIDFromUser(req.user);
+    if (!instituteID || instituteID !== resolvedInstituteID) {
       console.log('Institute mismatch - Requested:', instituteID, 'User institute:', req.user?.instituteID);
       return res.status(403).json({ message: 'Institute mismatch' });
     }
