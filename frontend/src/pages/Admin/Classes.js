@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Alert } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
 const Classes = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { instituteObjectId } = useAuth();
   const [classes, setClasses] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('add');
@@ -22,12 +20,19 @@ const Classes = () => {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    fetchClasses();
-  }, []);
+    if (instituteObjectId) {
+      fetchClasses();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instituteObjectId]);
 
   const fetchClasses = async () => {
+    if (!instituteObjectId) {
+      setError('Institute ID not found');
+      return;
+    }
     try {
-      const response = await fetch(`http://localhost:5000/api/classes/${user?.instituteID}`);
+      const response = await fetch(`http://localhost:5000/api/classes/${instituteObjectId}`);
       if (response.ok) {
         const data = await response.json();
         setClasses(data);
@@ -72,7 +77,7 @@ const Classes = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...currentClass,
-          instituteID: user?.instituteID
+          instituteID: instituteObjectId
         })
       });
 

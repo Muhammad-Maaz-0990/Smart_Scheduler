@@ -7,7 +7,7 @@ import '../Dashboard.css';
 const DAY_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 const TimeSlots = () => {
-  const { user } = useAuth();
+  const { instituteObjectId } = useAuth();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [list, setList] = useState([]);
@@ -22,6 +22,7 @@ const TimeSlots = () => {
   };
 
   const fetchList = async () => {
+    if (!instituteObjectId) return;
     setLoading(true);
     setError('');
     try {
@@ -36,8 +37,12 @@ const TimeSlots = () => {
     }
   };
 
-  useEffect(() => { fetchList(); // eslint-disable-next-line
-  }, [user?.id]);
+  useEffect(() => { 
+    if (instituteObjectId) {
+      fetchList();
+    }
+  // eslint-disable-next-line
+  }, [instituteObjectId]);
 
   const usedDays = useMemo(() => new Set(list.map(x => x.days)), [list]);
   const availableDays = DAY_ORDER.filter(d => !usedDays.has(d) || (mode === 'edit' && d === current.days));

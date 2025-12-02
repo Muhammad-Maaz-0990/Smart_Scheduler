@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import '../Dashboard.css';
 
 const Users = () => {
-  const { user } = useAuth();
+  const { user, instituteObjectId } = useAuth();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [users, setUsers] = useState([]);
@@ -30,6 +30,7 @@ const Users = () => {
   };
 
   const fetchUsers = async () => {
+    if (!instituteObjectId) return;
     setLoading(true);
     setError('');
     try {
@@ -56,9 +57,11 @@ const Users = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
+    if (instituteObjectId) {
+      fetchUsers();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [instituteObjectId]);
 
   const openAdd = () => {
     setMode('add');

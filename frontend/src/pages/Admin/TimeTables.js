@@ -3,8 +3,7 @@ import TimeTable from '../../components/shared/TimeTable';
 import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
-const TeacherTimeTablesPage = () => {
-
+function AdminTimeTables() {
   return (
     <>
       <Sidebar activeMenu="timetables" />
@@ -15,12 +14,11 @@ const TeacherTimeTablesPage = () => {
           <div className="floating-shape shape-3"></div>
         </div>
         <div className="dashboard-content">
-          <h1 className="dashboard-title mb-4">Weekly Time Table</h1>
-          <TimeTable />
+          <TimeTable isAdmin />
         </div>
       </div>
     </>
   );
-};
+}
 
-export default TeacherTimeTablesPage;
+export default AdminTimeTables;

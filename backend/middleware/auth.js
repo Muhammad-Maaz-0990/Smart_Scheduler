@@ -15,7 +15,8 @@ const protect = async (req, res, next) => {
       req.user = {
         id: decoded.id,
         designation: decoded.designation,
-        userName: decoded.userName
+        userName: decoded.userName,
+        instituteID: decoded.instituteID
       };
 
       next();

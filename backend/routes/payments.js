@@ -37,11 +37,15 @@ async function recordPayment({ instituteID, plan, paymentIntentId, amount }) {
 // Create a Stripe Checkout Session and return the URL
 router.post('/checkout', protect, async (req, res) => {
   try {
-    if (!stripe) return res.status(500).json({ message: 'Stripe is not configured' });
+    if (!stripe) {
+      console.error('Stripe configuration missing. Please set STRIPE_SECRET_KEY in .env file');
+      return res.status(500).json({ message: 'Stripe is not configured. Please contact administrator.' });
+    }
 
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
     const role = (user.designation || '').toLowerCase();
+    console.log('Payment checkout attempt by:', user.userName, 'Role:', user.designation);
     if (role !== 'admin') return res.status(403).json({ message: 'Only admin can initiate payments' });
 
     const { plan } = req.body || {};
@@ -89,11 +93,15 @@ router.post('/checkout', protect, async (req, res) => {
 // Confirm a session after returning from Checkout and record payment
 router.get('/confirm', protect, async (req, res) => {
   try {
-    if (!stripe) return res.status(500).json({ message: 'Stripe is not configured' });
+    if (!stripe) {
+      console.error('Stripe configuration missing. Please set STRIPE_SECRET_KEY in .env file');
+      return res.status(500).json({ message: 'Stripe is not configured' });
+    }
 
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
     const role = (user.designation || '').toLowerCase();
+    console.log('Payment confirmation attempt by:', user.userName, 'Role:', user.designation);
     if (role !== 'admin') return res.status(403).json({ message: 'Only admin can confirm payments' });
 
     const { session_id } = req.query;
@@ -133,9 +141,14 @@ router.get('/confirm', protect, async (req, res) => {
 router.get('/history/:instituteID', protect, async (req, res) => {
   try {
     const role = (req.user?.designation || '').toLowerCase();
-    if (role !== 'admin') return res.status(403).json({ message: 'Only admin can view payment history' });
+    console.log('Payment history request by:', req.user?.userName, 'Role:', req.user?.designation, 'Institute:', req.user?.instituteID);
+    if (role !== 'admin') {
+      console.log('Access denied - user is not admin');
+      return res.status(403).json({ message: 'Only admin can view payment history' });
+    }
     const { instituteID } = req.params;
     if (!instituteID || instituteID !== req.user?.instituteID) {
+      console.log('Institute mismatch - Requested:', instituteID, 'User institute:', req.user?.instituteID);
       return res.status(403).json({ message: 'Institute mismatch' });
     }
     const items = await InstituteSubscription.find({ instituteID }).sort({ paymentDate: -1 }).limit(20).lean();

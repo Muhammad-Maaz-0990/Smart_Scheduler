@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [instituteObjectId, setInstituteObjectId] = useState(null);
 
   // Configure axios defaults
   useEffect(() => {
@@ -53,6 +54,86 @@ export const AuthProvider = ({ children }) => {
 
     verifyToken();
   }, [token]);
+
+  // Resolve institute ObjectId once when user is set
+  useEffect(() => {
+    const resolveInstitute = async () => {
+      if (!user?.instituteID) {
+        setInstituteObjectId(null);
+        return;
+      }
+
+      const instituteRef = user.instituteID;
+      const rawParam = typeof instituteRef === 'object' && instituteRef !== null ? instituteRef._id : instituteRef;
+      
+      if (!rawParam) {
+        setInstituteObjectId(null);
+        return;
+      }
+
+      const looksLikeObjectId = /^[a-fA-F0-9]{24}$/.test(String(rawParam));
+      if (looksLikeObjectId) {
+        setInstituteObjectId(rawParam);
+      } else {
+        try {
+          const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(rawParam)}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          });
+          if (response.ok) {
+            const inst = await response.json();
+            setInstituteObjectId(inst?._id || null);
+          } else {
+            setInstituteObjectId(null);
+          }
+        } catch (err) {
+          console.error('Failed to resolve institute:', err);
+          setInstituteObjectId(null);
+        }
+      }
+    };
+
+    resolveInstitute();
+  }, [user, token]);
+
+  // Resolve institute ObjectId once when user is set
+  useEffect(() => {
+    const resolveInstitute = async () => {
+      if (!user?.instituteID) {
+        setInstituteObjectId(null);
+        return;
+      }
+
+      const instituteRef = user.instituteID;
+      const rawParam = typeof instituteRef === 'object' && instituteRef !== null ? instituteRef._id : instituteRef;
+      
+      if (!rawParam) {
+        setInstituteObjectId(null);
+        return;
+      }
+
+      const looksLikeObjectId = /^[a-fA-F0-9]{24}$/.test(String(rawParam));
+      if (looksLikeObjectId) {
+        setInstituteObjectId(rawParam);
+      } else {
+        try {
+          const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(rawParam)}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          });
+          if (response.ok) {
+            const inst = await response.json();
+            setInstituteObjectId(inst?._id || null);
+          } else {
+            setInstituteObjectId(null);
+          }
+        } catch (err) {
+          console.error('Failed to resolve institute:', err);
+          setInstituteObjectId(null);
+        }
+      }
+    };
+
+    resolveInstitute();
+  }, [user, token]);
 
   const login = async (email, password) => {
     try {
@@ -93,6 +174,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    setInstituteObjectId(null);
   };
 
   // Login directly with an existing token and optional user payload
@@ -114,6 +196,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     loginWithToken,
     isAuthenticated: !!user,
+    instituteObjectId,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

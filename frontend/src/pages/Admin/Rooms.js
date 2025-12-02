@@ -5,9 +5,8 @@ import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
 const Rooms = () => {
-  const { user } = useAuth();
+  const { instituteObjectId } = useAuth();
   const [rooms, setRooms] = useState([]);
-  const [instituteObjectId, setInstituteObjectId] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
   const [currentRoom, setCurrentRoom] = useState({
@@ -18,45 +17,21 @@ const Rooms = () => {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    fetchRooms();
+    if (instituteObjectId) {
+      fetchRooms();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [instituteObjectId]);
 
   const fetchRooms = async () => {
+    if (!instituteObjectId) {
+      setError('Institute ID not found');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
-      const instituteRef = user?.instituteID;
-      const rawParam = typeof instituteRef === 'object' && instituteRef !== null ? instituteRef._id : instituteRef;
-
-      if (!rawParam) {
-        setError('Institute ID not found');
-        return;
-      }
-      
-      // Resolve to ObjectId if a business key was provided
-      let resolvedInstituteId = rawParam;
-      const looksLikeObjectId = /^[a-fA-F0-9]{24}$/.test(String(rawParam));
-      if (!looksLikeObjectId) {
-        const instResp = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(rawParam)}`, {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
-        if (!instResp.ok) {
-          const errData = await instResp.json().catch(() => ({}));
-          setError(errData.message || 'Failed to resolve institute');
-          return;
-        }
-        const inst = await instResp.json();
-        resolvedInstituteId = inst?._id;
-        if (!resolvedInstituteId) {
-          setError('Institute not found');
-          return;
-        }
-        setInstituteObjectId(resolvedInstituteId);
-      } else {
-        setInstituteObjectId(resolvedInstituteId);
-      }
-
-      const response = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(resolvedInstituteId)}`, {
+      const response = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(instituteObjectId)}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (response.ok) {
@@ -102,12 +77,8 @@ const Rooms = () => {
       const method = modalMode === 'add' ? 'POST' : 'PUT';
       
       const token = localStorage.getItem('token');
-      const resolvedInstituteId = instituteObjectId || (() => {
-        const ref = user?.instituteID;
-        return (typeof ref === 'object' && ref !== null) ? ref._id : ref;
-      })();
 
-      if (!resolvedInstituteId) {
+      if (!instituteObjectId) {
         setError('Institute ID not resolved');
         return;
       }
@@ -120,7 +91,7 @@ const Rooms = () => {
         },
         body: JSON.stringify({
           ...currentRoom,
-          instituteID: resolvedInstituteId
+          instituteID: instituteObjectId
         })
       });
 

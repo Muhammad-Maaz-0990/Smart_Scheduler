@@ -13,7 +13,8 @@ const generateToken = (user) => {
     { 
       id: user._id, 
       userName: user.userName,
-      designation: user.designation || user.role 
+      designation: user.designation || user.role,
+      instituteID: user.instituteID
     },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE }

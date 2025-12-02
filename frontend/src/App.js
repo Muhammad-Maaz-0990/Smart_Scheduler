@@ -10,6 +10,8 @@ import Rooms from './pages/Admin/Rooms';
 import Classes from './pages/Admin/Classes';
 import Courses from './pages/Admin/Courses';
 import TimeSlots from './pages/Admin/TimeSlots';
+import AdminTimeTablesPage from './pages/Admin/TimeTables';
+import GenerateTimetable from './pages/Admin/GenerateTimetable';
 import Users from './pages/Admin/Users';
 import AdminFeedbacksPage from './pages/Admin/Feedbacks';
 import AdminProfilePage from './pages/Admin/Profile';
@@ -89,6 +91,24 @@ function App() {
               element={
                 <PrivateRoute allowedRoles={['Admin']}>
                   <TimeSlots />
+                </PrivateRoute>
+              } 
+            />
+
+            <Route 
+              path="/admin/timetables" 
+              element={
+                <PrivateRoute allowedRoles={['Admin']}>
+                  <AdminTimeTablesPage />
+                </PrivateRoute>
+              } 
+            />
+
+            <Route 
+              path="/admin/generate-timetable" 
+              element={
+                <PrivateRoute allowedRoles={['Admin']}>
+                  <GenerateTimetable />
                 </PrivateRoute>
               } 
             />
