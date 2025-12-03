@@ -92,21 +92,39 @@ function TimeTable({ isAdmin = false }) {
     navigate('/admin/generate-timetable');
   }, [navigate]);
 
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
   return (
     <div style={{ padding: '24px', background: '#fff', minHeight: '100vh' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h2 style={{ margin: 0, color: '#333' }}>Time Tables</h2>
-        {isAdmin && (
-          <button
-            onClick={generateTimetable}
-            disabled={loading}
-            style={{
-              background: '#7c3aed', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '14px', opacity: loading ? 0.6 : 1
-            }}
-          >
-            Generate Timetable
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {selected && (
+            <button
+              onClick={handlePrint}
+              style={{
+                background: '#10b981', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '14px'
+              }}
+              className="no-print"
+            >
+              🖨️ Print Timetable
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              onClick={generateTimetable}
+              disabled={loading}
+              style={{
+                background: '#7c3aed', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '14px', opacity: loading ? 0.6 : 1
+              }}
+              className="no-print"
+            >
+              Generate Timetable
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -114,7 +132,7 @@ function TimeTable({ isAdmin = false }) {
       )}
 
       {/* List of saved headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px', marginBottom: '24px' }} className="no-print">
         {items.length === 0 ? (
           <div style={{ color: '#6b7280' }}>No timetables found. Click Generate to create one.</div>) : (
           items.map(h => (
@@ -147,7 +165,7 @@ function TimeTable({ isAdmin = false }) {
               <div style={{ fontSize: '12px', color: '#6b7280' }}>{selected.session} • {selected.year}</div>
             </div>
             {isAdmin && (
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="no-print">
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#374151' }}>
                   <input
                     type="checkbox"
@@ -180,6 +198,34 @@ function TimeTable({ isAdmin = false }) {
 }
 
 export default TimeTable;
+
+// Print styles injected via style tag
+if (typeof document !== 'undefined') {
+  const styleId = 'timetable-print-styles';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        .no-print, .no-print * {
+          display: none !important;
+        }
+        #root, #root * {
+          visibility: visible;
+        }
+        @page {
+          size: landscape;
+          margin: 0.5cm;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
 
 // ============== Helpers & Table Renderer ==============
 
