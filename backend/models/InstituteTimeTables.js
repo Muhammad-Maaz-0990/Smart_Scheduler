@@ -7,6 +7,8 @@ const instituteTimeTablesSchema = new mongoose.Schema({
   year: { type: Number, required: true },
   visibility: { type: Boolean, default: true },
   currentStatus: { type: Boolean, default: false },
+  breakStart: { type: String },
+  breakEnd: { type: String },
 }, { timestamps: true });
 
 instituteTimeTablesSchema.index({ instituteID: 1, year: 1, session: 1 });

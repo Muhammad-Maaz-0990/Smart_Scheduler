@@ -20,6 +20,8 @@ function GenerateTimetable() {
   const [error, setError] = useState('');
   const [candidates, setCandidates] = useState([]); // array of { header, details }
   const [selectedCandidateIndex, setSelectedCandidateIndex] = useState(null);
+  const [breakStart, setBreakStart] = useState('12:00');
+  const [breakEnd, setBreakEnd] = useState('13:00');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -167,6 +169,17 @@ function GenerateTimetable() {
         }
       }
     }
+    if (step === 5) {
+      // Validate break times
+      if (!breakStart || !breakEnd) {
+        alert('Please set break start and end times');
+        return;
+      }
+      if (breakStart >= breakEnd) {
+        alert('Break end time must be after start time');
+        return;
+      }
+    }
     setStep((prev) => prev + 1);
   };
 
@@ -204,9 +217,9 @@ function GenerateTimetable() {
             const teacherId = courseTeacherMap[`${clsId}_${cid}`];
             const tObj = teachers.find(t => t._id === teacherId);
             
-            const courseType = /lab/i.test(cObj?.courseTitle || '') ? 'Lab' : 'Lecture';
+            const courseType = (cObj?.courseType === 'Lab' || /lab/i.test(cObj?.courseTitle || '')) ? 'Lab' : 'Lecture';
             const courseName = cObj?.courseTitle || 'Course';
-            const creditHours = courseType === 'Lab' ? 3 : (cObj?.creditHours || 3);
+            const creditHours = courseType === 'Lab' ? 3 : (Number(cObj?.creditHours) || 1);
             
             const courseEntry = { name: courseName, type: courseType, creditHours };
             if (!allCourses.find(c => c.name === courseName && c.type === courseType)) {
@@ -264,7 +277,7 @@ function GenerateTimetable() {
             { day: 'Fri', start: '14:00', end: '15:00' },
             { day: 'Fri', start: '15:00', end: '16:00' },
           ],
-          breaks: { mode: 'same', same: { start: '12:00', end: '13:00' } },
+          breaks: { mode: 'same', same: { start: breakStart, end: breakEnd } },
         };
 
         const res = await fetch('http://localhost:5000/api/timetables-gen/generate', {
@@ -286,7 +299,7 @@ function GenerateTimetable() {
         }
         setCandidates(list);
         setSelectedCandidateIndex(0);
-        setStep(6); // show candidates selection step
+        setStep(7); // show candidates selection step
       } catch (e) {
         console.error(e);
         setError(e.message || 'Generation failed');
@@ -332,8 +345,9 @@ function GenerateTimetable() {
                 { num: 2, label: 'Assign Classes' },
                 { num: 3, label: 'Assign Courses' },
                 { num: 4, label: 'Assign Teachers' },
-                { num: 5, label: 'Review & Generate' },
-                { num: 6, label: 'Select Candidate' },
+                { num: 5, label: 'Set Break Time' },
+                { num: 6, label: 'Review & Generate' },
+                { num: 7, label: 'Select Candidate' },
               ].map((s, idx) => (
                 <React.Fragment key={s.num}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -359,7 +373,7 @@ function GenerateTimetable() {
                       </div>
                     </div>
                   </div>
-                  {idx < 5 && (
+                  {idx < 6 && (
                     <div
                       style={{
                         flex: 1,
@@ -662,11 +676,91 @@ function GenerateTimetable() {
                 </div>
               )}
 
-              {/* Step 5: Review & Generate */}
+              {/* Step 5: Set Break Time */}
               {step === 5 && (
                 <div>
                   <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
-                    Step 5: Review & Generate
+                    Step 5: Set Break Time
+                  </h2>
+                  <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
+                    Configure the break window for the timetable
+                  </p>
+
+                  <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                    <div
+                      style={{
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '12px',
+                        padding: '32px',
+                        background: '#f9fafb',
+                      }}
+                    >
+                      <div style={{ marginBottom: '24px' }}>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                          Break Start Time
+                        </label>
+                        <input
+                          type="time"
+                          value={breakStart}
+                          onChange={(e) => setBreakStart(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '12px',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            color: '#1f2937',
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '24px' }}>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                          Break End Time
+                        </label>
+                        <input
+                          type="time"
+                          value={breakEnd}
+                          onChange={(e) => setBreakEnd(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '12px',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            color: '#1f2937',
+                          }}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          padding: '16px',
+                          background: '#fff7ed',
+                          border: '1px solid #fed7aa',
+                          borderRadius: '8px',
+                          marginTop: '20px',
+                        }}
+                      >
+                        <div style={{ fontSize: '14px', color: '#9a3412', fontWeight: 600, marginBottom: '4px' }}>
+                          ⏰ Break Duration
+                        </div>
+                        <div style={{ fontSize: '18px', color: '#7c2d12', fontWeight: 700 }}>
+                          {breakStart && breakEnd ? `${breakStart} - ${breakEnd}` : 'Not set'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 6: Review & Generate */}
+              {step === 6 && (
+                <div>
+                  <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
+                    Step 6: Review & Generate
                   </h2>
                   <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
                     Review your selections before generating the timetable
@@ -742,11 +836,11 @@ function GenerateTimetable() {
                 </div>
               )}
 
-              {/* Step 6: Select Candidate */}
-              {step === 6 && (
+              {/* Step 7: Select Candidate */}
+              {step === 7 && (
                 <div>
                   <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
-                    Step 6: Select a Timetable Candidate
+                    Step 7: Select a Timetable Candidate
                   </h2>
                   <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
                     Review the generated candidates and choose one to save.
@@ -818,8 +912,8 @@ function GenerateTimetable() {
                 Back
               </button>
 
-              {/* Steps 1-4: Next */}
-              {step >= 1 && step <= 4 && (
+              {/* Steps 1-5: Next */}
+              {step >= 1 && step <= 5 && (
                 <button
                   onClick={handleNext}
                   style={{
@@ -837,8 +931,8 @@ function GenerateTimetable() {
                 </button>
               )}
 
-              {/* Step 5: Generate */}
-              {step === 5 && (
+              {/* Step 6: Generate */}
+              {step === 6 && (
                 <button
                   onClick={handleGenerate}
                   disabled={loading}
@@ -858,8 +952,8 @@ function GenerateTimetable() {
                 </button>
               )}
 
-              {/* Step 6: Save */}
-              {step === 6 && (
+              {/* Step 7: Save */}
+              {step === 7 && (
                 <button
                   onClick={async () => {
                     try {

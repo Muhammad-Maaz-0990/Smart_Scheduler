@@ -100,6 +100,13 @@ const AdminDashboard = () => {
             <p className="dashboard-subtitle">Manage {user?.instituteName || 'your institute'}</p>
           </div>
 
+          {loading && (
+            <div className="mb-3" style={{ color: '#6b7280' }}>Loading stats…</div>
+          )}
+          {!!error && (
+            <div className="mb-3" style={{ color: '#dc2626' }}>{error}</div>
+          )}
+
           <Row className="g-4">
             <Col xs={12} sm={6} lg={3}>
               <Card className="stat-card glass-effect">

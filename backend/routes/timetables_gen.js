@@ -4,6 +4,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const InstituteTimeTables = require('../models/InstituteTimeTables');
 const InstituteTimeTableDetails = require('../models/InstituteTimeTableDetails');
+const TimeSlot = require('../models/TimeSlot');
 
 // helper to compose key per spec
 function keyFor(ttId, instituteID, year) {
@@ -26,16 +27,44 @@ router.post('/generate', protect, async (req, res) => {
       courses = [],
       instructors = [],
       rooms = [],
-      timeslots = [],
+      timeslots: clientTimeslots = [],
       breaks = {}
     } = req.body || {};
 
     if (!session || !year) return res.status(400).json({ message: 'Missing session/year' });
 
-    const normalizedCourses = (courses || []).map(c => ({
-      name: c.name,
-      type: c.type === 'Lab' ? 'Lab' : 'Lecture',
-      creditHours: c.type === 'Lab' ? 3 : Number(c.creditHours || 1)
+    // Validate courses: Lecture must have positive creditHours; Lab forced to 3
+    if (!Array.isArray(courses) || courses.length === 0) {
+      return res.status(400).json({ message: 'At least one course is required' });
+    }
+    const normalizedCourses = (courses || []).map((c, idx) => {
+      const type = c.type === 'Lab' ? 'Lab' : 'Lecture';
+      let creditHours = type === 'Lab' ? 3 : Number(c.creditHours);
+      if (type === 'Lecture') {
+        if (!Number.isFinite(creditHours) || creditHours < 1) {
+          throw new Error(`Course ${c.name || `#${idx+1}`} missing/invalid creditHours`);
+        }
+        creditHours = Math.floor(creditHours);
+      }
+      return {
+        name: c.name,
+        type,
+        creditHours
+      };
+    });
+
+    // Load institute time window per day from DB and transform to generator format
+    const dayMap = {
+      Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun'
+    };
+    const tsList = await TimeSlot.find({ instituteID }).sort({ timeSlotID: 1 }).lean();
+    if (!tsList || tsList.length === 0) {
+      return res.status(400).json({ message: 'No time slots defined for this institute' });
+    }
+    const timeslots = tsList.map(ts => ({
+      day: dayMap[ts.days] || ts.days,
+      start: ts.startTime,
+      end: ts.endTime
     }));
 
     const payload = {
@@ -63,6 +92,9 @@ router.post('/generate', protect, async (req, res) => {
     return res.json({ candidates });
   } catch (err) {
     console.error('Generate timetable error:', err?.message || err);
+    if (String(err?.message || '').includes('missing/invalid creditHours')) {
+      return res.status(400).json({ message: err.message });
+    }
     return res.status(500).json({ message: 'Failed to generate timetables' });
   }
 });
@@ -87,10 +119,10 @@ router.post('/save', protect, async (req, res) => {
     const instituteTimeTableID = Number(header.instituteTimeTableID);
     if (!instituteTimeTableID) return res.status(400).json({ message: 'Invalid instituteTimeTableID' });
 
-    // upsert header
+    // upsert header (carry optional global break window if provided)
     await InstituteTimeTables.updateOne(
       { instituteTimeTableID },
-      { $set: { instituteTimeTableID, instituteID, session, year, visibility: !!header.visibility, currentStatus: !!header.currentStatus } },
+      { $set: { instituteTimeTableID, instituteID, session, year, visibility: !!header.visibility, currentStatus: !!header.currentStatus, ...(header.breakStart && header.breakEnd ? { breakStart: String(header.breakStart), breakEnd: String(header.breakEnd) } : {}) } },
       { upsert: true }
     );
 

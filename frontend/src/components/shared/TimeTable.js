@@ -20,8 +20,7 @@ function TimeTable({ isAdmin = false }) {
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       let list = Array.isArray(data?.items) ? data.items : [];
-      // For non-admin, only show visible items
-      if (!isAdmin) list = list.filter(h => !!h.visibility);
+      // Show all timetables returned by backend
       // Sort: current first, then latest year
       list = list.sort((a, b) => {
         if (a.currentStatus && !b.currentStatus) return -1;
@@ -39,7 +38,7 @@ function TimeTable({ isAdmin = false }) {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, []);
 
   const fetchDetails = useCallback(async (header) => {
     if (!header) return;
@@ -172,23 +171,7 @@ function TimeTable({ isAdmin = false }) {
           {loading ? (
             <div style={{ color: '#6b7280' }}>Loading details…</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px' }}>
-              {details.length === 0 ? (
-                <div style={{ color: '#6b7280' }}>No rows</div>
-              ) : (
-                details.map((d, i) => (
-                  <div key={i} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '10px' }}>
-                    <div style={{ fontWeight: 600, color: '#111827', marginBottom: '6px' }}>{d.day} • {d.time}</div>
-                    <div style={{ fontSize: '13px', color: '#374151' }}>
-                      <div>Class: {d.class}</div>
-                      <div>Course: {d.course}</div>
-                      <div>Room: {d.roomNumber}</div>
-                      <div>Instructor: {d.instructorName}</div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            <TimetableTables details={details} header={selected} />
           )}
         </div>
       )}
@@ -197,3 +180,164 @@ function TimeTable({ isAdmin = false }) {
 }
 
 export default TimeTable;
+
+// ============== Helpers & Table Renderer ==============
+
+function normalizeDay(day) {
+  if (!day) return '';
+  const d = String(day).toLowerCase();
+  if (d.startsWith('mon')) return 'Mon';
+  if (d.startsWith('tue')) return 'Tue';
+  if (d.startsWith('wed')) return 'Wed';
+  if (d.startsWith('thu')) return 'Thu';
+  if (d.startsWith('fri')) return 'Fri';
+  if (d.startsWith('sat')) return 'Sat';
+  if (d.startsWith('sun')) return 'Sun';
+  return day;
+}
+
+function parseStartMinutes(timeRange) {
+  // expects HH:MM-HH:MM; returns minutes from 00:00
+  if (!timeRange || typeof timeRange !== 'string') return 0;
+  const part = timeRange.split('-')[0] || '';
+  const [hh, mm] = part.split(':').map(n => parseInt(n, 10));
+  if (Number.isFinite(hh) && Number.isFinite(mm)) return hh * 60 + mm;
+  return 0;
+}
+
+function TimetableTables({ details, header }) {
+  if (!Array.isArray(details) || details.length === 0) {
+    return <div style={{ color: '#6b7280' }}>No rows</div>;
+  }
+
+  // Build unique sets
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const baseTimes = Array.from(
+    new Set(details.map(d => String(d.time || '')).filter(Boolean))
+  ).sort((a, b) => parseStartMinutes(a) - parseStartMinutes(b));
+
+  // Derive a common break window from details if present
+  const breakPairs = {};
+  for (const d of details) {
+    const bs = d.breakStart ? String(d.breakStart) : null;
+    const be = d.breakEnd ? String(d.breakEnd) : null;
+    if (bs && be) {
+      const k = `${bs}-${be}`;
+      breakPairs[k] = (breakPairs[k] || 0) + 1;
+    }
+  }
+  let breakStart = null, breakEnd = null;
+  if (header?.breakStart && header?.breakEnd) {
+    breakStart = String(header.breakStart);
+    breakEnd = String(header.breakEnd);
+  } else if (Object.keys(breakPairs).length) {
+    const top = Object.entries(breakPairs).sort((a, b) => b[1] - a[1])[0][0];
+    [breakStart, breakEnd] = top.split('-');
+  }
+
+  // Build final column set with an inserted Break column (if detected)
+  let allTimes = [...baseTimes];
+  if (breakStart && breakEnd) {
+    const insertIdx = allTimes.findIndex(t => parseStartMinutes(t) >= parseStartMinutes(`${breakStart}-${breakEnd}`));
+    const idx = insertIdx >= 0 ? insertIdx : allTimes.length;
+    allTimes = [
+      ...allTimes.slice(0, idx),
+      { __break: true, label: 'Break', range: `${breakStart}-${breakEnd}` },
+      ...allTimes.slice(idx)
+    ];
+  }
+
+  // Group rows by class
+  const classMap = new Map();
+  for (const d of details) {
+    const klass = String(d.class || 'Unknown');
+    const day = normalizeDay(d.day);
+    const time = String(d.time || '');
+    if (!classMap.has(klass)) classMap.set(klass, []);
+    classMap.get(klass).push({ ...d, day, time });
+  }
+
+  const containerStyle = { display: 'grid', gap: '16px' };
+  const tableWrapper = { border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', background: '#fff' };
+  const titleStyle = { padding: '10px 12px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb', fontWeight: 700, color: '#111827' };
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: `160px repeat(${allTimes.length}, 1fr)`,
+    borderTop: '1px solid #e5e7eb'
+  };
+  const cellStyle = { borderRight: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb', padding: 10, minHeight: 72 };
+  const headCellStyle = { ...cellStyle, background: '#f3f4f6', fontWeight: 600, color: '#374151', textAlign: 'center' };
+  const headBreakStyle = { ...headCellStyle, background: '#fff7ed', color: '#9a3412' };
+  const dayCellStyle = { ...cellStyle, background: '#fafafa', fontWeight: 600, color: '#374151', width: 160 };
+  const entryTitle = { fontWeight: 600, color: '#111827' };
+  const entryMeta = { fontSize: 12, color: '#374151', marginTop: 4, lineHeight: 1.35 };
+
+  return (
+    <div style={containerStyle}>
+      {Array.from(classMap.entries()).map(([klass, rows]) => {
+        // Index rows for O(1) cell lookup: key = day|time
+        const byKey = new Map();
+        for (const r of rows) byKey.set(`${r.day}|${r.time}`, r);
+
+        return (
+          <div key={klass} style={tableWrapper}>
+            <div style={{ ...titleStyle, textAlign: 'center' }}>Class: {klass}</div>
+            <div style={gridStyle}>
+              <div style={headCellStyle}></div>
+              {allTimes.map((t, idx) => (
+                <div key={idx} style={typeof t !== 'string' && t.__break ? headBreakStyle : headCellStyle}>
+                  {typeof t === 'string' ? t : (t.__break ? t.range : '')}
+                </div>
+              ))}
+
+              {days.map((day, di) => (
+                <React.Fragment key={day}>
+                  <div style={dayCellStyle}>{day}</div>
+                  {allTimes.map((t, i) => {
+                    if (typeof t !== 'string' && t.__break) {
+                      if (di === 0) {
+                        // Single merged break cell spanning all day rows
+                        return (
+                          <div
+                            key={`break-col-${i}`}
+                            style={{
+                              ...cellStyle,
+                              background: '#fff7ed',
+                              textAlign: 'center',
+                              color: '#9a3412',
+                              fontWeight: 700,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gridRow: `span ${days.length}`
+                            }}
+                          >
+                            Break
+                          </div>
+                        );
+                      }
+                      // Omit for other days — spanned cell covers them
+                      return null;
+                    }
+                    const row = byKey.get(`${day}|${t}`);
+                    return (
+                      <div key={`${day}-${i}`} style={cellStyle}>
+                        {row ? (
+                          <div>
+                            <div style={entryTitle}>{row.course}</div>
+                            <div style={entryMeta}>Room: {row.roomNumber}</div>
+                            <div style={entryMeta}>Instructor: {row.instructorName}</div>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
