@@ -8,6 +8,38 @@ function TimeTable({ isAdmin = false }) {
   const [items, setItems] = useState([]); // headers list
   const [selected, setSelected] = useState(null); // selected header
   const [details, setDetails] = useState([]); // details for selected
+  const [instituteInfo, setInstituteInfo] = useState(null);
+
+  useEffect(() => {
+    const fetchInstituteInfo = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return;
+        const user = JSON.parse(userStr);
+        const instituteRef = user?.instituteID;
+        const instituteParam = typeof instituteRef === 'object'
+          ? (instituteRef._id || instituteRef.instituteID || instituteRef)
+          : instituteRef;
+        if (!instituteParam) return;
+        const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(instituteParam)}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // If instituteLogo is a path (not data URL), prepend base URL
+          if (data.instituteLogo && !data.instituteLogo.startsWith('data:') && !data.instituteLogo.startsWith('http')) {
+            data.instituteLogo = `http://localhost:5000${data.instituteLogo}`;
+          }
+          console.log('Institute info loaded:', data);
+          setInstituteInfo(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch institute info:', err);
+      }
+    };
+    fetchInstituteInfo();
+  }, []);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -88,18 +120,82 @@ function TimeTable({ isAdmin = false }) {
     if (selected) fetchDetails(selected);
   }, [selected, fetchDetails]);
 
+  // Fallback: if instituteInfo is missing, try fetching via selected header's instituteID
+  useEffect(() => {
+    const fetchByHeader = async () => {
+      if (instituteInfo || !selected?.instituteID) return;
+      try {
+        const token = localStorage.getItem('token');
+        const instId = selected.instituteID;
+        const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(instId)}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.instituteLogo && !String(data.instituteLogo).startsWith('http') && !String(data.instituteLogo).startsWith('data:')) {
+            data.instituteLogo = `http://localhost:5000${data.instituteLogo}`;
+          }
+          setInstituteInfo(data);
+        }
+      } catch {}
+    };
+    fetchByHeader();
+  }, [selected, instituteInfo]);
+
   const generateTimetable = useCallback(() => {
     navigate('/admin/generate-timetable');
   }, [navigate]);
 
-  const handlePrint = useCallback(() => {
-    window.print();
-  }, []);
+  const handlePrint = useCallback(async () => {
+    try {
+      // Ensure institute info is loaded
+      if (!instituteInfo) {
+        // Try refetch quickly if missing
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          const instituteRef = user?.instituteID;
+          const instituteParam = typeof instituteRef === 'object'
+            ? (instituteRef._id || instituteRef.instituteID || instituteRef)
+            : instituteRef;
+          if (instituteParam) {
+            const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(instituteParam)}`, {
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+            if (response.ok) {
+              const data = await response.json();
+              if (data.instituteLogo && !String(data.instituteLogo).startsWith('http') && !String(data.instituteLogo).startsWith('data:')) {
+                data.instituteLogo = `http://localhost:5000${data.instituteLogo}`;
+              }
+              setInstituteInfo(data);
+            }
+          }
+        }
+      }
+
+      // If there's a logo, wait for it to load before printing
+      if (instituteInfo?.instituteLogo) {
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = instituteInfo.instituteLogo;
+        });
+      }
+
+      // Give the browser a tick to apply print-only styles
+      await new Promise(r => setTimeout(r, 50));
+      window.print();
+    } catch {
+      window.print();
+    }
+  }, [instituteInfo]);
 
   return (
     <div style={{ padding: '24px', background: '#fff', minHeight: '100vh' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ margin: 0, color: '#333' }}>Time Tables</h2>
+        <h2 style={{ margin: 0, color: '#333' }} className="no-print">Time Tables</h2>
         <div style={{ display: 'flex', gap: '12px' }}>
           {selected && (
             <button
@@ -131,39 +227,89 @@ function TimeTable({ isAdmin = false }) {
         <div style={{ color: '#dc2626', marginBottom: '16px', padding: '12px', background: '#fee2e2', borderRadius: '8px' }}>{error}</div>
       )}
 
-      {/* List of saved headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px', marginBottom: '24px' }} className="no-print">
-        {items.length === 0 ? (
-          <div style={{ color: '#6b7280' }}>No timetables found. Click Generate to create one.</div>) : (
-          items.map(h => (
-            <div
-              key={h.instituteTimeTableID}
-              onClick={() => setSelected(h)}
-              style={{ border: selected?.instituteTimeTableID === h.instituteTimeTableID ? '3px solid #7c3aed' : '2px solid #e5e7eb', borderRadius: '12px', padding: '14px', cursor: 'pointer', background: selected?.instituteTimeTableID === h.instituteTimeTableID ? '#f5f3ff' : '#fff' }}
-            >
-              <div style={{ fontWeight: 700, color: '#111827' }}>Timetable {h.instituteTimeTableID}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>{h.session} • {h.year}</div>
-              {h.currentStatus && (
-                <div style={{ marginTop: '6px', display: 'inline-block', background: '#10b981', color: '#fff', fontSize: '11px', padding: '4px 8px', borderRadius: '999px' }}>Current</div>
-              )}
-              {isAdmin && (
-                <div style={{ marginTop: '8px', fontSize: '12px', color: '#6b7280' }}>
-                  Visibility: {h.visibility ? 'Yes' : 'No'} • Current: {h.currentStatus ? 'Yes' : 'No'}
-                </div>
-              )}
-            </div>
-          ))
-        )}
-      </div>
+      {/* Timetable Selector Dropdown */}
+      {items.length > 0 && (
+        <div style={{ marginBottom: '24px' }} className="no-print">
+          <label style={{ display: 'block', fontWeight: 600, color: '#374151', marginBottom: '8px', fontSize: '14px' }}>
+            Select Timetable:
+          </label>
+          <select
+            value={selected?.instituteTimeTableID || ''}
+            onChange={(e) => {
+              const selectedId = parseInt(e.target.value);
+              const timetable = items.find(h => h.instituteTimeTableID === selectedId);
+              if (timetable) setSelected(timetable);
+            }}
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              padding: '12px 16px',
+              fontSize: '14px',
+              border: '2px solid #e5e7eb',
+              borderRadius: '8px',
+              backgroundColor: '#fff',
+              color: '#111827',
+              cursor: 'pointer',
+              outline: 'none'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#7c3aed'}
+            onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+          >
+            {items.map(h => (
+              <option key={h.instituteTimeTableID} value={h.instituteTimeTableID}>
+                Timetable {h.instituteTimeTableID} - {h.session} • {h.year}
+                {h.currentStatus ? ' (Current)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {items.length === 0 && (
+        <div style={{ color: '#6b7280', marginBottom: '24px', padding: '12px' }} className="no-print">
+          No timetables found. Click Generate to create one.
+        </div>
+      )}
 
       {/* Details for selected timetable */}
       {selected && (
-        <div style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div>
-              <div style={{ fontWeight: 700, color: '#111827' }}>Timetable {selected.instituteTimeTableID}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280' }}>{selected.session} • {selected.year}</div>
-            </div>
+        <div style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '16px' }} id="timetable-print-content">
+          {/* Print Header with Institute Info */}
+          {(
+            () => {
+              // Fallbacks: prefer instituteInfo, then selected header, then user from localStorage
+              let displayName = instituteInfo?.instituteName || selected?.instituteName;
+              if (!displayName) {
+                try {
+                  const userStr = localStorage.getItem('user');
+                  if (userStr) {
+                    const u = JSON.parse(userStr);
+                    displayName = u?.instituteName || displayName;
+                  }
+                } catch {}
+              }
+              if (!displayName) displayName = 'Institute';
+              const logoUrl = instituteInfo?.instituteLogo || '';
+              return (
+                <div className="print-only" style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '2px solid #e5e7eb', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Institute Logo" style={{ height: '80px', width: '80px', borderRadius: '50%', objectFit: 'cover', marginRight: '18px' }} />
+                    ) : null}
+                    <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: 0 }}>{displayName}</h1>
+                  </div>
+                  <div style={{ fontSize: '16px', color: '#6b7280', margin: '18px 0 0 0', textAlign: 'center', width: '100%' }}>
+                    Academic Year: {selected.session}
+                  </div>
+                  <div style={{ position: 'absolute', right: 24, bottom: 8, fontSize: '14px', color: '#9ca3af', textAlign: 'right' }}>
+                    Generated on: {new Date(selected.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
+                </div>
+              );
+            }
+          )()}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }} className="no-print">
             {isAdmin && (
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="no-print">
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#374151' }}>
@@ -206,15 +352,21 @@ if (typeof document !== 'undefined') {
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = `
-      @media print {
-        body * {
-          visibility: hidden;
-        }
-        .no-print, .no-print * {
+      @media screen {
+        .print-only {
           display: none !important;
         }
-        #root, #root * {
-          visibility: visible;
+      }
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+        .print-only {
+          display: block !important;
+        }
+        #timetable-print-content {
+          visibility: visible !important;
+          display: block !important;
         }
         @page {
           size: landscape;
@@ -315,8 +467,6 @@ function TimetableTables({ details, header }) {
   const headCellStyle = { ...cellStyle, background: '#f3f4f6', fontWeight: 600, color: '#374151', textAlign: 'center' };
   const headBreakStyle = { ...headCellStyle, background: '#fff7ed', color: '#9a3412' };
   const dayCellStyle = { ...cellStyle, background: '#fafafa', fontWeight: 600, color: '#374151', width: 160 };
-  const entryTitle = { fontWeight: 600, color: '#111827' };
-  const entryMeta = { fontSize: 12, color: '#374151', marginTop: 4, lineHeight: 1.35 };
 
   return (
     <div style={containerStyle}>
@@ -369,10 +519,16 @@ function TimetableTables({ details, header }) {
                     return (
                       <div key={`${day}-${i}`} style={cellStyle}>
                         {row ? (
-                          <div>
-                            <div style={entryTitle}>{row.course}</div>
-                            <div style={entryMeta}>Room: {row.roomNumber}</div>
-                            <div style={entryMeta}>Instructor: {row.instructorName}</div>
+                          <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>
+                              {row.roomNumber}
+                            </div>
+                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', textAlign: 'center', margin: '4px 0' }}>
+                              {row.course}
+                            </div>
+                            <div style={{ fontSize: '12px', fontWeight: 500, color: '#374151', textAlign: 'right' }}>
+                              {row.instructorName}
+                            </div>
                           </div>
                         ) : null}
                       </div>

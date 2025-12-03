@@ -306,15 +306,16 @@ const Users = () => {
                       <th>Name</th>
                       <th>Email</th>
                       <th>Designation</th>
+                      <th>National ID</th>
                       <th>Phone</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
-                      <tr><td colSpan="6" className="text-center">Loading...</td></tr>
+                      <tr><td colSpan="7" className="text-center">Loading...</td></tr>
                     ) : users.length === 0 ? (
-                      <tr><td colSpan="6" className="text-center">No users found</td></tr>
+                      <tr><td colSpan="7" className="text-center">No users found</td></tr>
                     ) : (
                       users.map((u, idx) => (
                         <tr key={u._id}>
@@ -326,6 +327,7 @@ const Users = () => {
                               {u.designation}
                             </span>
                           </td>
+                          <td>{u.cnic === 'N/A' ? '-' : u.cnic}</td>
                           <td>{u.phoneNumber === 'N/A' ? '-' : u.phoneNumber}</td>
                           <td>
                             <Button size="sm" variant="warning" className="me-2" onClick={() => openEdit(u)} disabled={u.designation === 'Admin'}>✏️ Edit</Button>

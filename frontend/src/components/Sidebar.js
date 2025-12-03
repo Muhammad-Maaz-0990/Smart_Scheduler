@@ -101,7 +101,7 @@ const Sidebar = ({ activeMenu }) => {
     <>
       {/* Top Navigation Toggle */}
       <button
-        className="mobile-menu-toggle"
+        className="mobile-menu-toggle no-print"
         style={{ position: 'fixed', top: 12, left: 12, zIndex: 1100 }}
         onClick={() => {
           // On mobile, open the slide-in; on desktop, toggle visibility
@@ -127,7 +127,7 @@ const Sidebar = ({ activeMenu }) => {
 
       {/* Sidebar */}
       {isVisible && (
-      <div className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
+      <div className={`sidebar no-print ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
         {/* Institute Info (click to go to dashboard) */}
         <div className="sidebar-header" onClick={() => handleMenuClick('dashboard')} style={{cursor:'pointer'}}>
           {instituteInfo?.instituteLogo && (
