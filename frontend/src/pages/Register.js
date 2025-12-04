@@ -633,52 +633,71 @@ const Register = () => {
   // Show welcome screen when currentStep is -1 (initial state changed to 0)
   if (currentStep === -1) {
     return (
-      <div className="register-page">
-        <div className="bg-animation">
-          <div className="floating-shape shape-1"></div>
-          <div className="floating-shape shape-2"></div>
-          <div className="floating-shape shape-3"></div>
-          <div className="floating-shape shape-4"></div>
-        </div>
-
+      <div
+        className="register-page"
+        style={{
+          minHeight: '100vh',
+          background: '#ffffff',
+          fontFamily: 'Poppins, sans-serif'
+        }}
+      >
         <Container className="register-container">
           <Row className="justify-content-center align-items-center min-vh-100">
             <Col xs={12} md={6} lg={5} xl={4}>
-              <div className="register-card glass-effect">
-                <div className="welcome-header">
-                  <h1 className="welcome-title">Welcome To Smart Scheduler</h1>
+              <div
+                className="register-card glass-effect"
+                style={{
+                  background: '#fffff',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: '0 10px 24px rgba(124, 58, 237, 0.15)',
+                  borderRadius: 24,
+                  padding: '28px 24px'
+                }}
+              >
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <div style={{
+                    width: '100px',
+                    height: '100px',
+                    margin: '0 auto 12px',
+                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 8px 24px rgba(126, 34, 206, 0.3)'
+                  }}>
+                    <svg width="50" height="50" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="50" cy="50" r="35" stroke="white" strokeWidth="4"/>
+                      <path d="M50 25V50L65 65" stroke="white" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <circle cx="50" cy="50" r="5" fill="white"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className="welcome-header" style={{ marginBottom: '8px', border: 'none', padding: '0'}}>
+                  <h1 className="welcome-title" style={{ color: '#111827', margin: 0 }}>Welcome To Smart Scheduler</h1>
                 </div>
 
-                <div className="subtitle-box">
-                  <p className="subtitle-text">
-                    Subtitle to describe<br />
-                    our service
+                <div className="subtitle-box" style={{ marginBottom: '16px', border: 'none'}}>
+                  <p className="subtitle-text" style={{ color: '#6b7280', margin: 0 }}>
+                    Create conflict‑free timetables for your Institute.
                   </p>
                 </div>
 
-                <div className="register-message">
-                  <p className="message-text">
-                    Click here to register your<br />
-                    institute
-                  </p>
-                </div>
-
-                <Button 
-                  variant="primary"
-                  className="register-button w-100 mb-3"
+                <Button
+                  className="register-button w-100"
                   onClick={() => setCurrentStep(0)}
+                  style={{
+                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                    border: 'none',
+                    padding: '10px 14px',
+                    fontWeight: 600,
+                    borderRadius: 12,
+                    boxShadow: '0 8px 18px rgba(126, 34, 206, 0.25)',
+                    marginBottom: '12px'
+                  }}
                 >
                   Register Institute
                 </Button>
-
-                <Button 
-                  variant="outline-light" 
-                  className="skip-button w-100"
-                  onClick={handleSkip}
-                >
-                  Skip for landing
-                </Button>
-
                 <div className="card-glow"></div>
               </div>
             </Col>
@@ -689,14 +708,11 @@ const Register = () => {
   }
 
   return (
-    <div className="register-page">
-      <div className="bg-animation">
-        <div className="floating-shape shape-1"></div>
-        <div className="floating-shape shape-2"></div>
-        <div className="floating-shape shape-3"></div>
-        <div className="floating-shape shape-4"></div>
-      </div>
-
+    <div className="register-page" style={{
+      minHeight: '100vh',
+      background: '#ffffff',
+      fontFamily: 'Poppins, sans-serif'
+    }}>
       <Container className="register-container">
         <Row className="justify-content-center align-items-center min-vh-100">
           <Col xs={12} md={8} lg={7} xl={6}>
