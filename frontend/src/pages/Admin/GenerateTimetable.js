@@ -24,75 +24,70 @@ function GenerateTimetable() {
   const [breakStart, setBreakStart] = useState('12:00');
   const [breakEnd, setBreakEnd] = useState('13:00');
 
+  // Fetch rooms, classes, courses, teachers once instituteObjectId is available
   useEffect(() => {
-    const fetchData = async () => {
-      if (!instituteObjectId) {
-        setError('Institute ID not found');
-        return;
-      }
-
-      setLoading(true);
-      setError('');
-
+    const run = async () => {
       try {
+        if (!instituteObjectId) return;
+        setLoading(true);
+        setError('');
         const token = localStorage.getItem('token');
+        const commonHeaders = {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        };
 
-        // Fetch rooms
-        const roomsRes = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(instituteObjectId)}`, {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
+        // Rooms
+        const roomsRes = await fetch(`http://localhost:5000/api/rooms/${instituteObjectId}`, { headers: commonHeaders });
         if (roomsRes.ok) {
-          const roomsData = await roomsRes.json();
-          setRooms(Array.isArray(roomsData) ? roomsData : []);
+          const data = await roomsRes.json();
+          setRooms(Array.isArray(data) ? data : (data?.rooms || []));
         } else {
-          console.error('Failed to fetch rooms:', await roomsRes.text());
+          // fallback to query style
+          const roomsResQ = await fetch(`http://localhost:5000/api/rooms?instituteID=${instituteObjectId}`, { headers: commonHeaders });
+          const dataQ = roomsResQ.ok ? await roomsResQ.json() : [];
+          setRooms(Array.isArray(dataQ) ? dataQ : (dataQ?.rooms || []));
         }
 
-        // Fetch classes
-        const classesRes = await fetch(`http://localhost:5000/api/classes/${encodeURIComponent(instituteObjectId)}`, {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
+        // Classes
+        const classesRes = await fetch(`http://localhost:5000/api/classes/${instituteObjectId}`, { headers: commonHeaders });
         if (classesRes.ok) {
-          const classesData = await classesRes.json();
-          setClasses(Array.isArray(classesData) ? classesData : []);
+          const data = await classesRes.json();
+          setClasses(Array.isArray(data) ? data : (data?.classes || []));
         } else {
-          console.error('Failed to fetch classes:', await classesRes.text());
+          const classesResQ = await fetch(`http://localhost:5000/api/classes?instituteID=${instituteObjectId}`, { headers: commonHeaders });
+          const dataQ = classesResQ.ok ? await classesResQ.json() : [];
+          setClasses(Array.isArray(dataQ) ? dataQ : (dataQ?.classes || []));
         }
 
-        // Fetch courses
-        const coursesRes = await fetch(`http://localhost:5000/api/courses/${encodeURIComponent(instituteObjectId)}`, {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
+        // Courses
+        const coursesRes = await fetch(`http://localhost:5000/api/courses/${instituteObjectId}`, { headers: commonHeaders });
         if (coursesRes.ok) {
-          const coursesData = await coursesRes.json();
-          setCourses(Array.isArray(coursesData) ? coursesData : []);
+          const data = await coursesRes.json();
+          setCourses(Array.isArray(data) ? data : (data?.courses || []));
         } else {
-          console.error('Failed to fetch courses:', await coursesRes.text());
+          const coursesResQ = await fetch(`http://localhost:5000/api/courses?instituteID=${instituteObjectId}`, { headers: commonHeaders });
+          const dataQ = coursesResQ.ok ? await coursesResQ.json() : [];
+          setCourses(Array.isArray(dataQ) ? dataQ : (dataQ?.courses || []));
         }
 
-        // Fetch teachers
-        const teachersRes = await fetch('http://localhost:5000/api/users/institute', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
+        // Teachers: backend exposes /api/users/institute for Admin; filter by designation
+        const teachersRes = await fetch(`http://localhost:5000/api/users/institute`, { headers: commonHeaders });
         if (teachersRes.ok) {
-          const usersData = await teachersRes.json();
-          const teachersList = Array.isArray(usersData) ? usersData.filter(u => u.designation === 'Teacher') : [];
-          setTeachers(teachersList);
+          const data = await teachersRes.json();
+          const list = Array.isArray(data) ? data : (data?.users || []);
+          setTeachers(list.filter(u => (u.designation || '').toLowerCase() === 'teacher'));
         } else {
-          console.error('Failed to fetch teachers:', await teachersRes.text());
+          setTeachers([]);
         }
-
-      } catch (err) {
-        setError('Failed to load data');
-        console.error(err);
+      } catch (e) {
+        console.error(e);
+        setError('Failed to load institute data');
       } finally {
         setLoading(false);
       }
     };
-
-    if (instituteObjectId) {
-      fetchData();
-    }
+    run();
   }, [instituteObjectId]);
 
   const handleRoomToggle = (roomId) => {
@@ -316,8 +311,23 @@ function GenerateTimetable() {
           body: JSON.stringify(body)
         });
         if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(txt || 'Failed to generate timetables');
+          // Try to extract structured Python clash details forwarded by backend
+          let msg = 'Failed to generate timetables';
+          try {
+            const dataErr = await res.json();
+            if (dataErr && dataErr.message) {
+              if (typeof dataErr.message === 'string') {
+                msg = dataErr.message;
+              } else {
+                // message could be an object propagated from Python detail
+                msg = JSON.stringify(dataErr.message);
+              }
+            }
+          } catch (_) {
+            const txt = await res.text();
+            if (txt) msg = txt;
+          }
+          throw new Error(msg);
         }
         const data = await res.json();
         const list = Array.isArray(data?.candidates) ? data.candidates : (Array.isArray(data) ? data : []);
@@ -329,7 +339,19 @@ function GenerateTimetable() {
         setStep(7); // show candidates selection step
       } catch (e) {
         console.error(e);
-        setError(e.message || 'Generation failed');
+        // If Python provided structured detail JSON string, try to prettify for UI
+        let msg = e.message || 'Generation failed';
+        try {
+          const parsed = JSON.parse(msg);
+          if (parsed && parsed.message) {
+            const head = typeof parsed.message === 'string' ? parsed.message : 'Scheduling failed';
+            const failed = Array.isArray(parsed.failedTasks) ? parsed.failedTasks.slice(0,3).map(ft => `${ft.class} • ${ft.course} (${ft.type})`).join('; ') : '';
+            const missing = Array.isArray(parsed.missing) ? parsed.missing.slice(0,3).map(m => `${m.class} • ${m.course} exp:${m.expected} got:${m.actual}`).join('; ') : '';
+            const clashes = Array.isArray(parsed.clashes) ? parsed.clashes.slice(0,3).map(c => `${c.day} ${Array.isArray(c.time)?c.time.join(', '):c.time} • ${c.class} • ${c.room}`).join('; ') : '';
+            msg = [head, failed && `Failed: ${failed}`, missing && `Missing: ${missing}`, clashes && `Clashes: ${clashes}`].filter(Boolean).join('\n');
+          }
+        } catch(_) {}
+        setError(msg);
       } finally {
         setLoading(false);
       }
@@ -337,6 +359,7 @@ function GenerateTimetable() {
     run();
   };
 
+  // eslint-disable-next-line no-unused-vars
   const assignedClasses = Array.from(new Set([
     ...Object.values(roomClassMap),
     ...Object.values(roomLabMap).flat()
@@ -600,81 +623,114 @@ function GenerateTimetable() {
                     Step 3: Assign Courses to Classes
                   </h2>
                   <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
-                    Select courses for each class (you can select multiple). If a class is assigned in any Lab room, only Lab courses are shown.
+                    Select courses in two sections: Class Rooms show theory courses; Lab Rooms show lab courses. If a class is in both, select in both sections.
                   </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {assignedClasses.map((classId) => {
-                      const cls = classes.find((c) => c._id === classId);
-                      const assignedRooms = Object.entries(roomClassMap)
-                        .filter(([, cId]) => cId === classId)
-                        .map(([rId]) => rooms.find((r) => r._id === rId)?.roomNumber)
-                        .join(', ');
-                      const classInLab = isClassSelectedInAnyLab(classId);
-                      const anyLabSelected = selectedRooms.some(rid => (rooms.find(r => r._id === rid)?.roomStatus || 'Class') === 'Lab');
-                      let availableCourses;
-                      if (classInLab) {
-                        // If this class is assigned in a Lab, only show Lab courses
-                        availableCourses = courses.filter(c => (c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
-                      } else if (!anyLabSelected) {
-                        // No lab rooms selected anywhere: hide lab courses globally
-                        availableCourses = courses.filter(c => !(c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
-                      } else {
-                        // Labs exist but this class is not in a lab: show non-lab courses
-                        availableCourses = courses.filter(c => !(c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
-                      }
-                      return (
-                        <div
-                          key={classId}
-                          style={{
-                            border: '2px solid #e5e7eb',
-                            borderRadius: '12px',
-                            padding: '20px',
-                            background: '#fff',
-                          }}
-                        >
-                          <div style={{ marginBottom: '12px' }}>
-                            <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed' }}>
-                              {cls ? `${cls.degree} ${cls.year}-${cls.section}` : 'Unknown Class'}
-                            </div>
-                            <div style={{ fontSize: '13px', color: '#6b7280' }}>Room(s): {assignedRooms || (classInLab ? 'Lab-assigned' : '—')}</div>
-                            {classInLab && (
-                              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
-                                Showing Lab courses because this class is selected in a Lab room
+
+                  {/* Class Rooms Section */}
+                  <div style={{ marginBottom: '28px' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginBottom: '12px' }}>Class Rooms</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      {Object.entries(roomClassMap).filter(([, cId]) => !!cId).length === 0 ? (
+                        <div style={{ color: '#6b7280', fontSize: '14px' }}>No classes assigned to Class rooms</div>
+                      ) : (
+                        Object.entries(roomClassMap).filter(([, cId]) => !!cId).map(([rId, classId]) => {
+                          const cls = classes.find(c => c._id === classId);
+                          const roomNumber = rooms.find(r => r._id === rId)?.roomNumber;
+                          const availableCourses = courses.filter(c => !(c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
+                          return (
+                            <div key={`${rId}-${classId}`} style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '20px', background: '#fff' }}>
+                              <div style={{ marginBottom: '12px' }}>
+                                <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed' }}>
+                                  {cls ? `${cls.degree} ${cls.year}-${cls.section}` : 'Unknown Class'}
+                                </div>
+                                <div style={{ fontSize: '13px', color: '#6b7280' }}>Room: {roomNumber}</div>
                               </div>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                            {availableCourses.length === 0 ? (
-                              <div style={{ color: '#6b7280', fontSize: '14px' }}>No courses available</div>
-                            ) : (
-                              availableCourses.map((course) => (
-                                <button
-                                  key={course._id}
-                                  onClick={() => handleCourseToggle(classId, course._id)}
-                                  style={{
-                                    padding: '10px 16px',
-                                    border: (classCoursesMap[classId] || []).includes(course._id)
-                                      ? '2px solid #7c3aed'
-                                      : '2px solid #e5e7eb',
-                                    borderRadius: '8px',
-                                    background: (classCoursesMap[classId] || []).includes(course._id)
-                                      ? '#7c3aed'
-                                      : '#fff',
-                                    color: (classCoursesMap[classId] || []).includes(course._id) ? '#fff' : '#374151',
-                                    cursor: 'pointer',
-                                    fontWeight: 600,
-                                    fontSize: '14px',
-                                    transition: 'all 0.2s',
-                                  }}
-                                >
-                                  {course.courseTitle}
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                {availableCourses.length === 0 ? (
+                                  <div style={{ color: '#6b7280', fontSize: '14px' }}>No courses available</div>
+                                ) : (
+                                  availableCourses.map((course) => (
+                                    <button
+                                      key={course._id}
+                                      onClick={() => handleCourseToggle(classId, course._id)}
+                                      style={{
+                                        padding: '10px 16px',
+                                        border: (classCoursesMap[classId] || []).includes(course._id) ? '2px solid #7c3aed' : '2px solid #e5e7eb',
+                                        borderRadius: '8px',
+                                        background: (classCoursesMap[classId] || []).includes(course._id) ? '#7c3aed' : '#fff',
+                                        color: (classCoursesMap[classId] || []).includes(course._id) ? '#fff' : '#374151',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        fontSize: '14px',
+                                        transition: 'all 0.2s',
+                                      }}
+                                    >
+                                      {course.courseTitle}
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Lab Rooms Section */}
+                  <div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginBottom: '12px' }}>Lab Rooms</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      {Object.entries(roomLabMap).filter(([, arr]) => Array.isArray(arr) && arr.length > 0).length === 0 ? (
+                        <div style={{ color: '#6b7280', fontSize: '14px' }}>No classes assigned to Lab rooms</div>
+                      ) : (
+                        Object.entries(roomLabMap).flatMap(([rId, arr]) => arr.map(classId => ({ rId, classId }))).map(({ rId, classId }) => {
+                          const cls = classes.find(c => c._id === classId);
+                          const roomNumber = rooms.find(r => r._id === rId)?.roomNumber;
+                          const availableCourses = courses.filter(c => (c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
+                          return (
+                            <div key={`${rId}-${classId}`} style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '20px', background: '#fff' }}>
+                              <div style={{ marginBottom: '12px' }}>
+                                <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed' }}>
+                                  {cls ? `${cls.degree} ${cls.year}-${cls.section}` : 'Unknown Class'}
+                                </div>
+                                <div style={{ fontSize: '13px', color: '#6b7280' }}>Room: {roomNumber} (Lab)</div>
+                                {Object.values(roomClassMap).includes(classId) && (
+                                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
+                                    This class is also in a Class room. Select theory courses in the Class Rooms section above.
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                {availableCourses.length === 0 ? (
+                                  <div style={{ color: '#6b7280', fontSize: '14px' }}>No lab courses available</div>
+                                ) : (
+                                  availableCourses.map((course) => (
+                                    <button
+                                      key={course._id}
+                                      onClick={() => handleCourseToggle(classId, course._id)}
+                                      style={{
+                                        padding: '10px 16px',
+                                        border: (classCoursesMap[classId] || []).includes(course._id) ? '2px solid #7c3aed' : '2px solid #e5e7eb',
+                                        borderRadius: '8px',
+                                        background: (classCoursesMap[classId] || []).includes(course._id) ? '#7c3aed' : '#fff',
+                                        color: (classCoursesMap[classId] || []).includes(course._id) ? '#fff' : '#374151',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        fontSize: '14px',
+                                        transition: 'all 0.2s',
+                                      }}
+                                    >
+                                      {course.courseTitle}
+                                    </button>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -703,16 +759,16 @@ function GenerateTimetable() {
                         assignedClassesLocal.map((classId) => {
                           const cls = classes.find((c) => c._id === classId);
                           const classInLab = isClassSelectedInAnyLab(classId);
+                          const classInClassRoom = Object.values(roomClassMap).includes(classId);
                           const allSelectedCourses = (classCoursesMap[classId] || []);
-                          const coursesForClass = classInLab
-                            ? allSelectedCourses.filter(cid => {
-                                const cObj = courses.find(c => c._id === cid);
-                                return cObj && (cObj.courseType === 'Lab' || /lab/i.test(cObj.courseTitle || ''));
-                              })
-                            : allSelectedCourses.filter(cid => {
-                                const cObj = courses.find(c => c._id === cid);
-                                return cObj && !(cObj.courseType === 'Lab' || /lab/i.test(cObj.courseTitle || ''));
-                              });
+                          const labCourseIds = allSelectedCourses.filter(cid => {
+                            const cObj = courses.find(c => c._id === cid);
+                            return cObj && (cObj.courseType === 'Lab' || /lab/i.test(cObj.courseTitle || ''));
+                          });
+                          const theoryCourseIds = allSelectedCourses.filter(cid => {
+                            const cObj = courses.find(c => c._id === cid);
+                            return cObj && !(cObj.courseType === 'Lab' || /lab/i.test(cObj.courseTitle || ''));
+                          });
                           const roomEntry = Object.entries(roomClassMap).find(([, cId]) => cId === classId) ||
                                             Object.entries(roomLabMap).find(([rId, arr]) => Array.isArray(arr) && arr.includes(classId));
                           const roomName = roomEntry ? (rooms.find(r => r._id === roomEntry[0])?.roomNumber || 'Unknown') : 'Unknown';
@@ -735,56 +791,97 @@ function GenerateTimetable() {
                                   Room: {roomName}
                                 </div>
                               </div>
-                              
-                              {coursesForClass.length === 0 ? (
-                                <div style={{ color: '#6b7280', fontSize: '14px' }}>No courses assigned</div>
-                              ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                  {coursesForClass.map((courseId) => {
-                                    const course = courses.find((c) => c._id === courseId);
-                                    const key = `${classId}_${courseId}`;
-                                    
-                                    return (
-                                      <div
-                                        key={courseId}
-                                        style={{
-                                          padding: '12px',
-                                          background: '#f9fafb',
-                                          borderRadius: '8px',
-                                          border: '1px solid #e5e7eb',
-                                        }}
-                                      >
-                                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
-                                          📚 {course?.courseTitle || 'Unknown Course'}
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                          {teachers.length === 0 ? (
-                                            <div style={{ color: '#6b7280', fontSize: '13px' }}>No teachers available</div>
-                                          ) : (
-                                            teachers.map((teacher) => (
-                                              <button
-                                                key={teacher._id}
-                                                onClick={() => handleTeacherSelect(classId, courseId, teacher._id)}
-                                                style={{
-                                                  padding: '8px 14px',
-                                                  border: courseTeacherMap[key] === teacher._id ? '2px solid #7c3aed' : '2px solid #e5e7eb',
-                                                  borderRadius: '6px',
-                                                  background: courseTeacherMap[key] === teacher._id ? '#7c3aed' : '#fff',
-                                                  color: courseTeacherMap[key] === teacher._id ? '#fff' : '#374151',
-                                                  cursor: 'pointer',
-                                                  fontWeight: 600,
-                                                  fontSize: '13px',
-                                                  transition: 'all 0.2s',
-                                                }}
-                                              >
-                                                {teacher.userName}
-                                              </button>
-                                            ))
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
+                              {/* Theory Section (Class room) */}
+                              {classInClassRoom && (
+                                <div style={{ marginBottom: '12px' }}>
+                                  <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '6px' }}>Theory Courses</div>
+                                  {theoryCourseIds.length === 0 ? (
+                                    <div style={{ color: '#6b7280', fontSize: '14px' }}>No theory courses selected</div>
+                                  ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                      {theoryCourseIds.map((courseId) => {
+                                        const course = courses.find((c) => c._id === courseId);
+                                        const key = `${classId}_${courseId}`;
+                                        return (
+                                          <div key={courseId} style={{ padding: '12px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                                            <div style={{ fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>📚 {course?.courseTitle || 'Unknown Course'}</div>
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                              {teachers.length === 0 ? (
+                                                <div style={{ color: '#6b7280', fontSize: '13px' }}>No teachers available</div>
+                                              ) : (
+                                                teachers.map((teacher) => (
+                                                  <button
+                                                    key={teacher._id}
+                                                    onClick={() => handleTeacherSelect(classId, courseId, teacher._id)}
+                                                    style={{
+                                                      padding: '8px 14px',
+                                                      border: courseTeacherMap[key] === teacher._id ? '2px solid #7c3aed' : '2px solid #e5e7eb',
+                                                      borderRadius: '6px',
+                                                      background: courseTeacherMap[key] === teacher._id ? '#7c3aed' : '#fff',
+                                                      color: courseTeacherMap[key] === teacher._id ? '#fff' : '#374151',
+                                                      cursor: 'pointer',
+                                                      fontWeight: 600,
+                                                      fontSize: '13px',
+                                                      transition: 'all 0.2s',
+                                                    }}
+                                                  >
+                                                    {teacher.userName}
+                                                  </button>
+                                                ))
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Lab Section */}
+                              {classInLab && (
+                                <div>
+                                  <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '6px' }}>Lab Courses</div>
+                                  {labCourseIds.length === 0 ? (
+                                    <div style={{ color: '#6b7280', fontSize: '14px' }}>No lab courses selected</div>
+                                  ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                      {labCourseIds.map((courseId) => {
+                                        const course = courses.find((c) => c._id === courseId);
+                                        const key = `${classId}_${courseId}`;
+                                        return (
+                                          <div key={courseId} style={{ padding: '12px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                                            <div style={{ fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>📚 {course?.courseTitle || 'Unknown Course'}</div>
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                              {teachers.length === 0 ? (
+                                                <div style={{ color: '#6b7280', fontSize: '13px' }}>No teachers available</div>
+                                              ) : (
+                                                teachers.map((teacher) => (
+                                                  <button
+                                                    key={teacher._id}
+                                                    onClick={() => handleTeacherSelect(classId, courseId, teacher._id)}
+                                                    style={{
+                                                      padding: '8px 14px',
+                                                      border: courseTeacherMap[key] === teacher._id ? '2px solid #7c3aed' : '2px solid #e5e7eb',
+                                                      borderRadius: '6px',
+                                                      background: courseTeacherMap[key] === teacher._id ? '#7c3aed' : '#fff',
+                                                      color: courseTeacherMap[key] === teacher._id ? '#fff' : '#374151',
+                                                      cursor: 'pointer',
+                                                      fontWeight: 600,
+                                                      fontSize: '13px',
+                                                      transition: 'all 0.2s',
+                                                    }}
+                                                  >
+                                                    {teacher.userName}
+                                                  </button>
+                                                ))
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -891,22 +988,14 @@ function GenerateTimetable() {
                       const room = rooms.find((r) => r._id === roomId);
                       const status = room?.roomStatus || 'Class';
                       const classIds = status === 'Lab' ? (roomLabMap[roomId] || []) : ([roomClassMap[roomId]].filter(Boolean));
-                      const selectedCoursesByClass = classIds.map(cid => ({
+                      const byClass = classIds.map(cid => ({
                         classId: cid,
                         cls: classes.find(c => c._id === cid),
-                        courses: (classCoursesMap[cid] || []).map((cId) => courses.find((co) => co._id === cId))
+                        selectedIds: (classCoursesMap[cid] || [])
                       }));
 
                       return (
-                        <div
-                          key={roomId}
-                          style={{
-                            border: '2px solid #e5e7eb',
-                            borderRadius: '12px',
-                            padding: '20px',
-                            background: '#f9fafb',
-                          }}
-                        >
+                        <div key={roomId} style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '20px', background: '#f9fafb' }}>
                           <div style={{ display: 'flex', gap: '24px', marginBottom: '16px' }}>
                             <div>
                               <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Room</div>
@@ -915,36 +1004,73 @@ function GenerateTimetable() {
                             <div>
                               <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Class(es)</div>
                               <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed' }}>
-                                {selectedCoursesByClass.length === 0 ? 'N/A' : selectedCoursesByClass.map(x => x.cls ? `${x.cls.degree} ${x.cls.year}-${x.cls.section}` : 'Unknown').join(', ')}
+                                {byClass.length === 0 ? 'N/A' : byClass.map(x => x.cls ? `${x.cls.degree} ${x.cls.year}-${x.cls.section}` : 'Unknown').join(', ')}
                               </div>
                             </div>
                           </div>
+
                           <div>
                             <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>Courses & Teachers</div>
-                            {selectedCoursesByClass.length === 0 ? (
+                            {byClass.length === 0 ? (
                               <div style={{ color: '#6b7280', fontSize: '14px' }}>No courses selected</div>
                             ) : (
-                              selectedCoursesByClass.map(({ classId: cid, courses: courseList }) => (
-                                <div key={cid} style={{ marginBottom: '8px' }}>
-                                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>For Class</div>
-                                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                    {courseList.filter(c => c).length === 0 ? (
-                                      <div style={{ color: '#6b7280', fontSize: '14px' }}>No courses selected</div>
-                                    ) : (
-                                      courseList.filter(c => c).map((course) => {
-                                        const key = `${cid}_${course._id}`;
-                                        const teacher = teachers.find(t => t._id === courseTeacherMap[key]);
-                                        return (
-                                          <div key={course._id} style={{ padding: '8px 12px', background: '#7c3aed', color: '#fff', borderRadius: '6px', fontSize: '13px' }}>
-                                            <div style={{ fontWeight: 700 }}>{course.courseTitle}</div>
-                                            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.9 }}>👨‍🏫 {teacher?.userName || 'No teacher'}</div>
+                              byClass.map(({ classId: cid, cls, selectedIds }) => {
+                                const classInLab = Object.entries(roomLabMap).some(([_, arr]) => Array.isArray(arr) && arr.includes(cid));
+                                const classInClassRoom = Object.values(roomClassMap).includes(cid);
+                                const uniqueIds = Array.from(new Set(selectedIds));
+                                const labCourses = uniqueIds.map(id => courses.find(c => c._id === id)).filter(c => c && ((c.courseType === 'Lab') || /lab/i.test(c.courseTitle || '')));
+                                const theoryCourses = uniqueIds.map(id => courses.find(c => c._id === id)).filter(c => c && !((c.courseType === 'Lab') || /lab/i.test(c.courseTitle || '')));
+
+                                return (
+                                  <div key={cid} style={{ marginBottom: '16px' }}>
+                                    <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>{cls ? `${cls.degree} ${cls.year}-${cls.section}` : 'Class'}</div>
+
+                                    {classInClassRoom && status === 'Class' && (
+                                      <div style={{ marginBottom: '10px' }}>
+                                        <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '6px' }}>Theory Courses</div>
+                                        {theoryCourses.length === 0 ? (
+                                          <div style={{ color: '#6b7280', fontSize: '14px' }}>No theory courses selected</div>
+                                        ) : (
+                                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                            {theoryCourses.map(course => {
+                                              const key = `${cid}_${course._id}`;
+                                              const teacher = teachers.find(t => t._id === courseTeacherMap[key]);
+                                              return (
+                                                <div key={course._id} style={{ padding: '8px 12px', background: '#7c3aed', color: '#fff', borderRadius: '6px', fontSize: '13px' }}>
+                                                  <div style={{ fontWeight: 700 }}>{course.courseTitle}</div>
+                                                  <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.9 }}>👨‍🏫 {teacher?.userName || 'No teacher'}</div>
+                                                </div>
+                                              );
+                                            })}
                                           </div>
-                                        );
-                                      })
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {classInLab && status === 'Lab' && (
+                                      <div>
+                                        <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '6px' }}>Lab Courses</div>
+                                        {labCourses.length === 0 ? (
+                                          <div style={{ color: '#6b7280', fontSize: '14px' }}>No lab courses selected</div>
+                                        ) : (
+                                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                            {labCourses.map(course => {
+                                              const key = `${cid}_${course._id}`;
+                                              const teacher = teachers.find(t => t._id === courseTeacherMap[key]);
+                                              return (
+                                                <div key={course._id} style={{ padding: '8px 12px', background: '#7c3aed', color: '#fff', borderRadius: '6px', fontSize: '13px' }}>
+                                                  <div style={{ fontWeight: 700 }}>{course.courseTitle}</div>
+                                                  <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.9 }}>👨‍🏫 {teacher?.userName || 'No teacher'}</div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
-                                </div>
-                              ))
+                                );
+                              })
                             )}
                           </div>
                         </div>

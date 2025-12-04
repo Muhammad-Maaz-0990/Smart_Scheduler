@@ -47,7 +47,10 @@ const Courses = () => {
   const handleShowModal = (mode, course = null) => {
     setModalMode(mode);
     if (mode === 'edit' && course) {
-      setCurrentCourse(course);
+      // If editing a Lab, force creditHours to 1 and lock it
+      const next = { ...course };
+      if (next.courseType === 'Lab') next.creditHours = 1;
+      setCurrentCourse(next);
     } else {
       setCurrentCourse({ courseCode: '', courseTitle: '', courseType: 'Theory', creditHours: 3 });
     }
@@ -79,6 +82,8 @@ const Courses = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...currentCourse,
+          // Enforce Lab creditHours = 1 on submit
+          creditHours: currentCourse.courseType === 'Lab' ? 1 : currentCourse.creditHours,
           instituteID: instituteObjectId
         })
       });
@@ -290,7 +295,14 @@ const Courses = () => {
                   <Form.Label style={{ color: '#000' }}>Course Type</Form.Label>
                   <Form.Select
                     value={currentCourse.courseType}
-                    onChange={(e) => setCurrentCourse({ ...currentCourse, courseType: e.target.value })}
+                    onChange={(e) => {
+                      const type = e.target.value;
+                      setCurrentCourse({
+                        ...currentCourse,
+                        courseType: type,
+                        creditHours: type === 'Lab' ? 1 : currentCourse.creditHours || 3
+                      });
+                    }}
                     required
                     style={{ color: '#000' }}
                   >
@@ -304,12 +316,13 @@ const Courses = () => {
                   <Form.Label style={{ color: '#000' }}>Credit Hours</Form.Label>
                   <Form.Control
                     type="number"
-                    min="1"
-                    max="6"
+                    min={currentCourse.courseType === 'Lab' ? '1' : '1'}
+                    max={currentCourse.courseType === 'Lab' ? '1' : '6'}
                     placeholder="Enter credit hours"
                     value={currentCourse.creditHours}
                     onChange={(e) => setCurrentCourse({ ...currentCourse, creditHours: parseInt(e.target.value) })}
                     required
+                    disabled={currentCourse.courseType === 'Lab'}
                   />
                 </Form.Group>
               </Col>

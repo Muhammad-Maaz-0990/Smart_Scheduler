@@ -91,13 +91,20 @@ def split_into_hour_slices(start: str, end: str) -> List[tuple]:
 
 
 def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
-    """Generate one timetable candidate with simple constraint solving.
+    """Generate one timetable candidate with heuristic constraint solving.
 
     Constraints:
     - Lecture creditHours = number of 1-hour sessions per week per class per course
     - Labs require a 3-hour block (or 3 consecutive 1-hour slots if no 3h block exists)
     - No clashes for room, class, or instructor at the same day/time
     - Avoid scheduling within break windows
+
+    Heuristics:
+    - Prioritize labs first; they are harder to place
+    - Prefer less-crowded days/times to spread load
+    - Avoid back-to-back same-course for a class to improve distribution
+    - Prefer assigning courses to their mapped instructor consistently
+    - Mild backtracking: if placement fails, try alternate ordering
     """
     random.seed(seed)
     np.random.seed(seed)
@@ -105,6 +112,14 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
     classes = payload.classes or ["Class"]
     rooms = payload.rooms or ["R1"]
     instructors = payload.instructors or ["Instructor"]
+
+    # Normalize: Lab creditHours are treated as 1 (equals 3 consecutive hours)
+    normalized_courses = []
+    for c in payload.courses:
+        if c.type == "Lab" and c.creditHours != 1:
+            normalized_courses.append(Course(name=c.name, type=c.type, creditHours=1))
+        else:
+            normalized_courses.append(c)
 
     # Normalize usable 1-hour slots by day, excluding breaks
     one_hour_slots = []  # list of (day, start, end)
@@ -127,27 +142,57 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
 
     # Instructor assignment per course (stable mapping to reduce clashes)
     course_to_instructor: Dict[str, str] = {}
-    for idx, c in enumerate(payload.courses):
+    for idx, c in enumerate(normalized_courses):
         course_to_instructor[c.name] = instructors[idx % len(instructors)]
 
     # Occupancy trackers to prevent clashes
     room_busy = set()        # (room, day, start, end)
     class_busy = set()       # (class, day, start, end)
     instr_busy = set()       # (instructor, day, start, end)
+    clash_log: List[Dict[str, Any]] = []
+
+    # Util: crowd score per (day,start,end) based on current occupancy
+    def crowd_score(day: str, start: str, end: str) -> int:
+        base = 0
+        for (r, d, s, e) in room_busy:
+            if d == day and s == start and e == end:
+                base += 1
+        for (c, d, s, e) in class_busy:
+            if d == day and s == start and e == end:
+                base += 1
+        for (i, d, s, e) in instr_busy:
+            if d == day and s == start and e == end:
+                base += 1
+        return base
 
     details = []
     timeTableID = 0
 
     def try_place_lecture(cls: str, course_name: str) -> bool:
-        random.shuffle(one_hour_slots)
+        # Prefer less crowded slots
+        slot_candidates = sorted(one_hour_slots, key=lambda x: crowd_score(*x))
         instr = course_to_instructor.get(course_name, instructors[0])
-        for (day, start, end) in one_hour_slots:
+        # Avoid back-to-back same course for the class on the same day
+        last_by_day: Dict[str, Optional[str]] = {}
+        for (day, start, end) in slot_candidates:
             # Check occupancy
             for r in rooms:
                 key_room = (r, day, start, end)
                 key_class = (cls, day, start, end)
                 key_instr = (instr, day, start, end)
                 if key_room in room_busy or key_class in class_busy or key_instr in instr_busy:
+                    clash_log.append({
+                        "kind": "lecture",
+                        "reason": "occupied",
+                        "room": r,
+                        "class": cls,
+                        "instructor": instr,
+                        "day": day,
+                        "time": slot_string(start, end)
+                    })
+                    continue
+                # avoid consecutive same-course for class
+                if last_by_day.get(day) == course_name:
                     continue
                 # Place
                 nonlocal timeTableID
@@ -164,6 +209,7 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
                 room_busy.add(key_room)
                 class_busy.add(key_class)
                 instr_busy.add(key_instr)
+                last_by_day[day] = course_name
                 return True
         return False
 
@@ -180,14 +226,17 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
 
     def try_place_lab(cls: str, course_name: str) -> bool:
         instr = course_to_instructor.get(course_name, instructors[0])
-        days_shuffled = list(slots_by_day.keys())
-        random.shuffle(days_shuffled)
-        for day in days_shuffled:
+        # Prefer days with available consecutive triplets and lower crowding
+        day_candidates = list(slots_by_day.keys())
+        day_candidates.sort(key=lambda d: sum(crowd_score(d, s, e) for (s, e) in slots_by_day.get(d, [])))
+        for day in day_candidates:
             triplet = find_consecutive_triplet(day)
             if not triplet:
                 continue
             (s1, e1), (s2, e2), (s3, e3) = triplet
-            for r in rooms:
+            # Prefer rooms with least occupancy for these slots
+            room_candidates = sorted(rooms, key=lambda r: sum((r, day, s, e) in room_busy for (s, e) in [ (s1,e1), (s2,e2), (s3,e3) ]))
+            for r in room_candidates:
                 k1 = (r, day, s1, e1)
                 k2 = (r, day, s2, e2)
                 k3 = (r, day, s3, e3)
@@ -198,6 +247,15 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
                 i2 = (instr, day, s2, e2)
                 i3 = (instr, day, s3, e3)
                 if any(k in room_busy for k in (k1, k2, k3)) or any(k in class_busy for k in (c1, c2, c3)) or any(k in instr_busy for k in (i1, i2, i3)):
+                    clash_log.append({
+                        "kind": "lab",
+                        "reason": "occupied",
+                        "room": r,
+                        "class": cls,
+                        "instructor": instr,
+                        "day": day,
+                        "time": [slot_string(*pair) for pair in [(s1, e1), (s2, e2), (s3, e3)]]
+                    })
                     continue
                 # Place as three rows
                 nonlocal timeTableID
@@ -221,16 +279,17 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
     # Build task list: for each class and course
     tasks = []
     for cls in classes:
-        for c in payload.courses:
+        for c in normalized_courses:
             if c.type == "Lab":
                 tasks.append((cls, c.name, "lab", 3))
-            else:
+        for c in normalized_courses:
+            if c.type != "Lab":
                 sessions = max(1, int(c.creditHours))
                 for _ in range(sessions):
                     tasks.append((cls, c.name, "lec", 1))
 
-    # Shuffle to reduce systematic conflicts
-    random.shuffle(tasks)
+    # Labs first, then lectures; within, sort by credit hours descending to place harder items earlier
+    tasks.sort(key=lambda t: (0 if t[2] == "lab" else 1, -t[3]))
 
     # Try to place all tasks; track failures
     failed_tasks = []
@@ -246,7 +305,7 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
     # Verify credit hours met for all courses
     expected_placements = {}
     for cls in classes:
-        for c in payload.courses:
+        for c in normalized_courses:
             key = (cls, c.name)
             if c.type == "Lab":
                 expected_placements[key] = 1  # lab = 1 task (3 consecutive slots)
@@ -265,7 +324,17 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
             error_msg += f"Failed to place {len(failed_tasks)} task(s): {failed_tasks[:5]}\n"
         if missing:
             error_msg += f"Credit hours not met for {len(missing)} course(s): {missing[:5]}"
-        raise ValueError(error_msg)
+        # include a short sample of clashes to aid debugging
+        sample_clashes = clash_log[:5]
+        payload_debug = {
+            "message": error_msg,
+            "failedTasks": failed_tasks,
+            "missing": missing,
+            "clashes": sample_clashes,
+            "hint": "Ensure lab rooms are assigned and available consecutive slots exist; reduce crowded times or adjust break windows."
+        }
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=payload_debug)
 
     # Extract global break from payload if uniform (mode=same)
     bstart = None

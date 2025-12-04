@@ -209,16 +209,45 @@ function TimeTable({ isAdmin = false }) {
             </button>
           )}
           {isAdmin && (
-            <button
-              onClick={generateTimetable}
-              disabled={loading}
-              style={{
-                background: '#7c3aed', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '14px', opacity: loading ? 0.6 : 1
-              }}
-              className="no-print"
-            >
-              Generate Timetable
-            </button>
+            <>
+              <button
+                onClick={generateTimetable}
+                disabled={loading}
+                style={{
+                  background: '#7c3aed', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '14px', opacity: loading ? 0.6 : 1
+                }}
+                className="no-print"
+              >
+                Generate Timetable
+              </button>
+              {selected && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const confirmDel = window.confirm(`Delete timetable ${selected.instituteTimeTableID}? This cannot be undone.`);
+                      if (!confirmDel) return;
+                      const token = localStorage.getItem('token');
+                      const res = await fetch(`http://localhost:5000/api/timetables-gen/${encodeURIComponent(selected.instituteTimeTableID)}`, {
+                        method: 'DELETE',
+                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                      });
+                      if (!res.ok) throw new Error(await res.text());
+                      // Refresh list; fetchList will auto-select current or first
+                      await fetchList();
+                    } catch (e) {
+                      setError('Failed to delete timetable');
+                    }
+                  }}
+                  disabled={loading}
+                  style={{
+                    background: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '14px', opacity: loading ? 0.6 : 1
+                  }}
+                  className="no-print"
+                >
+                  🗑️ Delete Timetable
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

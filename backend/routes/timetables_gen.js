@@ -6,6 +6,7 @@ const InstituteTimeTables = require('../models/InstituteTimeTables');
 const InstituteTimeTableDetails = require('../models/InstituteTimeTableDetails');
 const TimeSlot = require('../models/TimeSlot');
 const Room = require('../models/Room');
+const InstituteInformation = require('../models/InstituteInformation');
 
 // helper to compose key per spec
 function keyFor(ttId, instituteID, year) {
@@ -97,6 +98,11 @@ router.post('/generate', protect, async (req, res) => {
     return res.json({ candidates });
   } catch (err) {
     console.error('Generate timetable error:', err?.message || err);
+    // Propagate Python API clash/validation errors with detail
+    if (err?.response && err.response.status === 400) {
+      const detail = err.response.data?.detail || err.response.data?.message || err.message;
+      return res.status(400).json({ message: detail });
+    }
     if (String(err?.message || '').includes('missing/invalid creditHours')) {
       return res.status(400).json({ message: err.message });
     }
@@ -160,7 +166,11 @@ router.post('/save', protect, async (req, res) => {
     // - Class rooms: at most one class per room per timeslot
     // - Lab rooms: allow multiple classes per timeslot
     const roomNumbers = [...new Set(rows.map(r => r.roomNumber))];
-    const roomDocs = await Room.find({ instituteID, roomNumber: { $in: roomNumbers } }).lean();
+    // Room model stores instituteID as ObjectId ref; resolve from InstituteInformation using string code
+    const instDoc = await InstituteInformation.findOne({ instituteID }).lean();
+    const instituteObjectId = instDoc?._id;
+    const roomQuery = instituteObjectId ? { instituteID: instituteObjectId, roomNumber: { $in: roomNumbers } } : { roomNumber: { $in: roomNumbers } };
+    const roomDocs = await Room.find(roomQuery).lean();
     const statusByRoom = new Map(roomDocs.map(r => [String(r.roomNumber), r.roomStatus]));
 
     const violations = [];
@@ -186,8 +196,15 @@ router.post('/save', protect, async (req, res) => {
 
     return res.json({ ok: true, instituteTimeTableID, count: rows.length });
   } catch (err) {
-    console.error('Save timetable error:', err?.message || err);
-    return res.status(500).json({ message: 'Failed to save timetable' });
+    // Surface common, actionable errors clearly
+    if (err?.name === 'ValidationError') {
+      return res.status(400).json({ message: `Validation failed: ${err.message}` });
+    }
+    if (err?.code === 11000) {
+      return res.status(400).json({ message: 'Duplicate record while saving timetable' });
+    }
+    console.error('Save timetable error:', err?.stack || err?.message || err);
+    return res.status(500).json({ message: err?.message || 'Failed to save timetable' });
   }
 });
 
@@ -248,6 +265,28 @@ router.patch('/header/:id', protect, async (req, res) => {
   } catch (err) {
     console.error('Update header error:', err?.message || err);
     return res.status(500).json({ message: 'Failed to update header' });
+  }
+});
+
+// DELETE /api/timetables-gen/:id
+// Deletes the timetable header and all associated detail rows; admin-only
+router.delete('/:id', protect, async (req, res) => {
+  try {
+    const { instituteID, designation } = req.user || {};
+    if (!instituteID) return res.status(400).json({ message: 'User has no institute' });
+    if (String(designation).toLowerCase() !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+
+    const instituteTimeTableID = Number(req.params.id);
+    const header = await InstituteTimeTables.findOne({ instituteTimeTableID, instituteID }).lean();
+    if (!header) return res.status(404).json({ message: 'Timetable not found' });
+
+    const key = keyFor(instituteTimeTableID, instituteID, header.year);
+    await InstituteTimeTableDetails.deleteMany({ key });
+    await InstituteTimeTables.deleteOne({ instituteTimeTableID, instituteID });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete timetable error:', err?.message || err);
+    return res.status(500).json({ message: 'Failed to delete timetable' });
   }
 });
 
