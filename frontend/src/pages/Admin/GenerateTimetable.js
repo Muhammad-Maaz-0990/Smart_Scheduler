@@ -150,6 +150,10 @@ function GenerateTimetable() {
     }));
   };
 
+  const isClassSelectedInAnyLab = (classId) => {
+    return Object.entries(roomLabMap).some(([roomId, classIds]) => Array.isArray(classIds) && classIds.includes(classId));
+  };
+
   const handleNext = () => {
     if (step === 1 && selectedRooms.length === 0) {
       alert('Please select at least one room');
@@ -228,7 +232,7 @@ function GenerateTimetable() {
           const clsId = roomClassMap[roomId];
           const clsObj = classes.find(c => c._id === clsId);
           const courseIds = (classCoursesMap[clsId] || []);
-          
+
           const className = clsObj ? `${clsObj.degree} ${clsObj.year}-${clsObj.section}` : 'Unknown';
           if (!allClasses.includes(className)) allClasses.push(className);
           if (roomObj?.roomNumber && !allRoomNumbers.includes(roomObj.roomNumber)) {
@@ -239,16 +243,16 @@ function GenerateTimetable() {
             const cObj = courses.find(c => c._id === cid);
             const teacherId = courseTeacherMap[`${clsId}_${cid}`];
             const tObj = teachers.find(t => t._id === teacherId);
-            
+
             const courseType = (cObj?.courseType === 'Lab' || /lab/i.test(cObj?.courseTitle || '')) ? 'Lab' : 'Lecture';
             const courseName = cObj?.courseTitle || 'Course';
             const creditHours = courseType === 'Lab' ? 3 : (Number(cObj?.creditHours) || 1);
-            
+
             const courseEntry = { name: courseName, type: courseType, creditHours };
             if (!allCourses.find(c => c.name === courseName && c.type === courseType)) {
               allCourses.push(courseEntry);
             }
-            
+
             const instructorName = tObj?.userName || 'Instructor';
             if (!allInstructors.includes(instructorName)) allInstructors.push(instructorName);
           });
@@ -596,7 +600,7 @@ function GenerateTimetable() {
                     Step 3: Assign Courses to Classes
                   </h2>
                   <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
-                    Select courses for each class (you can select multiple)
+                    Select courses for each class (you can select multiple). If a class is assigned in any Lab room, only Lab courses are shown.
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {assignedClasses.map((classId) => {
@@ -605,6 +609,19 @@ function GenerateTimetable() {
                         .filter(([, cId]) => cId === classId)
                         .map(([rId]) => rooms.find((r) => r._id === rId)?.roomNumber)
                         .join(', ');
+                      const classInLab = isClassSelectedInAnyLab(classId);
+                      const anyLabSelected = selectedRooms.some(rid => (rooms.find(r => r._id === rid)?.roomStatus || 'Class') === 'Lab');
+                      let availableCourses;
+                      if (classInLab) {
+                        // If this class is assigned in a Lab, only show Lab courses
+                        availableCourses = courses.filter(c => (c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
+                      } else if (!anyLabSelected) {
+                        // No lab rooms selected anywhere: hide lab courses globally
+                        availableCourses = courses.filter(c => !(c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
+                      } else {
+                        // Labs exist but this class is not in a lab: show non-lab courses
+                        availableCourses = courses.filter(c => !(c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
+                      }
                       return (
                         <div
                           key={classId}
@@ -619,13 +636,18 @@ function GenerateTimetable() {
                             <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed' }}>
                               {cls ? `${cls.degree} ${cls.year}-${cls.section}` : 'Unknown Class'}
                             </div>
-                            <div style={{ fontSize: '13px', color: '#6b7280' }}>Room(s): {assignedRooms}</div>
+                            <div style={{ fontSize: '13px', color: '#6b7280' }}>Room(s): {assignedRooms || (classInLab ? 'Lab-assigned' : '—')}</div>
+                            {classInLab && (
+                              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
+                                Showing Lab courses because this class is selected in a Lab room
+                              </div>
+                            )}
                           </div>
                           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                            {courses.length === 0 ? (
+                            {availableCourses.length === 0 ? (
                               <div style={{ color: '#6b7280', fontSize: '14px' }}>No courses available</div>
                             ) : (
-                              courses.map((course) => (
+                              availableCourses.map((course) => (
                                 <button
                                   key={course._id}
                                   onClick={() => handleCourseToggle(classId, course._id)}
@@ -668,19 +690,32 @@ function GenerateTimetable() {
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {(() => {
-                      const assignedClasses = Object.values(roomClassMap);
+                      const assignedClassesLocal = Array.from(new Set([
+                        ...Object.values(roomClassMap),
+                        ...Object.values(roomLabMap).flat()
+                      ].filter(Boolean)));
                       
-                      return assignedClasses.length === 0 ? (
+                      return assignedClassesLocal.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
                           No classes assigned
                         </div>
                       ) : (
-                        assignedClasses.map((classId) => {
+                        assignedClassesLocal.map((classId) => {
                           const cls = classes.find((c) => c._id === classId);
-                          const coursesForClass = classCoursesMap[classId] || [];
-                          const room = Object.entries(roomClassMap)
-                            .find(([, cId]) => cId === classId);
-                          const roomName = room ? rooms.find(r => r._id === room[0])?.roomNumber : 'Unknown';
+                          const classInLab = isClassSelectedInAnyLab(classId);
+                          const allSelectedCourses = (classCoursesMap[classId] || []);
+                          const coursesForClass = classInLab
+                            ? allSelectedCourses.filter(cid => {
+                                const cObj = courses.find(c => c._id === cid);
+                                return cObj && (cObj.courseType === 'Lab' || /lab/i.test(cObj.courseTitle || ''));
+                              })
+                            : allSelectedCourses.filter(cid => {
+                                const cObj = courses.find(c => c._id === cid);
+                                return cObj && !(cObj.courseType === 'Lab' || /lab/i.test(cObj.courseTitle || ''));
+                              });
+                          const roomEntry = Object.entries(roomClassMap).find(([, cId]) => cId === classId) ||
+                                            Object.entries(roomLabMap).find(([rId, arr]) => Array.isArray(arr) && arr.includes(classId));
+                          const roomName = roomEntry ? (rooms.find(r => r._id === roomEntry[0])?.roomNumber || 'Unknown') : 'Unknown';
 
                           return (
                             <div

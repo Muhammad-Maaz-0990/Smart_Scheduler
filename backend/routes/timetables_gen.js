@@ -18,7 +18,11 @@ function keyFor(ttId, instituteID, year) {
 // breaks: { mode: 'same'|'per-day', same?: { start, end }, perDay?: { Mon:{start,end}, ... } }
 router.post('/generate', protect, async (req, res) => {
   try {
-    const { instituteID } = req.user || {};
+    let { instituteID } = req.user || {};
+    // Fallback to body.instituteID if user context missing (e.g., legacy tokens)
+    if (!instituteID && req.body && req.body.instituteID) {
+      instituteID = req.body.instituteID;
+    }
     if (!instituteID) return res.status(400).json({ message: 'User has no institute' });
 
     const {
