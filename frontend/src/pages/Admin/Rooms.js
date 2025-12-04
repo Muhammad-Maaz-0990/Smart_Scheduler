@@ -15,6 +15,9 @@ const Rooms = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All'); // All | Class | Lab
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   useEffect(() => {
     if (instituteObjectId) {
@@ -158,6 +161,43 @@ const Rooms = () => {
           </Button>
         </div>
 
+        {/* Search and Filter Row */}
+        <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3">
+          <div className="d-flex align-items-center gap-2" style={{ flex: 1 }}>
+            <Form.Control
+              type="text"
+              placeholder="Search by Room Number..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="position-relative" style={{ minWidth: 160 }}>
+            <Button variant="light" className="border" onClick={() => setShowFilterMenu(s => !s)}>
+              ⋮
+            </Button>
+            {showFilterMenu && (
+              <div className="card shadow-sm" style={{ position: 'absolute', right: 0, zIndex: 10, minWidth: 220 }}>
+                <div className="card-body p-2">
+                  <div className="mb-2" style={{ fontWeight: 600 }}>Filter Options</div>
+                  <Form.Select
+                    size="sm"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="All">Status: All</option>
+                    <option value="Class">Status: Class</option>
+                    <option value="Lab">Status: Lab</option>
+                  </Form.Select>
+                  <div className="d-flex justify-content-end gap-2 mt-2">
+                    <Button size="sm" variant="secondary" onClick={() => { setStatusFilter('All'); setShowFilterMenu(false); }}>Reset</Button>
+                    <Button size="sm" variant="primary" onClick={() => setShowFilterMenu(false)}>Apply</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
         {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
@@ -178,7 +218,10 @@ const Rooms = () => {
                     <td colSpan="4" className="text-center">No rooms found. Add your first room!</td>
                   </tr>
                 ) : (
-                  rooms.map((room, index) => (
+                  rooms
+                    .filter(r => (statusFilter === 'All' ? true : r.roomStatus === statusFilter))
+                    .filter(r => String(r.roomNumber || '').toLowerCase().includes(searchTerm.trim().toLowerCase()))
+                    .map((room, index) => (
                     <tr key={room._id}>
                       <td>{index + 1}</td>
                       <td>{room.roomNumber}</td>

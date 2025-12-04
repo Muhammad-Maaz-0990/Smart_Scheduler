@@ -17,6 +17,9 @@ const Courses = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [filters, setFilters] = useState({ type: 'All', creditHours: '', });
 
   useEffect(() => {
     if (instituteObjectId) {
@@ -143,6 +146,43 @@ const Courses = () => {
           </Button>
         </div>
 
+        {/* Search and Filter */}
+        <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3">
+          <Form.Control
+            type="text"
+            placeholder="Search by Code or Title..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ maxWidth: 420 }}
+          />
+          <div className="position-relative" style={{ minWidth: 160 }}>
+            <Button variant="light" className="border" onClick={() => setShowFilterMenu(s => !s)}>⋮</Button>
+            {showFilterMenu && (
+              <div className="card shadow-sm" style={{ position: 'absolute', right: 0, zIndex: 10, minWidth: 280 }}>
+                <div className="card-body p-2">
+                  <div className="mb-2" style={{ fontWeight: 600, color: '#000' }}>Filter Options</div>
+                  <Form.Group className="mb-2">
+                    <Form.Label className="small mb-1" style={{ color: '#000' }}>Type</Form.Label>
+                    <Form.Select size="sm" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })} style={{ color: '#000' }}>
+                      <option value="All">All</option>
+                      <option value="Theory">Theory</option>
+                      <option value="Lab">Lab</option>
+                    </Form.Select>
+                  </Form.Group>
+                  <Form.Group className="mb-2">
+                    <Form.Label className="small mb-1" style={{ color: '#000' }}>Credit Hours</Form.Label>
+                    <Form.Control size="sm" type="number" min="" placeholder="e.g. 3" value={filters.creditHours} onChange={(e) => setFilters({ ...filters, creditHours: e.target.value })} />
+                  </Form.Group>
+                  <div className="d-flex justify-content-end gap-2 mt-2">
+                    <Button size="sm" variant="secondary" onClick={() => { setFilters({ type: 'All', creditHours: '' }); setShowFilterMenu(false); }}>Reset</Button>
+                    <Button size="sm" variant="primary" onClick={() => setShowFilterMenu(false)}>Apply</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
         {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
@@ -166,7 +206,14 @@ const Courses = () => {
                     <td colSpan="6" className="text-center py-4">No courses found. Add your first course!</td>
                   </tr>
                 ) : (
-                  courses.map((course, index) => (
+                  courses
+                    .filter(c => (filters.type === 'All' ? true : c.courseType === filters.type))
+                    .filter(c => (!filters.creditHours ? true : String(c.creditHours || '').includes(String(filters.creditHours))))
+                    .filter(c => (
+                      String(c.courseCode || '').toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
+                      String(c.courseTitle || '').toLowerCase().includes(searchTerm.trim().toLowerCase())
+                    ))
+                    .map((course, index) => (
                     <tr key={course._id}>
                       <td>{index + 1}</td>
                       <td><strong>{course.courseCode}</strong></td>
@@ -216,7 +263,7 @@ const Courses = () => {
           {success && <Alert variant="success">{success}</Alert>}
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Course Code</Form.Label>
+              <Form.Label style={{ color: '#000' }}>Course Code</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Enter course code (e.g., CS101, MATH201)"
@@ -227,7 +274,7 @@ const Courses = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Course Title</Form.Label>
+              <Form.Label style={{ color: '#000' }}>Course Title</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Enter course title"
@@ -240,11 +287,12 @@ const Courses = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Course Type</Form.Label>
+                  <Form.Label style={{ color: '#000' }}>Course Type</Form.Label>
                   <Form.Select
                     value={currentCourse.courseType}
                     onChange={(e) => setCurrentCourse({ ...currentCourse, courseType: e.target.value })}
                     required
+                    style={{ color: '#000' }}
                   >
                     <option value="Theory">Theory</option>
                     <option value="Lab">Lab</option>
@@ -253,7 +301,7 @@ const Courses = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Credit Hours</Form.Label>
+                  <Form.Label style={{ color: '#000' }}>Credit Hours</Form.Label>
                   <Form.Control
                     type="number"
                     min="1"

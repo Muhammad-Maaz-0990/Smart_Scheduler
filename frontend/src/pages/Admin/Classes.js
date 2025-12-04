@@ -18,6 +18,9 @@ const Classes = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [filters, setFilters] = useState({ session: 'All', section: 'All', year: '', rank: '' });
 
   useEffect(() => {
     if (instituteObjectId) {
@@ -144,6 +147,55 @@ const Classes = () => {
           </Button>
         </div>
 
+        {/* Search and Filter */}
+        <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3">
+          <Form.Control
+            type="text"
+            placeholder="Search by Class Name (Degree)..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ maxWidth: 420 }}
+          />
+          <div className="position-relative" style={{ minWidth: 160 }}>
+            <Button variant="light" className="border" onClick={() => setShowFilterMenu(s => !s)}>⋮</Button>
+            {showFilterMenu && (
+              <div className="card shadow-sm" style={{ position: 'absolute', right: 0, zIndex: 10, minWidth: 280 }}>
+                <div className="card-body p-2">
+                  <div className="mb-2" style={{ fontWeight: 600 }}>Filter Options</div>
+                  <Form.Group className="mb-2">
+                    <Form.Label className="small mb-1">Session</Form.Label>
+                    <Form.Select size="sm" value={filters.session} onChange={(e) => setFilters({ ...filters, session: e.target.value })} style={{ color: '#000' }}>
+                      <option value="All">All</option>
+                      <option value="Fall">Fall</option>
+                      <option value="Spring">Spring</option>
+                    </Form.Select>
+                  </Form.Group>
+                  <Form.Group className="mb-2">
+                    <Form.Label className="small mb-1">Section</Form.Label>
+                    <Form.Select size="sm" value={filters.section} onChange={(e) => setFilters({ ...filters, section: e.target.value })} style={{ color: '#000' }}>
+                      <option value="All">All</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                    </Form.Select>
+                  </Form.Group>
+                  <Form.Group className="mb-2">
+                    <Form.Label className="small mb-1">Year</Form.Label>
+                    <Form.Control size="sm" type="text" placeholder="e.g. 2025" value={filters.year} onChange={(e) => setFilters({ ...filters, year: e.target.value })} />
+                  </Form.Group>
+                  <Form.Group className="mb-2">
+                    <Form.Label className="small mb-1">Rank</Form.Label>
+                    <Form.Control size="sm" type="number" min="" placeholder="1-8" value={filters.rank} onChange={(e) => setFilters({ ...filters, rank: e.target.value })} />
+                  </Form.Group>
+                  <div className="d-flex justify-content-end gap-2 mt-2">
+                    <Button size="sm" variant="secondary" onClick={() => { setFilters({ session: 'All', section: 'All', year: '', rank: '' }); setShowFilterMenu(false); }}>Reset</Button>
+                    <Button size="sm" variant="primary" onClick={() => setShowFilterMenu(false)}>Apply</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
         {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
 
@@ -168,7 +220,13 @@ const Classes = () => {
                     <td colSpan="7" className="text-center py-4">No classes found. Add your first class!</td>
                   </tr>
                 ) : (
-                  classes.map((classItem, index) => (
+                  classes
+                    .filter(c => (filters.session === 'All' ? true : c.session === filters.session))
+                    .filter(c => (filters.section === 'All' ? true : c.section === filters.section))
+                    .filter(c => (!filters.year ? true : String(c.year || '').includes(filters.year)))
+                    .filter(c => (!filters.rank ? true : String(c.rank || '').includes(String(filters.rank))))
+                    .filter(c => String(c.degree || '').toLowerCase().includes(searchTerm.trim().toLowerCase()))
+                    .map((classItem, index) => (
                     <tr key={classItem._id}>
                       <td>{index + 1}</td>
                       <td>{classItem.degree}</td>
@@ -239,6 +297,7 @@ const Classes = () => {
                     value={currentClass.session}
                     onChange={(e) => setCurrentClass({ ...currentClass, session: e.target.value })}
                     required
+                    style={{ color: '#000' }}
                   >
                     <option value="Fall">Fall</option>
                     <option value="Spring">Spring</option>
@@ -252,6 +311,7 @@ const Classes = () => {
                     value={currentClass.section}
                     onChange={(e) => setCurrentClass({ ...currentClass, section: e.target.value })}
                     required
+                    style={{ color: '#000' }}
                   >
                     <option value="A">A</option>
                     <option value="B">B</option>
