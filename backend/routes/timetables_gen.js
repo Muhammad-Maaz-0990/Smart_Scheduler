@@ -5,6 +5,7 @@ const { protect } = require('../middleware/auth');
 const InstituteTimeTables = require('../models/InstituteTimeTables');
 const InstituteTimeTableDetails = require('../models/InstituteTimeTableDetails');
 const TimeSlot = require('../models/TimeSlot');
+const Room = require('../models/Room');
 
 // helper to compose key per spec
 function keyFor(ttId, instituteID, year) {
@@ -149,6 +150,32 @@ router.post('/save', protect, async (req, res) => {
 
     if (rows.some(r => !r.timeTableID || !r.roomNumber || !r.class || !r.course || !r.day || !r.time || !r.instructorName)) {
       return res.status(400).json({ message: 'Invalid detail rows' });
+    }
+
+    // Enforce room occupancy constraint:
+    // - Class rooms: at most one class per room per timeslot
+    // - Lab rooms: allow multiple classes per timeslot
+    const roomNumbers = [...new Set(rows.map(r => r.roomNumber))];
+    const roomDocs = await Room.find({ instituteID, roomNumber: { $in: roomNumbers } }).lean();
+    const statusByRoom = new Map(roomDocs.map(r => [String(r.roomNumber), r.roomStatus]));
+
+    const violations = [];
+    const bySlot = new Map();
+    for (const r of rows) {
+      const status = statusByRoom.get(r.roomNumber) || 'Class';
+      const slotKey = `${r.roomNumber}__${r.day}__${r.time}`;
+      if (!bySlot.has(slotKey)) bySlot.set(slotKey, []);
+      bySlot.get(slotKey).push(r);
+      if (status === 'Class' && bySlot.get(slotKey).length > 1) {
+        violations.push({ roomNumber: r.roomNumber, day: r.day, time: r.time });
+      }
+    }
+
+    if (violations.length) {
+      return res.status(400).json({
+        message: 'Room occupancy violation: class rooms can host only one class per timeslot',
+        conflicts: violations
+      });
     }
 
     await InstituteTimeTableDetails.insertMany(rows);

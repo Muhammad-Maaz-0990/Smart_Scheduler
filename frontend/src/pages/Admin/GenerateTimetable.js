@@ -13,7 +13,8 @@ function GenerateTimetable() {
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [selectedRooms, setSelectedRooms] = useState([]);
-  const [roomClassMap, setRoomClassMap] = useState({});
+  const [roomClassMap, setRoomClassMap] = useState({}); // single class per Class-room
+  const [roomLabMap, setRoomLabMap] = useState({}); // multiple classes per Lab-room
   const [classCoursesMap, setClassCoursesMap] = useState({});
   const [courseTeacherMap, setCourseTeacherMap] = useState({}); // Key: "classId_courseId", Value: teacherId
   const [loading, setLoading] = useState(false);
@@ -101,19 +102,33 @@ function GenerateTimetable() {
   };
 
   const handleClassSelect = (roomId, classId) => {
-    // Check if this class is already assigned to another room
-    const alreadyAssignedRoom = Object.entries(roomClassMap).find(
-      ([rId, cId]) => cId === classId && rId !== roomId
-    );
-    
-    if (alreadyAssignedRoom) {
-      alert(`This class is already assigned to another room`);
+    const roomObj = rooms.find(r => r._id === roomId);
+    const status = roomObj?.roomStatus || 'Class';
+
+    if (status === 'Lab') {
+      // toggle multi-select for lab room
+      setRoomLabMap((prev) => {
+        const current = prev[roomId] || [];
+        const exists = current.includes(classId);
+        const updated = exists ? current.filter(id => id !== classId) : [...current, classId];
+        return { ...prev, [roomId]: updated };
+      });
       return;
     }
 
-    setRoomClassMap((prev) => ({
+    // Class room: allow only one class, and prevent same class assigned to another Class room
+    const alreadyAssignedClassRoom = Object.entries(roomClassMap).find(([rId, cId]) => cId === classId && rId !== roomId);
+    if (alreadyAssignedClassRoom) {
+      alert('This class is already assigned to another class room');
+      return;
+    }
+    setRoomClassMap((prev) => ({ ...prev, [roomId]: classId }));
+  };
+
+  const handleLabRemove = (roomId, classId) => {
+    setRoomLabMap(prev => ({
       ...prev,
-      [roomId]: classId,
+      [roomId]: (prev[roomId] || []).filter(id => id !== classId)
     }));
   };
 
@@ -141,9 +156,17 @@ function GenerateTimetable() {
       return;
     }
     if (step === 2) {
-      const missingClass = selectedRooms.find((roomId) => !roomClassMap[roomId]);
-      if (missingClass) {
-        alert('Please assign a class to each selected room');
+      // Validate room assignments: Class rooms must have one class; Lab rooms must have at least one selected class
+      const missing = selectedRooms.find((roomId) => {
+        const roomObj = rooms.find(r => r._id === roomId);
+        const status = roomObj?.roomStatus || 'Class';
+        if (status === 'Lab') {
+          return !roomLabMap[roomId] || roomLabMap[roomId].length === 0;
+        }
+        return !roomClassMap[roomId];
+      });
+      if (missing) {
+        alert('Assign classes: one for each Class room, and at least one for each Lab');
         return;
       }
     }
@@ -310,7 +333,10 @@ function GenerateTimetable() {
     run();
   };
 
-  const assignedClasses = Object.values(roomClassMap);
+  const assignedClasses = Array.from(new Set([
+    ...Object.values(roomClassMap),
+    ...Object.values(roomLabMap).flat()
+  ].filter(Boolean)));
 
   return (
     <>
@@ -454,52 +480,111 @@ function GenerateTimetable() {
                     Step 2: Assign Classes to Rooms
                   </h2>
                   <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
-                    Assign one class to each selected room
+                    Assign one class per Class room. Labs can have multiple classes.
                   </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {selectedRooms.map((roomId) => {
-                      const room = rooms.find((r) => r._id === roomId);
-                      return (
-                        <div
-                          key={roomId}
-                          style={{
-                            border: '2px solid #e5e7eb',
-                            borderRadius: '12px',
-                            padding: '20px',
-                            background: '#fff',
-                          }}
-                        >
-                          <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed', marginBottom: '12px' }}>
-                            {room?.roomNumber} ({room?.roomStatus || 'Class'})
-                          </div>
-                          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                            {classes.length === 0 ? (
-                              <div style={{ color: '#6b7280', fontSize: '14px' }}>No classes available</div>
-                            ) : (
-                              classes.map((cls) => (
-                                <button
-                                  key={cls._id}
-                                  onClick={() => handleClassSelect(roomId, cls._id)}
+                  {/* Class Rooms */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginBottom: '12px' }}>Class Rooms</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {selectedRooms.filter(rid => (rooms.find(r => r._id === rid)?.roomStatus || 'Class') === 'Class').length === 0 ? (
+                        <div style={{ color: '#6b7280', fontSize: '14px' }}>No class rooms selected</div>
+                      ) : (
+                        selectedRooms.filter(rid => (rooms.find(r => r._id === rid)?.roomStatus || 'Class') === 'Class').map((roomId) => {
+                          const room = rooms.find((r) => r._id === roomId);
+                          return (
+                            <div key={roomId} style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '20px', background: '#fff' }}>
+                              <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed', marginBottom: '12px' }}>
+                                {room?.roomNumber} (Class)
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px' }}>Select Class</label>
+                                <select
+                                  value={roomClassMap[roomId] || ''}
+                                  onChange={(e) => handleClassSelect(roomId, e.target.value)}
                                   style={{
-                                    padding: '10px 16px',
-                                    border: roomClassMap[roomId] === cls._id ? '2px solid #7c3aed' : '2px solid #e5e7eb',
+                                    width: '100%',
+                                    padding: '10px',
+                                    border: '2px solid #e5e7eb',
                                     borderRadius: '8px',
-                                    background: roomClassMap[roomId] === cls._id ? '#7c3aed' : '#fff',
-                                    color: roomClassMap[roomId] === cls._id ? '#fff' : '#374151',
-                                    cursor: 'pointer',
-                                    fontWeight: 600,
                                     fontSize: '14px',
-                                    transition: 'all 0.2s',
+                                    color: '#111827'
                                   }}
                                 >
-                                  {`${cls.degree} ${cls.year}-${cls.section}`}
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                                  <option value="">-- Select a class --</option>
+                                  {classes.map(cls => (
+                                    <option key={cls._id} value={cls._id}>{`${cls.degree} ${cls.year}-${cls.section}`}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Lab Rooms */}
+                  <div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginBottom: '12px' }}>Lab Rooms</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {selectedRooms.filter(rid => (rooms.find(r => r._id === rid)?.roomStatus || 'Class') === 'Lab').length === 0 ? (
+                        <div style={{ color: '#6b7280', fontSize: '14px' }}>No lab rooms selected</div>
+                      ) : (
+                        selectedRooms.filter(rid => (rooms.find(r => r._id === rid)?.roomStatus || 'Class') === 'Lab').map((roomId) => {
+                          const room = rooms.find((r) => r._id === roomId);
+                          const selectedForLab = roomLabMap[roomId] || [];
+                          return (
+                            <div key={roomId} style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '20px', background: '#fff' }}>
+                              <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed', marginBottom: '12px' }}>
+                                {room?.roomNumber} (Lab)
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '13px', color: '#6b7280', marginBottom: '6px' }}>Select Class(es)</label>
+                                <select
+                                  multiple
+                                  value={selectedForLab}
+                                  onChange={(e) => {
+                                    const opts = Array.from(e.target.selectedOptions).map(o => o.value);
+                                    setRoomLabMap(prev => ({ ...prev, [roomId]: opts }));
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    padding: '10px',
+                                    border: '2px solid #e5e7eb',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    minHeight: '100px',
+                                    color: '#111827'
+                                  }}
+                                >
+                                  {classes.map(cls => (
+                                    <option key={cls._id} value={cls._id}>{`${cls.degree} ${cls.year}-${cls.section}`}</option>
+                                  ))}
+                                </select>
+
+                                {/* Chips */}
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+                                  {selectedForLab.length === 0 ? (
+                                    <div style={{ color: '#6b7280', fontSize: '13px' }}>No classes selected</div>
+                                  ) : (
+                                    selectedForLab.map(cid => {
+                                      const cls = classes.find(c => c._id === cid);
+                                      const label = cls ? `${cls.degree} ${cls.year}-${cls.section}` : cid;
+                                      return (
+                                        <div key={cid} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#eef2ff', color: '#1f2937', border: '1px solid #c7d2fe', borderRadius: '999px', padding: '6px 10px' }}>
+                                          <span style={{ fontSize: '13px', fontWeight: 600 }}>{label}</span>
+                                          <button onClick={() => handleLabRemove(roomId, cid)} style={{ border: 'none', background: 'transparent', color: '#6b7280', cursor: 'pointer', fontSize: '14px' }}>✕</button>
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -769,11 +854,13 @@ function GenerateTimetable() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     {selectedRooms.map((roomId) => {
                       const room = rooms.find((r) => r._id === roomId);
-                      const classId = roomClassMap[roomId];
-                      const cls = classes.find((c) => c._id === classId);
-                      const selectedCourses = (classCoursesMap[classId] || []).map((cId) =>
-                        courses.find((co) => co._id === cId)
-                      );
+                      const status = room?.roomStatus || 'Class';
+                      const classIds = status === 'Lab' ? (roomLabMap[roomId] || []) : ([roomClassMap[roomId]].filter(Boolean));
+                      const selectedCoursesByClass = classIds.map(cid => ({
+                        classId: cid,
+                        cls: classes.find(c => c._id === cid),
+                        courses: (classCoursesMap[cid] || []).map((cId) => courses.find((co) => co._id === cId))
+                      }));
 
                       return (
                         <div
@@ -788,46 +875,42 @@ function GenerateTimetable() {
                           <div style={{ display: 'flex', gap: '24px', marginBottom: '16px' }}>
                             <div>
                               <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Room</div>
-                              <div style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937' }}>
-                                {room?.roomNumber}
-                              </div>
+                              <div style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937' }}>{room?.roomNumber}</div>
                             </div>
                             <div>
-                              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Class</div>
+                              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Class(es)</div>
                               <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed' }}>
-                                {cls ? `${cls.degree} ${cls.year}-${cls.section}` : 'N/A'}
+                                {selectedCoursesByClass.length === 0 ? 'N/A' : selectedCoursesByClass.map(x => x.cls ? `${x.cls.degree} ${x.cls.year}-${x.cls.section}` : 'Unknown').join(', ')}
                               </div>
                             </div>
                           </div>
                           <div>
                             <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>Courses & Teachers</div>
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                              {selectedCourses.length === 0 ? (
-                                <div style={{ color: '#6b7280', fontSize: '14px' }}>No courses selected</div>
-                              ) : (
-                                selectedCourses.filter(c => c).map((course) => {
-                                  const key = `${classId}_${course._id}`;
-                                  const teacher = teachers.find(t => t._id === courseTeacherMap[key]);
-                                  return (
-                                    <div
-                                      key={course._id}
-                                      style={{
-                                        padding: '8px 12px',
-                                        background: '#7c3aed',
-                                        color: '#fff',
-                                        borderRadius: '6px',
-                                        fontSize: '13px',
-                                      }}
-                                    >
-                                      <div style={{ fontWeight: 700 }}>{course.courseTitle}</div>
-                                      <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.9 }}>
-                                        👨‍🏫 {teacher?.userName || 'No teacher'}
-                                      </div>
-                                    </div>
-                                  );
-                                })
-                              )}
-                            </div>
+                            {selectedCoursesByClass.length === 0 ? (
+                              <div style={{ color: '#6b7280', fontSize: '14px' }}>No courses selected</div>
+                            ) : (
+                              selectedCoursesByClass.map(({ classId: cid, courses: courseList }) => (
+                                <div key={cid} style={{ marginBottom: '8px' }}>
+                                  <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>For Class</div>
+                                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    {courseList.filter(c => c).length === 0 ? (
+                                      <div style={{ color: '#6b7280', fontSize: '14px' }}>No courses selected</div>
+                                    ) : (
+                                      courseList.filter(c => c).map((course) => {
+                                        const key = `${cid}_${course._id}`;
+                                        const teacher = teachers.find(t => t._id === courseTeacherMap[key]);
+                                        return (
+                                          <div key={course._id} style={{ padding: '8px 12px', background: '#7c3aed', color: '#fff', borderRadius: '6px', fontSize: '13px' }}>
+                                            <div style={{ fontWeight: 700 }}>{course.courseTitle}</div>
+                                            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.9 }}>👨‍🏫 {teacher?.userName || 'No teacher'}</div>
+                                          </div>
+                                        );
+                                      })
+                                    )}
+                                  </div>
+                                </div>
+                              ))
+                            )}
                           </div>
                         </div>
                       );

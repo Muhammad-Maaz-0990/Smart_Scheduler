@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Card, Button, ListGroup, Modal, Form, Row, Col, InputGroup } from 'react-bootstrap';
+import { Card, Button, ListGroup, Modal, Form, Row, Col, InputGroup, Overlay } from 'react-bootstrap';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
 const Feedback = () => {
   const { user } = useAuth();
   const [threads, setThreads] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [monthFilter, setMonthFilter] = useState('All');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [filterTarget, setFilterTarget] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [active, setActive] = useState(null); // feedbackID
@@ -98,19 +102,73 @@ const Feedback = () => {
     <div className="d-flex gap-3" style={{ minHeight: 520 }}>
       {/* Threads list */}
       <div style={{ width: 380, maxWidth: '100%' }}>
-        <Card className="glass-effect mb-3">
-          <Card.Body className="d-flex justify-content-between align-items-center">
-            <div>
-              <div className="dashboard-title mb-0" style={{ fontSize: 20 }}>Feedback</div>
-              <div className="dashboard-subtitle">Conversations</div>
+        <Card className="glass-effect mb-3" style={{ overflow: 'visible' }}>
+          <Card.Body className="d-flex flex-column gap-2" style={{ position: 'relative' }}>
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <div className="dashboard-title mb-0" style={{ fontSize: 20 }}>Feedback</div>
+                <div className="dashboard-subtitle">Conversations</div>
+              </div>
+              {canStartThread && (
+                <Button size="sm" variant="primary" className="btn-futuristic" onClick={() => setShowNew(true)}>New</Button>
+              )}
             </div>
-            {canStartThread && (
-              <Button size="sm" variant="primary" className="btn-futuristic" onClick={() => setShowNew(true)}>New</Button>
-            )}
+            <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2" style={{ position: 'relative', zIndex: 2000 }}>
+              <Form.Control
+                type="text"
+                placeholder="Search by name or title..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ maxWidth: 380 }}
+              />
+              <div style={{ minWidth: 160 }}>
+                <Button
+                  variant="light"
+                  className="border"
+                  ref={setFilterTarget}
+                  onClick={() => setShowFilterMenu(s => !s)}
+                >
+                  ⋮
+                </Button>
+                <Overlay target={filterTarget} show={showFilterMenu} placement="bottom-end" rootClose onHide={() => setShowFilterMenu(false)}>
+                  {(props) => (
+                    <div {...props} style={{ ...props.style, zIndex: 2000 }}>
+                      <div className="card shadow-sm" style={{ minWidth: 280 }}>
+                        <div className="card-body p-2">
+                          <div className="mb-2" style={{ fontWeight: 600, color: '#000' }}>Filter Options</div>
+                          <Form.Group className="mb-2">
+                            <Form.Label className="small mb-1" style={{ color: '#000' }}>Month</Form.Label>
+                            <Form.Select size="sm" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} style={{ color: '#000' }}>
+                              <option value="All">All</option>
+                              <option value="1">January</option>
+                              <option value="2">February</option>
+                              <option value="3">March</option>
+                              <option value="4">April</option>
+                              <option value="5">May</option>
+                              <option value="6">June</option>
+                              <option value="7">July</option>
+                              <option value="8">August</option>
+                              <option value="9">September</option>
+                              <option value="10">October</option>
+                              <option value="11">November</option>
+                              <option value="12">December</option>
+                            </Form.Select>
+                          </Form.Group>
+                          <div className="d-flex justify-content-end gap-2 mt-2">
+                            <Button size="sm" variant="secondary" onClick={() => { setMonthFilter('All'); setShowFilterMenu(false); }}>Reset</Button>
+                            <Button size="sm" variant="primary" onClick={() => setShowFilterMenu(false)}>Apply</Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </Overlay>
+              </div>
+            </div>
           </Card.Body>
         </Card>
 
-        <Card className="glass-effect">
+        <Card className="glass-effect" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
           <ListGroup variant="flush">
             {error ? (
               <ListGroup.Item className="text-danger">{error}</ListGroup.Item>
@@ -119,7 +177,21 @@ const Feedback = () => {
             ) : threads.length === 0 ? (
               <ListGroup.Item>No conversations</ListGroup.Item>
             ) : (
-              threads.map(t => (
+              threads
+                .filter(t => {
+                  if (monthFilter === 'All') return true;
+                  const d = new Date(t.issueDate);
+                  const mm = (d.getMonth() + 1).toString();
+                  return mm === monthFilter;
+                })
+                .filter(t => {
+                  const q = searchTerm.trim().toLowerCase();
+                  if (!q) return true;
+                  const name = String(t.user?.userName || '').toLowerCase();
+                  const title = String(t.title || '').toLowerCase();
+                  return name.includes(q) || title.includes(q);
+                })
+                .map(t => (
                 <ListGroup.Item
                   key={t.feedbackID}
                   action
