@@ -5,11 +5,12 @@ import './Sidebar.css';
 
 const Sidebar = ({ activeMenu }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, instituteObjectId, loadSubscriptionOnce } = useAuth();
   const [instituteInfo, setInstituteInfo] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [isExpired, setIsExpired] = useState(false);
   const role = user?.designation || 'Owner';
 
   useEffect(() => {
@@ -37,6 +38,25 @@ const Sidebar = ({ activeMenu }) => {
       fetchInstituteInfo();
     }
   }, [user]);
+
+  // Load subscription status and gate menus for Admin/Student/Teacher
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      try {
+        if (!instituteObjectId) {
+          if (mounted) setIsExpired(false);
+          return;
+        }
+        const sub = await loadSubscriptionOnce(instituteObjectId);
+        if (mounted) setIsExpired(!!sub?.isExpired);
+      } catch {
+        if (mounted) setIsExpired(false);
+      }
+    };
+    run();
+    return () => { mounted = false; };
+  }, [instituteObjectId, loadSubscriptionOnce]);
 
   // Toggle global class to allow full-width content when sidebar hidden
   useEffect(() => {
@@ -106,8 +126,12 @@ const Sidebar = ({ activeMenu }) => {
     { icon: '💬', label: 'Feedbacks', value: 'feedbacks' },
     { icon: '🔧', label: 'Profile', value: 'profile' }
   ];
-
-  const menuItems = role === 'Admin' ? adminMenu : role === 'Student' ? studentMenu : role === 'Teacher' ? teacherMenu : ownerMenu;
+  
+  // When subscription expired for Admin/Student/Teacher, only allow Profile
+  const isGateRole = ['Admin','Student','Teacher'].includes(role);
+  const gatedMenu = [{ icon: '🔧', label: 'Profile', value: 'profile' }];
+  const baseMenu = role === 'Admin' ? adminMenu : role === 'Student' ? studentMenu : role === 'Teacher' ? teacherMenu : ownerMenu;
+  const menuItems = (isGateRole && isExpired) ? gatedMenu : baseMenu;
 
   return (
     <>
