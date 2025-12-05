@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -139,18 +139,20 @@ export const AuthProvider = ({ children }) => {
     resolveInstitute();
   }, [user, token]);
 
-  // Lightweight data loaders with caching
-  const loadInstituteOnce = async (instituteID) => {
+  // Lightweight data loaders with caching (memoized for stable identity)
+  const loadInstituteOnce = useCallback(async (instituteID) => {
     if (!instituteID) return null;
     if (instituteCache && instituteCache.instituteID === instituteID) return instituteCache;
     try {
       const res = await axios.get(`/api/auth/institute/${encodeURIComponent(instituteID)}`);
       setInstituteCache(res.data);
       return res.data;
-    } catch { return null; }
-  };
+    } catch {
+      return null;
+    }
+  }, [instituteCache]);
 
-  const loadSubscriptionOnce = async (instituteID) => {
+  const loadSubscriptionOnce = useCallback(async (instituteID) => {
     if (!instituteID) return null;
     if (subscriptionCache && subscriptionCache._for === instituteID) return subscriptionCache;
     try {
@@ -158,10 +160,12 @@ export const AuthProvider = ({ children }) => {
       const data = { ...res.data, _for: instituteID };
       setSubscriptionCache(data);
       return data;
-    } catch { return null; }
-  };
+    } catch {
+      return null;
+    }
+  }, [subscriptionCache]);
 
-  const loadPaymentsHistoryOnce = async (instituteID) => {
+  const loadPaymentsHistoryOnce = useCallback(async (instituteID) => {
     if (!instituteID) return null;
     if (paymentsHistoryCache && paymentsHistoryCache._for === instituteID) return paymentsHistoryCache;
     try {
@@ -169,8 +173,10 @@ export const AuthProvider = ({ children }) => {
       const data = { items: res.data?.items || [], _for: instituteID };
       setPaymentsHistoryCache(data);
       return data;
-    } catch { return null; }
-  };
+    } catch {
+      return null;
+    }
+  }, [paymentsHistoryCache]);
 
   const login = async (email, password) => {
     try {

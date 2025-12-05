@@ -11,7 +11,8 @@
   margin-left: 0 !important;
 }
 
-.dashboard-page.sidebar-collapsed {
+/* When sidebar is collapsed, reduce content margin */
+.sidebar-collapsed .dashboard-page {
   margin-left: 80px;
 }
 

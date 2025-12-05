@@ -5,7 +5,7 @@ import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user, instituteObjectId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [counts, setCounts] = useState({ teachers: 0, students: 0, courses: 0, schedules: 0, rooms: 0, classes: 0 });
@@ -30,32 +30,30 @@ const AdminDashboard = () => {
           }
         } catch {}
 
-        // Rooms (defaults to authenticated user's institute on backend)
+        // Rooms (query with institute ObjectId like Rooms page)
         let rooms = 0;
         try {
-          const resRooms = await fetch('http://localhost:5000/api/rooms', { headers });
+          const resRooms = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(instituteObjectId || '')}`, { headers });
           if (resRooms.ok) {
             const list = await resRooms.json();
             rooms = Array.isArray(list) ? list.length : (Array.isArray(list?.items) ? list.items.length : 0);
           }
         } catch {}
 
-        // Classes (expects institute business key string in path)
+        // Classes (use institute ObjectId like Classes page)
         let classes = 0;
         try {
-          const instituteKey = user?.instituteID; // business key string
-          const resClasses = await fetch(`http://localhost:5000/api/classes/${encodeURIComponent(instituteKey || '')}`, { headers });
+          const resClasses = await fetch(`http://localhost:5000/api/classes/${encodeURIComponent(instituteObjectId || '')}`, { headers });
           if (resClasses.ok) {
             const list = await resClasses.json();
             classes = Array.isArray(list) ? list.length : (Array.isArray(list?.items) ? list.items.length : 0);
           }
         } catch {}
 
-        // Courses (expects institute business key string in path)
+        // Courses (use institute ObjectId like Courses page)
         let courses = 0;
         try {
-          const instituteKey = user?.instituteID; // business key string
-          const resCourses = await fetch(`http://localhost:5000/api/courses/${encodeURIComponent(instituteKey || '')}`, { headers });
+          const resCourses = await fetch(`http://localhost:5000/api/courses/${encodeURIComponent(instituteObjectId || '')}`, { headers });
           if (resCourses.ok) {
             const list = await resCourses.json();
             courses = Array.isArray(list) ? list.length : (Array.isArray(list?.items) ? list.items.length : 0);
@@ -81,7 +79,7 @@ const AdminDashboard = () => {
       }
     };
     run();
-  }, [user]);
+  }, [user, instituteObjectId]);
 
   return (
     <>

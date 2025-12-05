@@ -27,6 +27,11 @@ const Users = () => {
   const [importPreview, setImportPreview] = useState([]);
   const [importError, setImportError] = useState('');
   const fileInputRef = React.useRef(null);
+  // Filters
+  const [searchName, setSearchName] = useState('');
+  const [filterCNIC, setFilterCNIC] = useState('');
+  const [filterDesignation, setFilterDesignation] = useState('All'); // All | Student | Teacher
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const tokenHeader = () => {
     const token = localStorage.getItem('token');
@@ -323,6 +328,51 @@ const Users = () => {
             </div>
           </div>
 
+          {/* Search and Filter Row */}
+          <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3">
+            <div className="d-flex align-items-center gap-2" style={{ flex: 1 }}>
+              <Form.Control
+                type="text"
+                placeholder="Search by name..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+              />
+            </div>
+            <div className="position-relative" style={{ minWidth: 200 }}>
+              <Button variant="light" className="border" onClick={() => setShowFilterMenu(s => !s)}>
+                ⋮
+              </Button>
+              {showFilterMenu && (
+                <div className="card shadow-sm" style={{ position: 'absolute', right: 0, zIndex: 10, minWidth: 260 }}>
+                  <div className="card-body p-2">
+                    <div className="mb-2" style={{ fontWeight: 600 }}>Filter Options</div>
+                    <Form.Control
+                      size="sm"
+                      type="text"
+                      placeholder="Filter by National ID (CNIC/SSN)"
+                      value={filterCNIC}
+                      onChange={(e) => setFilterCNIC(e.target.value)}
+                      className="mb-2"
+                    />
+                    <Form.Select
+                      size="sm"
+                      value={filterDesignation}
+                      onChange={(e) => setFilterDesignation(e.target.value)}
+                    >
+                      <option value="All">Designation: All</option>
+                      <option value="Teacher">Designation: Teacher</option>
+                      <option value="Student">Designation: Student</option>
+                    </Form.Select>
+                    <div className="d-flex justify-content-end gap-2 mt-2">
+                      <Button size="sm" variant="secondary" onClick={() => { setFilterCNIC(''); setFilterDesignation('All'); setShowFilterMenu(false); }}>Reset</Button>
+                      <Button size="sm" variant="primary" onClick={() => setShowFilterMenu(false)}>Apply</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {error && (
             <Alert variant="danger" className="error-alert" onClose={() => setError('')} dismissible>
               {error}
@@ -377,7 +427,11 @@ const Users = () => {
                     ) : users.length === 0 ? (
                       <tr><td colSpan="7" className="text-center">No users found</td></tr>
                     ) : (
-                      users.map((u, idx) => (
+                      users
+                        .filter(u => String(u.userName || '').toLowerCase().includes(searchName.trim().toLowerCase()))
+                        .filter(u => filterDesignation === 'All' ? true : String(u.designation || '') === filterDesignation)
+                        .filter(u => filterCNIC.trim() ? String(u.cnic || '').toLowerCase().includes(filterCNIC.trim().toLowerCase()) : true)
+                        .map((u, idx) => (
                         <tr key={u._id}>
                           <td>{idx + 1}</td>
                           <td>{u.userName}</td>

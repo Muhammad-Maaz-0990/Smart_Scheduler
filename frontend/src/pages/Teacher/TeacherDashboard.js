@@ -1,35 +1,64 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Table, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import '../Dashboard.css';
 
 const TeacherDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [today, setToday] = useState(null);
+  const [todaySlot, setTodaySlot] = useState(null);
+  const [todayClasses, setTodayClasses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const to12hAmpm = (hhmm) => {
+    if (!hhmm || typeof hhmm !== 'string') return hhmm;
+    const m = hhmm.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+    if (!m) return hhmm;
+    let h24 = parseInt(m[1], 10);
+    const min = m[2];
+    const suffix = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = h24 % 12 || 12;
+    return `${h12}:${min} ${suffix}`;
+  };
+
+  const formatTimeText = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    return text.replace(/\b([01]?\d|2[0-3]):([0-5]\d)\b/g, (match) => to12hAmpm(match));
+  };
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       setError('');
       try {
-        const res = await axios.get('/api/timeslots/my/today');
-        setToday(res.data || null);
+        const tsRes = await axios.get('/api/timeslots/my/today');
+        const ts = tsRes.data || null;
+        setTodaySlot(ts);
+
+        const listRes = await axios.get('/api/timetables-gen/list');
+        const items = listRes.data?.items || [];
+        const current = items.find(h => !!h.currentStatus);
+        if (!current) {
+          setTodayClasses([]);
+        } else {
+          const detailsRes = await axios.get(`/api/timetables-gen/details/${encodeURIComponent(current.instituteTimeTableID)}`);
+          const details = detailsRes.data?.details || [];
+          const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+          const todayName = dayNames[new Date().getDay()];
+          const filtered = details.filter(d => String(d.day) === todayName);
+          setTodayClasses(filtered);
+        }
       } catch (e) {
         setError(e?.response?.data?.message || 'Failed to load today\'s schedule');
+        setTodayClasses([]);
       } finally {
         setLoading(false);
       }
     };
     load();
   }, []);
-
-  const classesToday = today && today.startTime ? 1 : 0;
 
   return (
     <>
@@ -46,49 +75,7 @@ const TeacherDashboard = () => {
           <h1 className="dashboard-title">Teacher Dashboard 👨‍🏫</h1>
           <p className="dashboard-subtitle">Welcome, {user?.userName}!</p>
         </div>
-
-        <Row className="g-4">
-          <Col md={6} lg={3}>
-            <Card className="stat-card glass-effect">
-              <Card.Body>
-                <div className="stat-icon">📚</div>
-                <h3 className="stat-value">0</h3>
-                <p className="stat-label">Courses</p>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col md={6} lg={3}>
-            <Card className="stat-card glass-effect">
-              <Card.Body>
-                <div className="stat-icon">🎓</div>
-                <h3 className="stat-value">0</h3>
-                <p className="stat-label">Students</p>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col md={6} lg={3}>
-            <Card className="stat-card glass-effect">
-              <Card.Body>
-                <div className="stat-icon">📝</div>
-                <h3 className="stat-value">0</h3>
-                <p className="stat-label">Assignments</p>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col md={6} lg={3}>
-            <Card className="stat-card glass-effect">
-              <Card.Body>
-                <div className="stat-icon">📅</div>
-                <h3 className="stat-value">{classesToday}</h3>
-                <p className="stat-label">Classes Today</p>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
+        
         <Row className="g-4 mt-4">
           <Col lg={8}>
             <Card className="schedule-card glass-effect">
@@ -100,78 +87,42 @@ const TeacherDashboard = () => {
                   <Table variant="dark" className="schedule-table">
                     <thead>
                       <tr>
-                        <th>Day</th>
-                        <th>Start</th>
-                        <th>End</th>
+                        <th>#</th>
+                        <th>Class</th>
+                        <th>Course</th>
+                        <th>Room</th>
+                        <th>Time</th>
+                        <th>Instructor</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="3" className="text-center text-white-50">Loading…</td></tr>
-                      ) : today && today.startTime ? (
-                        <tr>
-                          <td>{today.days}</td>
-                          <td>{today.startTime}</td>
-                          <td>{today.endTime}</td>
-                        </tr>
+                        <tr><td colSpan="6" className="text-center text-white-50">Loading…</td></tr>
+                      ) : todayClasses.length > 0 ? (
+                        todayClasses.map((c, idx) => (
+                          <tr key={`${c.timeTableID}-${idx}`}>
+                            <td>{idx + 1}</td>
+                            <td>{c.class}</td>
+                            <td>{c.course}</td>
+                            <td>{c.roomNumber}</td>
+                            <td>{formatTimeText(c.time)}</td>
+                            <td>{c.instructorName}</td>
+                          </tr>
+                        ))
                       ) : (
                         <tr>
-                          <td colSpan="3" className="text-center text-white-50">
-                            {error || 'No schedule found for today'}
+                          <td colSpan="6" className="text-center text-white-50">
+                            {error || 'No classes scheduled for today'}
                           </td>
                         </tr>
                       )}
                     </tbody>
                   </Table>
-                </div>
-              </Card.Body>
-            </Card>
-
-            <Card className="action-card glass-effect mt-4">
-              <Card.Header>
-                <h4 className="card-title">Quick Actions</h4>
-              </Card.Header>
-              <Card.Body>
-                <Row className="g-3">
-                  <Col md={4}>
-                    <Button variant="primary" className="action-btn btn-futuristic w-100" onClick={() => navigate('/teacher/timetables')}>
-                      <span className="btn-icon">📅</span>
-                      View Schedule
-                    </Button>
-                  </Col>
-                  <Col md={4}>
-                    <Button variant="primary" className="action-btn btn-futuristic w-100" onClick={() => navigate('/teacher/feedbacks')}>
-                      <span className="btn-icon">💬</span>
-                      Feedbacks
-                    </Button>
-                  </Col>
-                  <Col md={4}>
-                    <Button variant="primary" className="action-btn btn-futuristic w-100" onClick={() => navigate('/teacher/profile')}>
-                      <span className="btn-icon">👤</span>
-                      My Profile
-                    </Button>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col lg={4}>
-            <Card className="profile-card glass-effect">
-              <Card.Header>
-                <h4 className="card-title">Profile</h4>
-              </Card.Header>
-              <Card.Body>
-                <div className="profile-info">
-                  <div className="profile-avatar teacher-avatar">
-                    {user?.userName?.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="profile-details">
-                    <p><strong>Name:</strong> {user?.userName}</p>
-                    <p><strong>Email:</strong> {user?.email}</p>
-                    <p><strong>Institute:</strong> {user?.instituteName}</p>
-                    <p><strong>Role:</strong> <span className="role-badge teacher-badge">Teacher</span></p>
-                  </div>
+                  {todaySlot && todaySlot.startTime && (
+                    <div style={{ color: '#ddd', marginTop: 8 }}>
+                      Institute timeslot: {todaySlot.days} • {to12hAmpm(todaySlot.startTime)} - {to12hAmpm(todaySlot.endTime)}
+                    </div>
+                  )}
                 </div>
               </Card.Body>
             </Card>

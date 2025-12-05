@@ -49,6 +49,18 @@ const Sidebar = ({ activeMenu }) => {
     return () => body.classList.remove('no-sidebar');
   }, [isVisible]);
 
+  // Toggle collapsed class to reduce content left margin when sidebar is collapsed
+  useEffect(() => {
+    const body = document.body;
+    // Only apply collapsed margin when sidebar is visible
+    if (isVisible && isCollapsed) {
+      body.classList.add('sidebar-collapsed');
+    } else {
+      body.classList.remove('sidebar-collapsed');
+    }
+    return () => body.classList.remove('sidebar-collapsed');
+  }, [isCollapsed, isVisible]);
+
   const handleMenuClick = (menu) => {
     const basePath = (role === 'Admin') ? '/admin' : (role === 'Student') ? '/student' : (role === 'Teacher') ? '/teacher' : '/owner';
     if (menu === 'dashboard') {
@@ -169,7 +181,8 @@ const Sidebar = ({ activeMenu }) => {
             onClick={handleLogout}
             title="Logout"
           >
-            🚪 {!isCollapsed && 'Logout'}
+            <span className="btn-icon">🚪</span>
+            {!isCollapsed && <span className="menu-label">Logout</span>}
           </button>
         </div>
 

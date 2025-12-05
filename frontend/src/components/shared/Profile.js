@@ -31,7 +31,7 @@ const Profile = () => {
       }
     };
     load();
-  }, [user]);
+  }, [user, loadInstituteOnce, loadSubscriptionOnce]);
 
   // If redirected back from Stripe Checkout success, confirm and record payment
   useEffect(() => {
@@ -68,7 +68,7 @@ const Profile = () => {
       };
       confirm();
     }
-  }, [user]);
+  }, [user, loadSubscriptionOnce, loadPaymentsHistoryOnce]);
 
   const startPayment = async (plan) => {
     try {
@@ -100,7 +100,7 @@ const Profile = () => {
       }
     };
     loadHistory();
-  }, [user]);
+  }, [user, loadPaymentsHistoryOnce]);
 
   const renderPersonal = () => {
     if (!user) return null;
