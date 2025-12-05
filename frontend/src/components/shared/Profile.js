@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, loadInstituteOnce, loadSubscriptionOnce, loadPaymentsHistoryOnce } = useAuth();
   const [institute, setInstitute] = useState(null);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,13 +18,11 @@ const Profile = () => {
       setLoading(true);
       setError('');
       try {
-        // Fetch institute details
         if (user.instituteID) {
-          const instRes = await axios.get(`/api/auth/institute/${encodeURIComponent(user.instituteID)}`);
-          setInstitute(instRes.data);
-          // Fetch subscription/payment status for all roles
-          const statusRes = await axios.get(`/api/subscription/status/${encodeURIComponent(user.instituteID)}`);
-          setStatus(statusRes.data);
+          const cachedInst = await loadInstituteOnce(user.instituteID);
+          if (cachedInst) setInstitute(cachedInst);
+          const cachedStatus = await loadSubscriptionOnce(user.instituteID);
+          if (cachedStatus) setStatus(cachedStatus);
         }
       } catch (e) {
         setError(e?.response?.data?.message || 'Failed to load profile');
@@ -50,12 +48,11 @@ const Profile = () => {
             setNotice('Payment recorded successfully. Refreshing status...');
             // Refresh status
             if (user?.instituteID) {
-              const statusRes = await axios.get(`/api/subscription/status/${encodeURIComponent(user.instituteID)}`);
-              setStatus(statusRes.data);
-              // Refresh payment history too
+              const st = await loadSubscriptionOnce(user.instituteID);
+              if (st) setStatus(st);
               try {
-                const hRes = await axios.get(`/api/payments/history/${encodeURIComponent(user.instituteID)}`);
-                setHistory(hRes.data?.items || []);
+                const h = await loadPaymentsHistoryOnce(user.instituteID);
+                setHistory(h?.items || []);
               } catch {}
             }
           }
@@ -95,8 +92,8 @@ const Profile = () => {
     const loadHistory = async () => {
       try {
         if (user?.instituteID && (user?.designation || '').toLowerCase() === 'admin') {
-          const hRes = await axios.get(`/api/payments/history/${encodeURIComponent(user.instituteID)}`);
-          setHistory(hRes.data?.items || []);
+          const h = await loadPaymentsHistoryOnce(user.instituteID);
+          setHistory(h?.items || []);
         }
       } catch (e) {
         // silently ignore history errors

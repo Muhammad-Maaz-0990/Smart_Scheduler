@@ -16,6 +16,10 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [instituteObjectId, setInstituteObjectId] = useState(null);
+  // Cache: institute info and subscription status to avoid refetch on simple navigations
+  const [instituteCache, setInstituteCache] = useState(null);
+  const [subscriptionCache, setSubscriptionCache] = useState(null);
+  const [paymentsHistoryCache, setPaymentsHistoryCache] = useState(null);
 
   // Configure axios defaults
   useEffect(() => {
@@ -135,6 +139,39 @@ export const AuthProvider = ({ children }) => {
     resolveInstitute();
   }, [user, token]);
 
+  // Lightweight data loaders with caching
+  const loadInstituteOnce = async (instituteID) => {
+    if (!instituteID) return null;
+    if (instituteCache && instituteCache.instituteID === instituteID) return instituteCache;
+    try {
+      const res = await axios.get(`/api/auth/institute/${encodeURIComponent(instituteID)}`);
+      setInstituteCache(res.data);
+      return res.data;
+    } catch { return null; }
+  };
+
+  const loadSubscriptionOnce = async (instituteID) => {
+    if (!instituteID) return null;
+    if (subscriptionCache && subscriptionCache._for === instituteID) return subscriptionCache;
+    try {
+      const res = await axios.get(`/api/subscription/status/${encodeURIComponent(instituteID)}`);
+      const data = { ...res.data, _for: instituteID };
+      setSubscriptionCache(data);
+      return data;
+    } catch { return null; }
+  };
+
+  const loadPaymentsHistoryOnce = async (instituteID) => {
+    if (!instituteID) return null;
+    if (paymentsHistoryCache && paymentsHistoryCache._for === instituteID) return paymentsHistoryCache;
+    try {
+      const res = await axios.get(`/api/payments/history/${encodeURIComponent(instituteID)}`);
+      const data = { items: res.data?.items || [], _for: instituteID };
+      setPaymentsHistoryCache(data);
+      return data;
+    } catch { return null; }
+  };
+
   const login = async (email, password) => {
     try {
       const response = await axios.post('/api/auth/login', { email, password });
@@ -197,6 +234,13 @@ export const AuthProvider = ({ children }) => {
     loginWithToken,
     isAuthenticated: !!user,
     instituteObjectId,
+    // expose caches and loaders
+    instituteCache,
+    subscriptionCache,
+    paymentsHistoryCache,
+    loadInstituteOnce,
+    loadSubscriptionOnce,
+    loadPaymentsHistoryOnce,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
