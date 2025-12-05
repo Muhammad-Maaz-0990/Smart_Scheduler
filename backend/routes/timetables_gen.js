@@ -34,7 +34,8 @@ router.post('/generate', protect, async (req, res) => {
       rooms = [],
       roomTypes = {},
       timeslots: clientTimeslots = [],
-      breaks = {}
+      breaks = {},
+      slotMinutes = 60
     } = req.body || {};
 
     if (!session || !year) return res.status(400).json({ message: 'Missing session/year' });
@@ -85,6 +86,7 @@ router.post('/generate', protect, async (req, res) => {
       roomTypes,
       timeslots,
       breaks,
+      slotMinutes: Number(slotMinutes) || 60,
       algorithms: ['GA_A', 'GA_B', 'GA_C']
     };
 

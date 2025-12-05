@@ -21,7 +21,7 @@ class BreakWindow(BaseModel):
     end: str
 
 class BreaksConfig(BaseModel):
-    mode: str = Field(pattern=r"^(same|per-day)$")
+    mode: str = Field(pattern=r"^(same|per-day|none)$")
     same: Optional[BreakWindow] = None
     perDay: Optional[Dict[str, BreakWindow]] = None
 
@@ -43,6 +43,7 @@ class GeneratePayload(BaseModel):
     roomTypes: Dict[str, str] = {}
     timeslots: List[Dict[str, Any]]  # expected { day: 'Mon', start: '10:00', end: '11:00' }
     breaks: BreaksConfig
+    slotMinutes: int = 60
     algorithms: List[str]
 
 def duration_in_hours(start: str, end: str) -> float:
@@ -75,8 +76,8 @@ def respects_break(day: str, start: str, end: str, breaks: BreaksConfig) -> bool
     return e1 <= s2 or s1 >= e2
 
 
-def split_into_hour_slices(start: str, end: str) -> List[tuple]:
-    """Split a window (start,end) into ~1h slices."""
+def split_into_slices(start: str, end: str, minutes: int) -> List[tuple]:
+    """Split a window (start,end) into fixed-length slices in minutes."""
     def to_min(t: str) -> int:
         h, m = t.split(":")
         return int(h) * 60 + int(m)
@@ -87,8 +88,9 @@ def split_into_hour_slices(start: str, end: str) -> List[tuple]:
     s = to_min(start)
     e = to_min(end)
     out = []
-    while s + 50 <= e:  # require at least 50 minutes for a slice
-        nxt = min(s + 60, e)
+    threshold = max(1, minutes - 10)  # require near-full slice length (allow small buffer)
+    while s + threshold <= e:
+        nxt = min(s + minutes, e)
         out.append((from_min(s), from_min(nxt)))
         s = nxt
     return out
@@ -136,7 +138,24 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
     # Now collect instructors list from normalized assignments
     instructors = [a.instructor or "Instructor" for a in normalized_assignments] or ["Instructor"]
 
-    # Normalize usable 1-hour slots by day, excluding breaks
+    # Normalize breaks to align with slotMinutes if only start provided or zero-length
+    def to_min(t: str) -> int:
+        h, m = t.split(":"); return int(h) * 60 + int(m)
+    def from_min(x: int) -> str:
+        h = x // 60; m = x % 60; return f"{h:02d}:{m:02d}"
+    if payload.breaks:
+        if payload.breaks.mode == "same" and payload.breaks.same:
+            bs = payload.breaks.same.start
+            be = payload.breaks.same.end
+            if bs and (not be or to_min(be) <= to_min(bs)):
+                payload.breaks.same.end = from_min(to_min(bs) + payload.slotMinutes)
+        elif payload.breaks.mode == "per-day" and payload.breaks.perDay:
+            for day, bw in list(payload.breaks.perDay.items()):
+                bs = bw.start; be = bw.end
+                if bs and (not be or to_min(be) <= to_min(bs)):
+                    payload.breaks.perDay[day].end = from_min(to_min(bs) + payload.slotMinutes)
+
+    # Normalize usable slices by day, excluding breaks
     one_hour_slots = []  # list of (day, start, end)
     slots_by_day: Dict[str, List[tuple]] = {}
     for ts in payload.timeslots:
@@ -145,8 +164,8 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
         end = ts.get("end")
         if not day or not start or not end:
             continue
-        # Split the day window into hour slices, then filter by break
-        for (s, e) in split_into_hour_slices(start, end):
+        # Split the day window into fixed-length slices, then filter by break
+        for (s, e) in split_into_slices(start, end, payload.slotMinutes):
             if not respects_break(day, s, e, payload.breaks):
                 continue
             one_hour_slots.append((day, s, e))
@@ -213,11 +232,14 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
                 return True
         return False
 
+    # Track per-class/day courses already scheduled to avoid multiple lectures of same subject on same day
+    scheduled_courses_by_day: Dict[tuple, set] = {}
+
     def try_place_lecture(cls: str, course_name: str) -> bool:
         # Prefer less crowded slots
         slot_candidates = sorted(one_hour_slots, key=lambda x: crowd_score(*x))
         instr = course_to_instructor.get(course_name, instructors[0])
-        # Avoid back-to-back same course for the class on the same day
+        # Avoid scheduling same course multiple times on the same day
         last_by_day: Dict[str, Optional[str]] = {}
         for (day, start, end) in slot_candidates:
             # Check occupancy
@@ -230,6 +252,9 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
                 key_instr = (instr, day, start, end)
                 # skip if inside any lab block for this class/day
                 if within_lab_block(cls, day, start, end):
+                    continue
+                # skip if this course already scheduled on the same day for this class
+                if course_name in scheduled_courses_by_day.get((cls, day), set()):
                     continue
                 if key_room in room_busy or key_class in class_busy or key_instr in instr_busy:
                     clash_log.append({
@@ -261,8 +286,19 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
                 class_busy.add(key_class)
                 instr_busy.add(key_instr)
                 last_by_day[day] = course_name
+                scheduled_courses_by_day.setdefault((cls, day), set()).add(course_name)
                 return True
         return False
+
+    def break_length_min(day: str) -> int:
+        def to_min(t: str) -> int:
+            h, m = t.split(":"); return int(h) * 60 + int(m)
+        if payload.breaks.mode == "same" and payload.breaks.same:
+            return max(0, to_min(payload.breaks.same.end) - to_min(payload.breaks.same.start))
+        if payload.breaks.mode == "per-day" and payload.breaks.perDay and day in payload.breaks.perDay:
+            bw = payload.breaks.perDay[day]
+            return max(0, to_min(bw.end) - to_min(bw.start))
+        return 0
 
     def find_consecutive_triplet(day: str) -> Optional[List[tuple]]:
         day_slots = slots_by_day.get(day, [])
@@ -272,6 +308,17 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
             s3, e3 = day_slots[i + 2]
             # consecutive if previous end equals next start
             if e1 == s2 and e2 == s3:
+                return [(s1, e1), (s2, e2), (s3, e3)]
+            # allow a gap equal to break length between first-second or second-third
+            gap1 = duration_in_hours(e1, s2)
+            gap2 = duration_in_hours(e2, s3)
+            br_min = break_length_min(day)
+            # compare in minutes using slotMinutes resolution
+            def to_min(t: str) -> int:
+                h, m = t.split(":"); return int(h) * 60 + int(m)
+            gap1m = max(0, to_min(s2) - to_min(e1))
+            gap2m = max(0, to_min(s3) - to_min(e2))
+            if (gap1m == br_min and e2 == s3) or (gap2m == br_min and e1 == s2):
                 return [(s1, e1), (s2, e2), (s3, e3)]
         return None
 

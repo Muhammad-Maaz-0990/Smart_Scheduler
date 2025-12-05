@@ -23,6 +23,8 @@ function GenerateTimetable() {
   const [selectedCandidateIndex, setSelectedCandidateIndex] = useState(null);
   const [breakStart, setBreakStart] = useState('12:00');
   const [breakEnd, setBreakEnd] = useState('13:00');
+  const [noBreak, setNoBreak] = useState(false);
+  const [slotMinutes, setSlotMinutes] = useState(60);
 
   // Fetch rooms, classes, courses, teachers once instituteObjectId is available
   useEffect(() => {
@@ -192,13 +194,20 @@ function GenerateTimetable() {
       }
     }
     if (step === 5) {
-      // Validate break times
-      if (!breakStart || !breakEnd) {
-        alert('Please set break start and end times');
-        return;
+      // Validate break times unless noBreak selected
+      if (!noBreak) {
+        if (!breakStart || !breakEnd) {
+          alert('Please set break start and end times or choose No Break');
+          return;
+        }
+        if (breakStart >= breakEnd) {
+          alert('Break end time must be after start time');
+          return;
+        }
       }
-      if (breakStart >= breakEnd) {
-        alert('Break end time must be after start time');
+      // Validate slotMinutes
+      if (!Number.isFinite(Number(slotMinutes)) || Number(slotMinutes) < 30) {
+        alert('Lecture duration must be at least 30 minutes');
         return;
       }
     }
@@ -275,6 +284,8 @@ function GenerateTimetable() {
         });
 
         const currentYear = new Date().getFullYear();
+        // Use admin-selected lecture duration from Step 5
+        const selectedSlotMinutes = Number(slotMinutes) || 60;
         const body = {
           instituteID: instituteObjectId,
           session: `${currentYear}-${currentYear + 1}`,
@@ -320,7 +331,10 @@ function GenerateTimetable() {
             { day: 'Fri', start: '14:00', end: '15:00' },
             { day: 'Fri', start: '15:00', end: '16:00' },
           ],
-          breaks: { mode: 'same', same: { start: breakStart, end: breakEnd } },
+          breaks: (!noBreak && breakStart && breakEnd)
+            ? { mode: 'same', same: { start: breakStart, end: breakEnd } }
+            : { mode: 'none' },
+          slotMinutes: selectedSlotMinutes,
         };
 
         const res = await fetch('http://localhost:5000/api/timetables-gen/generate', {
@@ -933,6 +947,12 @@ function GenerateTimetable() {
                         background: '#f9fafb',
                       }}
                     >
+                      <div style={{ marginBottom: '16px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: '#374151' }}>
+                          <input type="checkbox" checked={noBreak} onChange={(e) => setNoBreak(e.target.checked)} />
+                          No Break for this timetable
+                        </label>
+                      </div>
                       <div style={{ marginBottom: '24px' }}>
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
                           Break Start Time
@@ -941,6 +961,7 @@ function GenerateTimetable() {
                           type="time"
                           value={breakStart}
                           onChange={(e) => setBreakStart(e.target.value)}
+                          disabled={noBreak}
                           style={{
                             width: '100%',
                             padding: '12px',
@@ -961,6 +982,29 @@ function GenerateTimetable() {
                           type="time"
                           value={breakEnd}
                           onChange={(e) => setBreakEnd(e.target.value)}
+                          disabled={noBreak}
+                          style={{
+                            width: '100%',
+                            padding: '12px',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            color: '#1f2937',
+                          }}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '24px' }}>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                          Lecture Duration (minutes)
+                        </label>
+                        <input
+                          type="number"
+                          min={30}
+                          step={5}
+                          value={slotMinutes}
+                          onChange={(e) => setSlotMinutes(Number(e.target.value))}
                           style={{
                             width: '100%',
                             padding: '12px',
@@ -986,7 +1030,7 @@ function GenerateTimetable() {
                           ⏰ Break Duration
                         </div>
                         <div style={{ fontSize: '18px', color: '#7c2d12', fontWeight: 700 }}>
-                          {breakStart && breakEnd ? `${breakStart} - ${breakEnd}` : 'Not set'}
+                          {noBreak ? 'No Break' : (breakStart && breakEnd ? `${breakStart} - ${breakEnd}` : 'Not set')}
                         </div>
                       </div>
                     </div>

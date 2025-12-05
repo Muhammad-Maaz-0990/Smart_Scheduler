@@ -15,6 +15,8 @@ import GenerateTimetable from './pages/Admin/GenerateTimetable';
 import Users from './pages/Admin/Users';
 import AdminFeedbacksPage from './pages/Admin/Feedbacks';
 import AdminProfilePage from './pages/Admin/Profile';
+import EditInstitute from './pages/Admin/EditInstitute';
+import ChangePassword from './pages/Admin/ChangePassword';
 import StudentDashboard from './pages/Student/StudentDashboard';
 import TeacherDashboard from './pages/Teacher/TeacherDashboard';
 import TeacherFeedbacksPage from './pages/Teacher/Feedbacks';
@@ -136,6 +138,22 @@ function App() {
               element={
                 <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
                   <AdminProfilePage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/admin/profile/edit" 
+              element={
+                <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
+                  <EditInstitute />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/admin/profile/password" 
+              element={
+                <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
+                  <ChangePassword />
                 </PrivateRoute>
               } 
             />

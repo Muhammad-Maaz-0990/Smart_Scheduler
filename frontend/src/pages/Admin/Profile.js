@@ -3,6 +3,7 @@ import { Container } from 'react-bootstrap';
 import Sidebar from '../../components/Sidebar';
 import Profile from '../../components/shared/Profile';
 import '../Dashboard.css';
+import { Link } from 'react-router-dom';
 
 const AdminProfilePage = () => {
   return (
@@ -16,6 +17,10 @@ const AdminProfilePage = () => {
         </div>
         <Container fluid className="dashboard-content">
           <h1 className="dashboard-title mb-4">Profile</h1>
+          <div className="mb-3" style={{ display: 'flex', gap: 8 }}>
+            <Link to="/admin/profile/edit" className="btn btn-primary">Edit Institute Info</Link>
+            <Link to="/admin/profile/password" className="btn btn-outline-secondary">Change Password</Link>
+          </div>
           <Profile />
         </Container>
       </div>

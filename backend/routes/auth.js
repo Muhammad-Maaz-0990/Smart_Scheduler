@@ -6,6 +6,8 @@ const passport = require('passport');
 const Users = require('../models/Users');
 const OwnerUser = require('../models/OwnerUser');
 const InstituteInformation = require('../models/InstituteInformation');
+const { protect, authorizeRoles } = require('../middleware/auth');
+const bcrypt = require('bcryptjs');
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -432,5 +434,101 @@ router.get('/institute/:instituteID/logo', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+  // @route   PUT /api/auth/institute/:instituteID
+  // @desc    Update institute info (Admin of that institute only)
+  // @access  Private
+  router.put('/institute/:instituteID', protect, authorizeRoles('Admin'), async (req, res) => {
+    try {
+      const { instituteID } = req.params;
+      const adminInstitute = req.user?.instituteID;
+      if (!adminInstitute || adminInstitute !== instituteID) {
+        return res.status(403).json({ message: 'You can only update your own institute' });
+      }
+
+      const { instituteName, address, contactNumber, instituteLogo } = req.body;
+
+      // Prepare binary logo from data URL if provided
+      let logoData, logoContentType, logoString = undefined;
+      if (typeof instituteLogo === 'string') {
+        if (instituteLogo.startsWith('data:')) {
+          try {
+            const match = instituteLogo.match(/^data:(.*?);base64,(.*)$/);
+            if (match) {
+              logoContentType = match[1] || 'image/png';
+              const b64 = match[2];
+              logoData = Buffer.from(b64, 'base64');
+            }
+          } catch {}
+          logoString = ''; // clear legacy string if data url provided
+        } else {
+          // keep legacy string URL if non-data URL provided
+          logoString = instituteLogo;
+          logoData = undefined;
+          logoContentType = undefined;
+        }
+      }
+
+      const update = {};
+      if (typeof instituteName === 'string') update.instituteName = instituteName.trim();
+      if (typeof address === 'string') update.address = address.trim();
+      if (typeof contactNumber === 'string') update.contactNumber = contactNumber.trim();
+      if (logoString !== undefined) update.instituteLogo = logoString;
+      if (logoData !== undefined) update.logoData = logoData;
+      if (logoContentType !== undefined) update.logoContentType = logoContentType;
+
+      const inst = await InstituteInformation.findOneAndUpdate(
+        { instituteID },
+        { $set: update },
+        { new: true }
+      );
+      if (!inst) return res.status(404).json({ message: 'Institute not found' });
+
+      const obj = inst.toObject();
+      if (obj.logoData && obj.logoData.length) {
+        obj.instituteLogo = `/api/auth/institute/${encodeURIComponent(instituteID)}/logo`;
+        delete obj.logoData;
+      }
+      res.json(obj);
+    } catch (err) {
+      console.error('Institute update error:', err);
+      res.status(500).json({ message: 'Server error', error: err.message });
+    }
+  });
+
+  // @route   PUT /api/auth/change-password
+  // @desc    Change current user's password
+  // @access  Private
+  router.put('/change-password', protect, async (req, res) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      if (!oldPassword || !newPassword || String(newPassword).length < 6) {
+        return res.status(400).json({ message: 'Provide oldPassword and newPassword (min 6 chars)' });
+      }
+
+      // User can be in either collection
+      let user = await Users.findById(req.user.id);
+      let collection = 'Users';
+      if (!user) {
+        user = await OwnerUser.findById(req.user.id);
+        collection = 'OwnerUser';
+      }
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      const isMatch = await user.comparePassword(oldPassword);
+      if (!isMatch) return res.status(401).json({ message: 'Old password is incorrect' });
+
+      // Hash and save new password
+      const salt = await bcrypt.genSalt(10);
+      const hashed = await bcrypt.hash(newPassword, salt);
+      user.password = hashed;
+      await user.save();
+
+      res.json({ ok: true, message: 'Password changed successfully' });
+    } catch (err) {
+      console.error('Change password error:', err);
+      res.status(500).json({ message: 'Server error', error: err.message });
+    }
+  });
 
 module.exports = router;
