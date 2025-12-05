@@ -15,7 +15,6 @@ const EditInstitute = () => {
     contactNumber: '',
     instituteLogo: '' // data URL or URL string
   });
-  const [country, setCountry] = useState('PK');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -34,15 +33,6 @@ const EditInstitute = () => {
           contactNumber: inst.contactNumber || '',
           instituteLogo: inst.instituteLogo || ''
         });
-        // derive country from phone prefix (simple heuristic)
-        const pn = String(inst.contactNumber || '');
-        if (pn.startsWith('+1')) setCountry('US');
-        else if (pn.startsWith('+92')) setCountry('PK');
-        else if (pn.startsWith('+44')) setCountry('GB');
-        else if (pn.startsWith('+91')) setCountry('IN');
-        else if (pn.startsWith('+971')) setCountry('AE');
-        else if (pn.startsWith('+966')) setCountry('SA');
-        else setCountry('PK');
       } catch (e) {
         setError(e?.response?.data?.message || 'Failed to load institute');
       } finally {

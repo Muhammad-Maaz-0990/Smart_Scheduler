@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Button, Table, Modal, Form, Alert } from 'react-bootstrap';
+import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
@@ -18,6 +19,9 @@ const Rooms = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All'); // All | Class | Lab
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [importPreview, setImportPreview] = useState([]);
+  const [importError, setImportError] = useState('');
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     if (instituteObjectId) {
@@ -47,6 +51,70 @@ const Rooms = () => {
     } catch (err) {
       setError('Failed to fetch rooms');
     }
+  };
+
+  const onImportClick = () => {
+    setImportError('');
+    fileInputRef.current?.click();
+  };
+
+  const onFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const { headers, items } = parseCSV(text);
+      const required = ['roomNumber','roomStatus'];
+      const hasAll = required.every(h => headers.includes(h));
+      if (!hasAll) {
+        setImportError('CSV must include headers: roomNumber, roomStatus');
+        setImportPreview([]);
+        return;
+      }
+      setImportPreview(items);
+    } catch (err) {
+      setImportError('Failed to parse CSV');
+      setImportPreview([]);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const addImported = async () => {
+    if (!instituteObjectId || importPreview.length === 0) return;
+    setError('');
+    setSuccess('');
+    try {
+      const token = localStorage.getItem('token');
+      for (const r of importPreview) {
+        const body = {
+          roomNumber: r.roomNumber,
+          roomStatus: r.roomStatus || 'Class',
+          instituteID: instituteObjectId
+        };
+        const res = await fetch('http://localhost:5000/api/rooms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(()=>({}));
+          throw new Error(data.message || 'Failed to add some rows');
+        }
+      }
+      setSuccess('Imported rooms added successfully');
+      setImportPreview([]);
+      fetchRooms();
+    } catch (err) {
+      setError(err.message || 'Import add failed');
+    }
+  };
+
+  const exportCSV = () => {
+    const headers = ['roomNumber','roomStatus'];
+    const rows = rooms.map(r => ({ roomNumber: r.roomNumber, roomStatus: r.roomStatus }));
+    const csv = toCSV(headers, rows);
+    downloadCSV('rooms.csv', csv);
   };
 
   const handleShowModal = (mode, room = null) => {
@@ -152,6 +220,7 @@ const Rooms = () => {
               <h2 className="dashboard-title mb-2">🏢 Rooms Management</h2>
               <p className="dashboard-subtitle mb-0">Manage all rooms in your institute</p>
             </div>
+            <div className="d-flex gap-2">
             <Button 
             variant="primary" 
             className="btn-futuristic"
@@ -159,6 +228,10 @@ const Rooms = () => {
           >
             <span className="btn-icon">➕</span> Add Room
           </Button>
+          <Button className="btn-futuristic" onClick={onImportClick}>📥 Import CSV</Button>
+          <Button className="btn-futuristic" onClick={exportCSV}>📤 Export CSV</Button>
+          <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
+          </div>
         </div>
 
         {/* Search and Filter Row */}
@@ -200,6 +273,24 @@ const Rooms = () => {
 
         {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
         {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+        {importError && <Alert variant="warning" dismissible onClose={() => setImportError('')}>{importError}</Alert>}
+        {importPreview.length > 0 && (
+          <Card className="mb-3">
+            <Card.Header>Import Preview</Card.Header>
+            <Card.Body>
+              <Table size="sm" hover>
+                <thead><tr><th>#</th><th>roomNumber</th><th>roomStatus</th></tr></thead>
+                <tbody>
+                  {importPreview.map((r, idx) => (
+                    <tr key={idx}><td>{idx+1}</td><td>{r.roomNumber}</td><td>{r.roomStatus}</td></tr>
+                  ))}
+                </tbody>
+              </Table>
+              <Button variant="primary" onClick={addImported}>Add Imported</Button>
+              <Button variant="secondary" className="ms-2" onClick={()=>setImportPreview([])}>Clear</Button>
+            </Card.Body>
+          </Card>
+        )}
 
         <Card className="glass-effect">
           <Card.Body>

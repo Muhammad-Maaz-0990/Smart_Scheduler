@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Card, Table, Alert, Button, Modal, Form } from 'react-bootstrap';
+import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import Sidebar from '../../components/Sidebar';
@@ -23,6 +24,9 @@ const Users = () => {
     cnic: ''
   });
   const [country, setCountry] = useState('PK');
+  const [importPreview, setImportPreview] = useState([]);
+  const [importError, setImportError] = useState('');
+  const fileInputRef = React.useRef(null);
 
   const tokenHeader = () => {
     const token = localStorage.getItem('token');
@@ -265,6 +269,35 @@ const Users = () => {
     }
   };
 
+  const onImportClick = () => { setImportError(''); fileInputRef.current?.click(); };
+  const onFileSelected = async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    try {
+      const text = await file.text();
+      const { headers, items } = parseCSV(text);
+      const required = ['userName','email','designation','phoneNumber','cnic'];
+      if (!required.every(h => headers.includes(h))) { setImportError('CSV must include headers: ' + required.join(', ')); setImportPreview([]); return; }
+      setImportPreview(items);
+    } catch { setImportError('Failed to parse CSV'); setImportPreview([]); }
+    finally { e.target.value = ''; }
+  };
+  const addImported = async () => {
+    setError(''); setSuccess('');
+    try {
+      for (const u of importPreview) {
+        const payload = { userName: u.userName, email: u.email, password: 'ChangeMe123', designation: u.designation, phoneNumber: u.phoneNumber, cnic: u.cnic };
+        const res = await fetch('http://localhost:5000/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json', ...tokenHeader() }, body: JSON.stringify(payload) });
+        if (!res.ok) { const d = await res.json().catch(()=>({})); throw new Error(d.message || 'Failed to add some rows'); }
+      }
+      setSuccess('Imported users added successfully'); setImportPreview([]); await fetchUsers();
+    } catch (e) { setError(e.message || 'Import add failed'); }
+  };
+  const exportCSV = () => {
+    const headers = ['userName','email','designation','phoneNumber','cnic'];
+    const rows = users.map(u => ({ userName: u.userName, email: u.email, designation: u.designation, phoneNumber: u.phoneNumber, cnic: u.cnic }));
+    downloadCSV('users.csv', toCSV(headers, rows));
+  };
+
   return (
     <>
       <Sidebar activeMenu="users" />
@@ -283,6 +316,11 @@ const Users = () => {
             <Button variant="primary" className="btn-futuristic" onClick={openAdd}>
               <span className="btn-icon">➕</span> Add User
             </Button>
+            <div className="d-inline-flex gap-2 ms-2">
+              <Button className="btn-futuristic" onClick={onImportClick}>📥 Import CSV</Button>
+              <Button className="btn-futuristic" onClick={exportCSV}>📤 Export CSV</Button>
+              <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
+            </div>
           </div>
 
           {error && (
@@ -294,6 +332,28 @@ const Users = () => {
             <Alert variant="success" className="error-alert" onClose={() => setSuccess('')} dismissible>
               {success}
             </Alert>
+          )}
+          {importError && (
+            <Alert variant="warning" className="error-alert" onClose={() => setImportError('')} dismissible>
+              {importError}
+            </Alert>
+          )}
+          {importPreview.length > 0 && (
+            <Card className="glass-effect mb-3">
+              <Card.Header>Import Preview</Card.Header>
+              <Card.Body>
+                <Table size="sm" hover>
+                  <thead><tr><th>#</th><th>userName</th><th>email</th><th>designation</th><th>phoneNumber</th><th>cnic</th></tr></thead>
+                  <tbody>
+                    {importPreview.map((r, idx) => (
+                      <tr key={idx}><td>{idx+1}</td><td>{r.userName}</td><td>{r.email}</td><td>{r.designation}</td><td>{r.phoneNumber}</td><td>{r.cnic}</td></tr>
+                    ))}
+                  </tbody>
+                </Table>
+                <Button variant="primary" onClick={addImported}>Add Imported</Button>
+                <Button variant="secondary" className="ms-2" onClick={()=>setImportPreview([])}>Clear</Button>
+              </Card.Body>
+            </Card>
           )}
 
           <Card className="glass-effect">

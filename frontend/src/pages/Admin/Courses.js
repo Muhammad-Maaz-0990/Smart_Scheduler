@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Alert } from 'react-bootstrap';
+import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
@@ -20,6 +21,9 @@ const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [filters, setFilters] = useState({ type: 'All', creditHours: '', });
+  const [importPreview, setImportPreview] = useState([]);
+  const [importError, setImportError] = useState('');
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     if (instituteObjectId) {
@@ -126,6 +130,36 @@ const Courses = () => {
     }
   };
 
+  const onImportClick = () => { setImportError(''); fileInputRef.current?.click(); };
+  const onFileSelected = async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    try {
+      const text = await file.text();
+      const { headers, items } = parseCSV(text);
+      const required = ['courseCode','courseTitle','courseType','creditHours'];
+      if (!required.every(h => headers.includes(h))) { setImportError('CSV must include headers: ' + required.join(', ')); setImportPreview([]); return; }
+      setImportPreview(items);
+    } catch { setImportError('Failed to parse CSV'); setImportPreview([]); }
+    finally { e.target.value = ''; }
+  };
+  const addImported = async () => {
+    if (!instituteObjectId || importPreview.length === 0) return;
+    setError(''); setSuccess('');
+    try {
+      for (const c of importPreview) {
+        const body = { courseCode: c.courseCode, courseTitle: c.courseTitle, courseType: c.courseType, creditHours: Number(c.creditHours)|| (c.courseType==='Lab'?1:3), instituteID: instituteObjectId };
+        const res = await fetch('http://localhost:5000/api/courses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (!res.ok) { const d = await res.json().catch(()=>({})); throw new Error(d.message || 'Failed to add some rows'); }
+      }
+      setSuccess('Imported courses added successfully'); setImportPreview([]); fetchCourses();
+    } catch (e) { setError(e.message || 'Import add failed'); }
+  };
+  const exportCSV = () => {
+    const headers = ['courseCode','courseTitle','courseType','creditHours'];
+    const rows = courses.map(c => ({ courseCode: c.courseCode, courseTitle: c.courseTitle, courseType: c.courseType, creditHours: c.creditHours }));
+    downloadCSV('courses.csv', toCSV(headers, rows));
+  };
+
   return (
     <>
       <Sidebar activeMenu="courses" />
@@ -142,6 +176,7 @@ const Courses = () => {
               <h2 className="dashboard-title">📚 Courses Management</h2>
               <p className="dashboard-subtitle">Manage all courses in your institute</p>
             </div>
+            <div className="d-flex gap-2">
             <Button 
             variant="primary" 
             className="btn-futuristic"
@@ -149,6 +184,10 @@ const Courses = () => {
           >
             <span className="btn-icon">➕</span> Add Course
           </Button>
+          <Button className="btn-futuristic" onClick={onImportClick}>📥 Import CSV</Button>
+          <Button className="btn-futuristic" onClick={exportCSV}>📤 Export CSV</Button>
+          <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
+          </div>
         </div>
 
         {/* Search and Filter */}
@@ -190,6 +229,24 @@ const Courses = () => {
 
         {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
         {success && <Alert variant="success" dismissible onClose={() => setSuccess('')}>{success}</Alert>}
+        {importError && <Alert variant="warning" dismissible onClose={() => setImportError('')}>{importError}</Alert>}
+        {importPreview.length > 0 && (
+          <Card className="mb-3">
+            <Card.Header>Import Preview</Card.Header>
+            <Card.Body>
+              <Table size="sm" hover>
+                <thead><tr><th>#</th><th>courseCode</th><th>courseTitle</th><th>courseType</th><th>creditHours</th></tr></thead>
+                <tbody>
+                  {importPreview.map((r, idx) => (
+                    <tr key={idx}><td>{idx+1}</td><td>{r.courseCode}</td><td>{r.courseTitle}</td><td>{r.courseType}</td><td>{r.creditHours}</td></tr>
+                  ))}
+                </tbody>
+              </Table>
+              <Button variant="primary" onClick={addImported}>Add Imported</Button>
+              <Button variant="secondary" className="ms-2" onClick={()=>setImportPreview([])}>Clear</Button>
+            </Card.Body>
+          </Card>
+        )}
 
         <Card className="glass-effect">
           <Card.Body className="p-0">
