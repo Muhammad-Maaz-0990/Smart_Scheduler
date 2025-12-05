@@ -218,21 +218,39 @@ function GenerateTimetable() {
 
         // Build payload expected by backend generator
         const allClasses = [];
-        const allCourses = [];
-        const allInstructors = [];
+        const assignments = [];
         const allRoomNumbers = [];
+        const roomTypes = {};
 
+        // Collect unique classes from both Class and Lab room assignments
+        const uniqueClassIds = new Set();
+        Object.values(roomClassMap).forEach(clsId => { if (clsId) uniqueClassIds.add(clsId); });
+        Object.values(roomLabMap).forEach(clsIds => { 
+          if (Array.isArray(clsIds)) clsIds.forEach(cid => { if (cid) uniqueClassIds.add(cid); });
+        });
+
+        uniqueClassIds.forEach(clsId => {
+          const clsObj = classes.find(c => c._id === clsId);
+          if (clsObj) {
+            const className = `${clsObj.degree} ${clsObj.year}-${clsObj.section}`;
+            if (!allClasses.includes(className)) allClasses.push(className);
+          }
+        });
+
+        // Collect all rooms with type mapping
         selectedRooms.forEach((roomId) => {
           const roomObj = rooms.find(r => r._id === roomId);
-          const clsId = roomClassMap[roomId];
-          const clsObj = classes.find(c => c._id === clsId);
-          const courseIds = (classCoursesMap[clsId] || []);
-
-          const className = clsObj ? `${clsObj.degree} ${clsObj.year}-${clsObj.section}` : 'Unknown';
-          if (!allClasses.includes(className)) allClasses.push(className);
           if (roomObj?.roomNumber && !allRoomNumbers.includes(roomObj.roomNumber)) {
             allRoomNumbers.push(roomObj.roomNumber);
+            roomTypes[roomObj.roomNumber] = roomObj.roomType === 'Lab' ? 'Lab' : 'Class';
           }
+        });
+
+        // Collect per-class assignments (course + instructor)
+        uniqueClassIds.forEach(clsId => {
+          const clsObj = classes.find(c => c._id === clsId);
+          const className = clsObj ? `${clsObj.degree} ${clsObj.year}-${clsObj.section}` : undefined;
+          const courseIds = (classCoursesMap[clsId] || []);
 
           courseIds.forEach(cid => {
             const cObj = courses.find(c => c._id === cid);
@@ -242,14 +260,17 @@ function GenerateTimetable() {
             const courseType = (cObj?.courseType === 'Lab' || /lab/i.test(cObj?.courseTitle || '')) ? 'Lab' : 'Lecture';
             const courseName = cObj?.courseTitle || 'Course';
             const creditHours = courseType === 'Lab' ? 3 : (Number(cObj?.creditHours) || 1);
-
-            const courseEntry = { name: courseName, type: courseType, creditHours };
-            if (!allCourses.find(c => c.name === courseName && c.type === courseType)) {
-              allCourses.push(courseEntry);
-            }
-
             const instructorName = tObj?.userName || 'Instructor';
-            if (!allInstructors.includes(instructorName)) allInstructors.push(instructorName);
+
+            if (className) {
+              assignments.push({
+                class: className,
+                course: courseName,
+                type: courseType,
+                creditHours,
+                instructor: instructorName
+              });
+            }
           });
         });
 
@@ -259,9 +280,9 @@ function GenerateTimetable() {
           session: `${currentYear}-${currentYear + 1}`,
           year: currentYear,
           classes: allClasses,
-          courses: allCourses,
-          instructors: allInstructors,
+          assignments,
           rooms: allRoomNumbers,
+          roomTypes,
           timeslots: [
             { day: 'Mon', start: '08:00', end: '09:00' },
             { day: 'Mon', start: '09:00', end: '10:00' },
@@ -1114,17 +1135,12 @@ function GenerateTimetable() {
                           <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>
                             {cand?.header?.session || 'Session'} • {cand?.header?.year || 'Year'}
                           </div>
-                          <div style={{ maxHeight: '220px', overflowY: 'auto', borderTop: '1px solid #e5e7eb', paddingTop: '8px' }}>
-                            {(cand?.details || []).slice(0, 12).map((d, i) => (
+                          <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '8px' }}>
+                            {(cand?.details || []).map((d, i) => (
                               <div key={i} style={{ fontSize: '12px', color: '#374151', marginBottom: '6px' }}>
                                 {d.day} {d.time} • {d.class} • {d.course} • {d.roomNumber}
                               </div>
                             ))}
-                            {(cand?.details || []).length > 12 && (
-                              <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                                +{(cand?.details || []).length - 12} more rows
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))}

@@ -76,6 +76,7 @@ function TimeTable({ isAdmin = false }) {
     if (!header) return;
     setLoading(true);
     setError('');
+    setDetails([]); // Clear immediately to prevent stale data mixing
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:5000/api/timetables-gen/details/${encodeURIComponent(header.instituteTimeTableID)}`, {
@@ -474,9 +475,20 @@ function TimetableTables({ details, header }) {
     ];
   }
 
+  // Deduplicate by unique key: class+day+time+course+room+instructor
+  const seen = new Set();
+  const dedupedDetails = [];
+  for (const d of details) {
+    const key = `${d.class}|${d.day}|${d.time}|${d.course}|${d.roomNumber}|${d.instructorName}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      dedupedDetails.push(d);
+    }
+  }
+
   // Group rows by class
   const classMap = new Map();
-  for (const d of details) {
+  for (const d of dedupedDetails) {
     const klass = String(d.class || 'Unknown');
     const day = normalizeDay(d.day);
     const time = String(d.time || '');

@@ -14,8 +14,8 @@ function keyFor(ttId, instituteID, year) {
 }
 
 // POST /api/timetables-gen/generate
-// Expects: { session, year, instituteID, classes, courses, instructors, rooms, timeslots, breaks }
-// courses: [{ name, type: 'Lecture'|'Lab', creditHours }]; enforce Lab creditHours=3
+// Expects: { session, year, instituteID, classes, assignments, rooms, roomTypes, timeslots, breaks }
+// assignments: [{ class, course, type: 'Lecture'|'Lab', creditHours, instructor }]; enforce Lab creditHours=3
 // breaks: { mode: 'same'|'per-day', same?: { start, end }, perDay?: { Mon:{start,end}, ... } }
 router.post('/generate', protect, async (req, res) => {
   try {
@@ -30,32 +30,34 @@ router.post('/generate', protect, async (req, res) => {
       session,
       year,
       classes = [],
-      courses = [],
-      instructors = [],
+      assignments = [],
       rooms = [],
+      roomTypes = {},
       timeslots: clientTimeslots = [],
       breaks = {}
     } = req.body || {};
 
     if (!session || !year) return res.status(400).json({ message: 'Missing session/year' });
 
-    // Validate courses: Lecture must have positive creditHours; Lab forced to 3
-    if (!Array.isArray(courses) || courses.length === 0) {
-      return res.status(400).json({ message: 'At least one course is required' });
+    // Validate assignments: Lecture must have positive creditHours; Lab forced to 3
+    if (!Array.isArray(assignments) || assignments.length === 0) {
+      return res.status(400).json({ message: 'At least one assignment is required' });
     }
-    const normalizedCourses = (courses || []).map((c, idx) => {
-      const type = c.type === 'Lab' ? 'Lab' : 'Lecture';
-      let creditHours = type === 'Lab' ? 3 : Number(c.creditHours);
+    const normalizedAssignments = (assignments || []).map((a, idx) => {
+      const type = a.type === 'Lab' ? 'Lab' : 'Lecture';
+      let creditHours = type === 'Lab' ? 3 : Number(a.creditHours);
       if (type === 'Lecture') {
         if (!Number.isFinite(creditHours) || creditHours < 1) {
-          throw new Error(`Course ${c.name || `#${idx+1}`} missing/invalid creditHours`);
+          throw new Error(`Assignment ${a.course || `#${idx+1}`} missing/invalid creditHours`);
         }
         creditHours = Math.floor(creditHours);
       }
       return {
-        name: c.name,
+        class: String(a.class),
+        course: String(a.course),
         type,
-        creditHours
+        creditHours,
+        instructor: String(a.instructor || '')
       };
     });
 
@@ -78,9 +80,9 @@ router.post('/generate', protect, async (req, res) => {
       session: String(session),
       year: Number(year),
       classes,
-      courses: normalizedCourses,
-      instructors,
+      assignments: normalizedAssignments,
       rooms,
+      roomTypes,
       timeslots,
       breaks,
       algorithms: ['GA_A', 'GA_B', 'GA_C']
@@ -230,7 +232,9 @@ router.get('/details/:id', protect, async (req, res) => {
     const header = await InstituteTimeTables.findOne({ instituteTimeTableID, instituteID }).lean();
     if (!header) return res.status(404).json({ message: 'Timetable not found' });
     const key = keyFor(instituteTimeTableID, instituteID, header.year);
+    console.log(`Fetching details for key: ${key}`);
     const details = await InstituteTimeTableDetails.find({ key }).lean();
+    console.log(`Found ${details.length} detail rows for key: ${key}`);
     return res.json({ header, details });
   } catch (err) {
     console.error('Details timetables error:', err?.message || err);

@@ -30,11 +30,10 @@ const AdminDashboard = () => {
           }
         } catch {}
 
-        // Rooms (expects Mongo ObjectId via query param)
+        // Rooms (defaults to authenticated user's institute on backend)
         let rooms = 0;
         try {
-          const instituteObjectId = user?.instituteObjectId; // rooms API validates ObjectId
-          const resRooms = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(instituteObjectId || '')}`, { headers });
+          const resRooms = await fetch('http://localhost:5000/api/rooms', { headers });
           if (resRooms.ok) {
             const list = await resRooms.json();
             rooms = Array.isArray(list) ? list.length : (Array.isArray(list?.items) ? list.items.length : 0);

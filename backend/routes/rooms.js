@@ -3,21 +3,37 @@ const router = express.Router();
 const Room = require('../models/Room');
 const { body, validationResult } = require('express-validator');
 
-// Get rooms via query param (fallback when no path param used)
-router.get('/', async (req, res) => {
+const { protect } = require('../middleware/auth');
+
+// Get rooms via query param (fallback when no path param used); defaults to authenticated user's institute
+router.get('/', protect, async (req, res) => {
   try {
-    const { instituteID } = req.query;
+    let { instituteID } = req.query;
     if (!instituteID) {
-      return res.status(400).json({ message: 'instituteID query is required' });
+      instituteID = req.user?.instituteID;
+    }
+    if (!instituteID) {
+      return res.status(400).json({ message: 'Missing instituteID' });
     }
     
-    // Validate ObjectId format
+    // Resolve string business key to ObjectId via InstituteInformation if needed
     const mongoose = require('mongoose');
+    let instituteObjectId = instituteID;
     if (!mongoose.Types.ObjectId.isValid(instituteID)) {
-      return res.status(400).json({ message: 'Invalid institute ID format' });
+      try {
+        const InstituteInformation = require('../models/InstituteInformation');
+        const inst = await InstituteInformation.findOne({ instituteID }).lean();
+        if (!inst || !inst._id) {
+          return res.status(400).json({ message: 'Invalid institute ID' });
+        }
+        instituteObjectId = inst._id;
+      } catch (e) {
+        console.error('Institute lookup failed:', e);
+        return res.status(500).json({ message: 'Failed to resolve institute', error: e.message });
+      }
     }
-    
-    const rooms = await Room.find({ instituteID }).sort({ roomID: 1 });
+
+    const rooms = await Room.find({ instituteID: instituteObjectId }).sort({ roomID: 1 });
     res.json(rooms);
   } catch (err) {
     console.error('GET /api/rooms error:', err);
