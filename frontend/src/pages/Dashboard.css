@@ -1,9 +1,79 @@
+/* Mobile overflow fix */
+@media (max-width: 992px) {
+  body, html {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+/* Custom Gradient Tooltip - Remove Bootstrap black background */
+.custom-gradient-tooltip.tooltip {
+  opacity: 1 !important;
+}
+
+.custom-gradient-tooltip .tooltip-inner {
+  background: transparent !important;
+  padding: 0 !important;
+  max-width: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.custom-gradient-tooltip .tooltip-arrow::before {
+  border-top-color: #7e22ce !important;
+  border-bottom-color: #7e22ce !important;
+  border-left-color: #7e22ce !important;
+  border-right-color: #7e22ce !important;
+}
+
+:root {
+  --sidebar-margin: 260px;
+}
+
+body.sidebar-collapsed {
+  --sidebar-margin: 80px;
+}
+
+body.no-sidebar {
+  --sidebar-margin: 0px;
+}
+
+@media (max-width: 992px) {
+  :root {
+    --sidebar-margin: 0px;
+  }
+}
+
+/* Apply CSS variable to all content divs */
+div[style*="marginLeft: '260px'"],
+div[style*="marginLeft: '250px'"] {
+  margin-left: var(--sidebar-margin) !important;
+  transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 992px) {
+  div[style*="marginLeft: '260px'"],
+  div[style*="marginLeft: '250px'"] {
+    margin-left: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    box-sizing: border-box !important;
+  }
+}
+
 .dashboard-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #ffffff;
   position: relative;
   overflow-x: hidden;
-  margin-left: 260px;
+  margin-left: var(--sidebar-margin);
   transition: margin-left 0.3s ease;
 }
 /* When sidebar is hidden, use full width */
@@ -21,6 +91,34 @@
   .dashboard-page {
     margin-left: 0 !important;
     padding-top: 70px;
+    width: 100%;
+    max-width: 100vw !important;
+  }
+
+  /* Fix Bootstrap containers on mobile */
+  .container-fluid, .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Ensure all content divs have no left margin on mobile */
+  div[style*="marginLeft"] {
+    margin-left: 0 !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Ensure body and html don't cause overflow */
+  body, html {
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 }
 
@@ -37,9 +135,11 @@
 
 .floating-shape {
   position: absolute;
-  background: rgba(255, 255, 255, 0.03);
+  background: linear-gradient(135deg, rgba(126, 34, 206, 0.15), rgba(168, 85, 247, 0.1));
   border-radius: 50%;
   animation: float 25s infinite ease-in-out;
+  filter: blur(60px);
+  opacity: 0.7;
 }
 
 .shape-1 {
@@ -66,6 +166,14 @@
   animation-delay: 16s;
 }
 
+.shape-4 {
+  width: 350px;
+  height: 350px;
+  bottom: 20%;
+  left: 15%;
+  animation-delay: 12s;
+}
+
 @keyframes float {
   0%, 100% {
     transform: translate(0, 0) rotate(0deg);
@@ -81,6 +189,7 @@
 /* Navbar Styling */
 .dashboard-navbar {
   background: rgba(255, 255, 255, 0.1) !important;
+  -webkit-backdrop-filter: blur(15px);
   backdrop-filter: blur(15px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   padding: 1rem 0;
@@ -167,16 +276,76 @@
 }
 
 .dashboard-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  margin-bottom: 0.5rem;
+  font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  margin-bottom: 0.75rem;
+  letter-spacing: -1.5px;
+  position: relative;
+  animation: titleGlow 3s ease-in-out infinite;
+  text-align: center;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(126, 34, 206, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px rgba(168, 85, 247, 0.6));
+  }
 }
 
 .dashboard-subtitle {
-  font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: clamp(0.875rem, 2vw, 1.125rem);
+  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.highlight-text {
+  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+/* Custom Alert Styling */
+.custom-alert {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 245, 250, 0.95) 100%);
+  border: 2px solid rgba(220, 38, 38, 0.2);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 24px rgba(220, 38, 38, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.custom-alert .alert-heading {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.custom-alert p {
+  color: #6b7280;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 @keyframes fadeIn {
@@ -192,29 +361,117 @@
 
 /* Statistics Cards */
 .stat-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  transition: all 0.3s ease;
-  animation: slideIn 0.6s ease-out;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 100%);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(126, 34, 206, 0.12);
+  border-radius: 24px;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 10px 40px rgba(126, 34, 206, 0.1),
+    0 3px 12px rgba(59, 130, 246, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(126, 34, 206, 0.05);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(126, 34, 206, 0.08), transparent);
+  transition: left 0.8s ease;
+}
+
+.stat-card:hover::before {
+  left: 100%;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #7e22ce, #3b82f6, #7e22ce);
+  transform: scaleX(0);
+  transition: transform 0.5s ease;
+}
+
+.stat-card:hover::after {
+  transform: scaleX(1);
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-8px);
+  box-shadow: 
+    0 25px 70px rgba(126, 34, 206, 0.15),
+    0 10px 30px rgba(59, 130, 246, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(126, 34, 206, 0.1);
+  border-color: rgba(126, 34, 206, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(252, 250, 255, 1) 100%);
 }
 
 .stat-card .card-body {
   text-align: center;
-  padding: 1.5rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem) clamp(1rem, 2vw, 1.5rem);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100%;
+}
+
+.stat-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .stat-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  animation: bounce 2s ease-in-out infinite;
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  background: var(--icon-color, linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 4px 16px rgba(126, 34, 206, 0.25));
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(80px, 15vw, 110px);
+  height: clamp(80px, 15vw, 110px);
+}
+
+.stat-icon::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(126, 34, 206, 0.12), rgba(59, 130, 246, 0.08));
+  border-radius: 50%;
+  z-index: -1;
+  animation: iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(126, 34, 206, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px rgba(59, 130, 246, 0);
+  }
 }
 
 @keyframes bounce {
@@ -227,16 +484,43 @@
 }
 
 .stat-value {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: clamp(2.25rem, 5.5vw, 3.25rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 0.5rem;
+  letter-spacing: -2px;
+  filter: drop-shadow(0 2px 10px rgba(126, 34, 206, 0.2));
+  line-height: 1.2;
 }
 
 .stat-label {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: clamp(0.8rem, 1.75vw, 1rem);
+  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
+  margin-top: 0.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.stat-label::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #7e22ce, #3b82f6, transparent);
+  border-radius: 2px;
 }
 
 @keyframes slideIn {
@@ -256,6 +540,7 @@
 .schedule-card,
 .activity-card {
   background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(15px);
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
@@ -437,6 +722,7 @@
 /* Glass Effect */
 .glass-effect {
   background: rgba(255, 255, 255, 0.1) !important;
+  -webkit-backdrop-filter: blur(15px);
   backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }

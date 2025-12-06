@@ -1,0 +1,124 @@
+.loading-spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  width: 100%;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.loading-content.small {
+  gap: 1rem;
+}
+
+.spinner-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content.small .spinner-wrapper {
+  width: 80px;
+  height: 80px;
+}
+
+.spinner-gradient-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid transparent;
+  border-top: 4px solid #7e22ce;
+  border-right: 4px solid #a855f7;
+  animation: spin 1.5s linear infinite;
+}
+
+.spinner-gradient-ring.ring-2 {
+  width: 85%;
+  height: 85%;
+  border-top: 3px solid #a855f7;
+  border-right: 3px solid #c084fc;
+  animation: spin-reverse 2s linear infinite;
+}
+
+.spinner-inner {
+  color: #7e22ce;
+  width: 50px;
+  height: 50px;
+  border-width: 3px;
+  position: relative;
+  z-index: 1;
+}
+
+.loading-content.small .spinner-inner {
+  width: 35px;
+  height: 35px;
+  border-width: 2px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+    filter: drop-shadow(0 0 10px rgba(126, 34, 206, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6));
+  }
+  100% {
+    transform: rotate(360deg);
+    filter: drop-shadow(0 0 10px rgba(126, 34, 206, 0.4));
+  }
+}
+
+@keyframes spin-reverse {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.loading-text {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #7e22ce 0%, #a855f7 50%, #5b21b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.loading-content.small .loading-text {
+  font-size: 1rem;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #7e22ce 0%, #a855f7 50%, #5b21b6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.loading-content.small .loading-dots {
+  font-size: 1.5rem;
+}
+
+.loading-dots span {
+  display: inline-block;
+}

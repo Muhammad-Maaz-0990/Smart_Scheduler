@@ -29,12 +29,13 @@ const StudentProfilePage = () => {
           <div className="floating-shape shape-2"></div>
           <div className="floating-shape shape-3"></div>
         </div>
-        <Container fluid className="dashboard-content">
-          <h1 className="dashboard-title mb-4">Profile</h1>
+        <Container fluid className="dashboard-content" style={{ padding: 0 }}>
           {expired && (
-            <Alert variant="warning" className="mb-3">
-              Say Your Head to Buy Subscription
-            </Alert>
+            <div style={{ padding: '0 1.5rem', marginTop: '1.5rem' }}>
+              <Alert variant="warning" style={{ borderRadius: '12px' }}>
+                Say Your Head to Buy Subscription
+              </Alert>
+            </div>
           )}
           <Profile />
         </Container>

@@ -11,6 +11,7 @@
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sidebar.collapsed {
@@ -23,7 +24,7 @@
   align-items: center;
   gap: 15px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 80px;
+  min-height: 95px;
 }
 
 .institute-logo {
@@ -196,8 +197,8 @@
   height: 32px;
   border-radius: 50%;
   background: white;
-  border: 2px solid #667eea;
-  color: #667eea;
+  border: 2px solid #7c3aed;
+  color: #7c3aed;
   font-size: 16px;
   cursor: pointer;
   display: flex;
@@ -209,31 +210,13 @@
 }
 
 .collapse-toggle:hover {
-  background: #667eea;
+  background: #7c3aed;
   color: white;
   transform: translateY(-50%) scale(1.05);
 }
 
 .mobile-menu-toggle {
   display: none;
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  z-index: 1001;
-  width: 45px;
-  height: 45px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.mobile-menu-toggle:hover {
-  transform: scale(1.05);
 }
 
 .sidebar-overlay {
@@ -243,17 +226,22 @@
 /* Responsive Styles */
 @media (max-width: 992px) {
   .mobile-menu-toggle {
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
   }
 
   .sidebar {
+    position: fixed;
     transform: translateX(-100%);
+    width: 260px;
+    z-index: 1000;
+    left: 0;
   }
 
   .sidebar.mobile-open {
     transform: translateX(0);
+    z-index: 1000;
   }
 
   .sidebar-overlay {
@@ -268,26 +256,20 @@
   }
 
   .collapse-toggle {
-    display: none;
+    display: none !important;
   }
 
   .sidebar.collapsed {
     width: 260px;
+    transform: translateX(-100%);
   }
-}
 
-@media (max-width: 768px) {
-  .sidebar {
-    width: 280px;
+  .sidebar.collapsed.mobile-open {
+    transform: translateX(0);
   }
 
   .sidebar-header {
     padding: 15px;
-  }
-
-  .institute-logo {
-    width: 45px;
-    height: 45px;
   }
 
   .sidebar-menu-item {
@@ -296,20 +278,119 @@
   }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 768px) {
   .sidebar {
-    width: 260px;
+    width: 240px;
+  }
+
+  .sidebar-header {
+    padding: 12px 10px;
+    min-height: 80px;
+    gap: 12px;
+  }
+
+  .institute-logo {
+    width: 46px;
+    height: 46px;
   }
 
   .institute-name {
-    font-size: 14px;
+    font-size: 15px;
+  }
+
+  .institute-subtitle {
+    font-size: 11px;
+  }
+
+  .sidebar-nav {
+    padding: 15px 0;
   }
 
   .sidebar-menu-item {
-    padding: 10px 15px;
+    padding: 10px 12px;
+    font-size: 13px;
+    gap: 12px;
   }
 
   .menu-icon {
-    font-size: 18px;
+    font-size: 17px;
+  }
+
+  .sidebar-footer {
+    padding: 12px;
+  }
+
+  .logout-btn-sidebar {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 576px) {
+  .mobile-menu-toggle {
+    top: 10px;
+    left: 10px;
+    padding: 0.5rem;
+  }
+
+  .sidebar {
+    width: 230px;
+  }
+
+  .sidebar-header {
+    padding: 10px;
+    min-height: 70px;
+    gap: 8px;
+  }
+
+  .institute-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .institute-name {
+    font-size: 13px;
+  }
+
+  .institute-subtitle {
+    font-size: 10px;
+  }
+
+  .sidebar-nav {
+    padding: 12px 0;
+  }
+
+  .sidebar-menu-item {
+    padding: 9px 10px;
+    font-size: 12px;
+    gap: 10px;
+  }
+
+  .menu-icon {
+    font-size: 15px;
+  }
+
+  .sidebar-footer {
+    padding: 10px;
+  }
+
+  .logout-btn-sidebar {
+    padding: 8px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .user-avatar {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+
+  .user-name {
+    font-size: 12px;
+  }
+
+  .user-role {
+    font-size: 10px;
   }
 }

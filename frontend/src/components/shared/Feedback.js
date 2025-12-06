@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Card, Button, ListGroup, Modal, Form, Row, Col, InputGroup, Overlay } from 'react-bootstrap';
+import { Card, ListGroup, Modal, Form, Overlay } from 'react-bootstrap';
+import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { FaComments, FaPlus, FaSearch, FaFilter, FaCheck, FaTimes, FaPaperPlane } from 'react-icons/fa';
 
 const Feedback = () => {
   const { user } = useAuth();
@@ -99,201 +101,675 @@ const Feedback = () => {
   }, [isAdmin]);
 
   return (
-    <div className="d-flex gap-3" style={{ minHeight: 520 }}>
-      {/* Threads list */}
-      <div style={{ width: 380, maxWidth: '100%' }}>
-        <Card className="glass-effect mb-3" style={{ overflow: 'visible' }}>
-          <Card.Body className="d-flex flex-column gap-2" style={{ position: 'relative' }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <div className="dashboard-title mb-0" style={{ fontSize: 20 }}>Feedback</div>
-                <div className="dashboard-subtitle">Conversations</div>
-              </div>
-              {canStartThread && (
-                <Button size="sm" variant="primary" className="btn-futuristic" onClick={() => setShowNew(true)}>New</Button>
-              )}
-            </div>
-            <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2" style={{ position: 'relative', zIndex: 2000 }}>
+    <div style={{ minHeight: '100vh', padding: '2rem 0' }}>
+      {/* Header */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          marginBottom: '0.5rem'
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <FaComments style={{ fontSize: '1.5rem', color: 'white' }} />
+          </div>
+          <div>
+            <h1 style={{
+              fontSize: '1.875rem',
+              fontWeight: '700',
+              color: '#7c3aed',
+              margin: 0
+            }}>Feedback & Messages</h1>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
+              Manage conversations with your team
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="d-flex gap-3" style={{ minHeight: 600 }}>
+        {/* Threads list */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{ width: 380, maxWidth: '100%' }}
+        >
+          {/* Search and New Button */}
+          <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem' }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <FaSearch style={{
+                position: 'absolute',
+                left: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#7c3aed',
+                fontSize: '0.875rem'
+              }} />
               <Form.Control
                 type="text"
-                placeholder="Search by name or title..."
+                placeholder="Search conversations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ maxWidth: 380 }}
+                style={{
+                  paddingLeft: '2.5rem',
+                  borderRadius: '10px',
+                  border: '2px solid #e5e7eb',
+                  fontSize: '0.875rem',
+                  transition: 'all 0.2s'
+                }}
+                className="gradient-border-input"
               />
-              <div style={{ minWidth: 160 }}>
-                <Button
-                  variant="light"
-                  className="border"
-                  ref={setFilterTarget}
-                  onClick={() => setShowFilterMenu(s => !s)}
-                >
-                  ⋮
-                </Button>
-                <Overlay target={filterTarget} show={showFilterMenu} placement="bottom-end" rootClose onHide={() => setShowFilterMenu(false)}>
-                  {(props) => (
-                    <div {...props} style={{ ...props.style, zIndex: 2000 }}>
-                      <div className="card shadow-sm" style={{ minWidth: 280 }}>
-                        <div className="card-body p-2">
-                          <div className="mb-2" style={{ fontWeight: 600, color: '#000' }}>Filter Options</div>
-                          <Form.Group className="mb-2">
-                            <Form.Label className="small mb-1" style={{ color: '#000' }}>Month</Form.Label>
-                            <Form.Select size="sm" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} style={{ color: '#000' }}>
-                              <option value="All">All</option>
-                              <option value="1">January</option>
-                              <option value="2">February</option>
-                              <option value="3">March</option>
-                              <option value="4">April</option>
-                              <option value="5">May</option>
-                              <option value="6">June</option>
-                              <option value="7">July</option>
-                              <option value="8">August</option>
-                              <option value="9">September</option>
-                              <option value="10">October</option>
-                              <option value="11">November</option>
-                              <option value="12">December</option>
-                            </Form.Select>
-                          </Form.Group>
-                          <div className="d-flex justify-content-end gap-2 mt-2">
-                            <Button size="sm" variant="secondary" onClick={() => { setMonthFilter('All'); setShowFilterMenu(false); }}>Reset</Button>
-                            <Button size="sm" variant="primary" onClick={() => setShowFilterMenu(false)}>Apply</Button>
-                          </div>
-                        </div>
+            </div>
+            {canStartThread && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowNew(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '10px',
+                  padding: '0.6rem 0.9rem',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
+                }}
+              >
+                <FaPlus /> New
+              </motion.button>
+            )}
+          </div>
+
+          {/* Filter Button */}
+          <div style={{ marginBottom: '1rem' }}>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              ref={setFilterTarget}
+              onClick={() => setShowFilterMenu(s => !s)}
+              style={{
+                background: 'white',
+                border: '2px solid #e5e7eb',
+                color: '#374151',
+                borderRadius: '10px',
+                padding: '0.6rem 1rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'all 0.2s'
+              }}
+            >
+              <span><FaFilter style={{ marginRight: '0.5rem' }} />Filter by Month</span>
+              <span style={{ fontSize: '1.1rem' }}>⋮</span>
+            </motion.button>
+            <Overlay target={filterTarget} show={showFilterMenu} placement="bottom-start" rootClose onHide={() => setShowFilterMenu(false)}>
+              {(props) => (
+                <div {...props} style={{ ...props.style, zIndex: 2000 }}>
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                    minWidth: 280,
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      padding: '1rem',
+                      borderBottom: '1px solid #e5e7eb',
+                      fontWeight: 600,
+                      color: '#7c3aed',
+                      fontSize: '0.875rem'
+                    }}>Filter by Month</div>
+                    <div style={{ padding: '1rem' }}>
+                      <Form.Select
+                        size="sm"
+                        value={monthFilter}
+                        onChange={(e) => setMonthFilter(e.target.value)}
+                        style={{
+                          borderRadius: '8px',
+                          border: '2px solid #e5e7eb',
+                          fontSize: '0.875rem',
+                          marginBottom: '1rem'
+                        }}
+                      >
+                        <option value="All">All Months</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                      </Form.Select>
+                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => { setMonthFilter('All'); setShowFilterMenu(false); }}
+                          style={{
+                            background: '#f3f4f6',
+                            border: '1px solid #e5e7eb',
+                            color: '#374151',
+                            borderRadius: '8px',
+                            padding: '0.5rem 1rem',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            flex: 1
+                          }}
+                        >
+                          <FaTimes style={{ marginRight: '0.25rem' }} />Reset
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setShowFilterMenu(false)}
+                          style={{
+                            background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                            border: 'none',
+                            color: 'white',
+                            borderRadius: '8px',
+                            padding: '0.5rem 1rem',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            flex: 1
+                          }}
+                        >
+                          <FaCheck style={{ marginRight: '0.25rem' }} />Apply
+                        </motion.button>
                       </div>
                     </div>
-                  )}
-                </Overlay>
-              </div>
+                  </div>
+                </div>
+              )}
+            </Overlay>
+          </div>
+
+          {/* Threads List */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Card style={{
+              borderRadius: '16px',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+              overflow: 'hidden'
+            }}>
+              <ListGroup variant="flush">
+                {error ? (
+                  <ListGroup.Item style={{
+                    padding: '2rem',
+                    textAlign: 'center',
+                    color: '#dc2626',
+                    background: '#fee2e2',
+                    borderRadius: '12px',
+                    margin: '1rem'
+                  }}>
+                    <FaTimes style={{ marginRight: '0.5rem' }} />
+                    {error}
+                  </ListGroup.Item>
+                ) : loading ? (
+                  <ListGroup.Item style={{
+                    padding: '2rem',
+                    textAlign: 'center',
+                    color: '#7c3aed',
+                    fontWeight: '600'
+                  }}>
+                    Loading conversations…
+                  </ListGroup.Item>
+                ) : threads.length === 0 ? (
+                  <ListGroup.Item style={{
+                    padding: '2rem',
+                    textAlign: 'center',
+                    color: '#6b7280',
+                    fontSize: '0.875rem'
+                  }}>
+                    <FaComments style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }} />
+                    <div>No conversations yet</div>
+                  </ListGroup.Item>
+                ) : (
+                  threads
+                    .filter(t => {
+                      if (monthFilter === 'All') return true;
+                      const d = new Date(t.issueDate);
+                      const mm = (d.getMonth() + 1).toString();
+                      return mm === monthFilter;
+                    })
+                    .filter(t => {
+                      const q = searchTerm.trim().toLowerCase();
+                      if (!q) return true;
+                      const name = String(t.user?.userName || '').toLowerCase();
+                      const title = String(t.title || '').toLowerCase();
+                      return name.includes(q) || title.includes(q);
+                    })
+                    .map((t, idx) => (
+                      <motion.div
+                        key={t.feedbackID}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, delay: idx * 0.05 }}
+                      >
+                        <ListGroup.Item
+                          action
+                          onClick={() => setActive(t.feedbackID)}
+                          style={{
+                            background: t.feedbackID === active 
+                              ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)'
+                              : 'white',
+                            border: t.feedbackID === active
+                              ? '2px solid #7c3aed'
+                              : '1px solid transparent',
+                            borderRadius: '10px',
+                            padding: '1rem',
+                            margin: '0.5rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: t.feedbackID === active
+                              ? '0 4px 12px rgba(124, 58, 237, 0.2)'
+                              : 'none'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (t.feedbackID !== active) {
+                              e.currentTarget.style.background = '#f9fafb';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (t.feedbackID !== active) {
+                              e.currentTarget.style.background = 'white';
+                            }
+                          }}
+                        >
+                          <div style={{
+                            fontWeight: 700,
+                            color: t.feedbackID === active ? '#7c3aed' : '#111827',
+                            marginBottom: '0.5rem',
+                            fontSize: '0.95rem'
+                          }}>
+                            {t.title}
+                          </div>
+                          <div style={{
+                            fontSize: '0.75rem',
+                            color: '#6b7280',
+                            display: 'flex',
+                            gap: '0.5rem',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>{t.user?.userName || 'User'}</span>
+                            <span>•</span>
+                            <span>{t.user?.designation || ''}</span>
+                            <span>•</span>
+                            <span>{new Date(t.issueDate).toLocaleDateString()}</span>
+                          </div>
+                        </ListGroup.Item>
+                      </motion.div>
+                    ))
+                )}
+              </ListGroup>
+            </Card>
+          </motion.div>
+        </motion.div>
+
+        {/* Chat Area */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex-grow-1"
+        >
+          {/* Chat Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              marginBottom: '1.5rem',
+              padding: '1.5rem',
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: '2px solid #e5e7eb',
+              boxShadow: '0 4px 12px rgba(124, 58, 237, 0.08)'
+            }}
+          >
+            <div style={{
+              fontWeight: 800,
+              fontSize: '1.375rem',
+              background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              marginBottom: '0.75rem'
+            }}>
+              {activeThread?.title || 'Select a conversation'}
             </div>
-          </Card.Body>
-        </Card>
-
-        <Card className="glass-effect" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
-          <ListGroup variant="flush">
-            {error ? (
-              <ListGroup.Item className="text-danger">{error}</ListGroup.Item>
-            ) : loading ? (
-              <ListGroup.Item>Loading…</ListGroup.Item>
-            ) : threads.length === 0 ? (
-              <ListGroup.Item>No conversations</ListGroup.Item>
-            ) : (
-              threads
-                .filter(t => {
-                  if (monthFilter === 'All') return true;
-                  const d = new Date(t.issueDate);
-                  const mm = (d.getMonth() + 1).toString();
-                  return mm === monthFilter;
-                })
-                .filter(t => {
-                  const q = searchTerm.trim().toLowerCase();
-                  if (!q) return true;
-                  const name = String(t.user?.userName || '').toLowerCase();
-                  const title = String(t.title || '').toLowerCase();
-                  return name.includes(q) || title.includes(q);
-                })
-                .map(t => (
-                <ListGroup.Item
-                  key={t.feedbackID}
-                  action
-                  active={t.feedbackID === active}
-                  onClick={() => setActive(t.feedbackID)}
-                >
-                  <div style={{ fontWeight: 600 }}>{t.title}</div>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>
-                    {t.user?.userName || 'User'} • {t.user?.designation || ''} • {new Date(t.issueDate).toLocaleString()}
-                  </div>
-                </ListGroup.Item>
-              ))
-            )}
-          </ListGroup>
-        </Card>
-      </div>
-
-      {/* Active chat */}
-      <div className="flex-grow-1">
-        <Card className="glass-effect mb-3">
-          <Card.Body>
-            <div style={{ fontWeight: 700, fontSize: 18 }}>{activeThread?.title || 'Select a conversation'}</div>
             {activeThread && (
-              <div style={{ fontSize: 12, opacity: 0.75 }}>
-                {activeThread.user?.userName || 'User'} • {activeThread.user?.designation || ''} • {new Date(activeThread.issueDate).toLocaleString()}
+              <div style={{
+                fontSize: '0.875rem',
+                color: '#6b7280',
+                display: 'flex',
+                gap: '0.75rem',
+                flexWrap: 'wrap',
+                alignItems: 'center'
+              }}>
+                <span style={{
+                  fontWeight: 700,
+                  color: '#7c3aed',
+                  background: 'rgba(124, 58, 237, 0.1)',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '8px'
+                }}>
+                  {activeThread.user?.userName || 'User'}
+                </span>
+                <span style={{ opacity: 0.5 }}>•</span>
+                <span style={{
+                  background: '#f3f4f6',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '8px',
+                  fontSize: '0.8rem'
+                }}>
+                  {activeThread.user?.designation || ''}
+                </span>
+                <span style={{ opacity: 0.5 }}>•</span>
+                <span style={{
+                  color: '#9ca3af',
+                  fontSize: '0.8rem'
+                }}>
+                  {new Date(activeThread.issueDate).toLocaleDateString()}
+                </span>
               </div>
             )}
-          </Card.Body>
-        </Card>
+          </motion.div>
 
-        <Card className="glass-effect" style={{ display: 'flex', flexDirection: 'column', height: 520 }}>
-          <Card.Body style={{ overflowY: 'auto' }}>
-            {(!messages || messages.length === 0) ? (
-              <div style={{ opacity: 0.7 }}>No messages yet</div>
-            ) : (
-              messages.map(m => {
-                const mine = (isAdmin && m.sender === 'Admin') || (!isAdmin && m.sender !== 'Admin');
-                return (
-                  <div key={m.messageID} className={`d-flex ${mine ? 'justify-content-end' : 'justify-content-start'}`} style={{ marginBottom: 8 }}>
-                    <div style={{
-                      background: mine ? '#667eea' : 'rgba(255,255,255,0.15)',
-                      color: mine ? 'white' : 'white',
-                      borderRadius: 12,
-                      padding: '8px 12px',
-                      maxWidth: '70%'
-                    }}>
-                      <div style={{ fontSize: 14 }}>{m.message}</div>
-                      <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4 }}>{new Date(m.date || m.createdAt).toLocaleString()}</div>
-                    </div>
+          {/* Messages Area */}
+          <Card style={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: 520,
+            borderRadius: '16px',
+            border: '2px solid #e5e7eb',
+            boxShadow: '0 8px 16px rgba(124, 58, 237, 0.08)',
+            overflow: 'hidden',
+            background: 'white'
+          }}>
+            <Card.Body style={{
+              overflowY: 'auto',
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              background: 'linear-gradient(180deg, #fafbfc 0%, #ffffff 100%)',
+              flex: 1
+            }}>
+              {(!messages || messages.length === 0) ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  color: '#9ca3af',
+                  textAlign: 'center'
+                }}>
+                  <div>
+                    <FaComments style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: 0.4 }} />
+                    <div style={{ fontSize: '0.875rem' }}>No messages yet. Start the conversation!</div>
                   </div>
-                );
-              })
-            )}
-          </Card.Body>
-          <Card.Footer>
-            <InputGroup>
-              <Form.Control
-                placeholder="Type a message"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
-                disabled={!active}
-              />
-              <Button onClick={handleSend} disabled={!active || sending || !text.trim()}>
-                Send
-              </Button>
-            </InputGroup>
-          </Card.Footer>
-        </Card>
+                </div>
+              ) : (
+                messages.map((m, idx) => {
+                  const mine = (isAdmin && m.sender === 'Admin') || (!isAdmin && m.sender !== 'Admin');
+                  return (
+                    <motion.div
+                      key={m.messageID}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: idx * 0.05 }}
+                      className={`d-flex ${mine ? 'justify-content-end' : 'justify-content-start'}`}
+                    >
+                      <div style={{
+                        background: mine
+                          ? 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)'
+                          : '#ffffff',
+                        color: mine ? 'white' : '#111827',
+                        borderRadius: mine ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
+                        padding: '0.875rem 1.25rem',
+                        maxWidth: '70%',
+                        boxShadow: mine
+                          ? '0 6px 20px rgba(124, 58, 237, 0.35)'
+                          : '0 2px 8px rgba(0, 0, 0, 0.08)',
+                        border: !mine ? '1.5px solid #e5e7eb' : 'none'
+                      }}>
+                        <div style={{
+                          fontSize: '0.95rem',
+                          lineHeight: 1.5,
+                          wordWrap: 'break-word'
+                        }}>
+                          {m.message}
+                        </div>
+                        <div style={{
+                          fontSize: '0.7rem',
+                          opacity: mine ? 0.8 : 0.6,
+                          marginTop: '0.5rem',
+                          fontWeight: 500
+                        }}>
+                          {new Date(m.date || m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
+            </Card.Body>
+            <Card.Footer className="p-3 p-md-4" style={{
+              background: 'white',
+              borderTop: '2px solid #e5e7eb'
+            }}>
+              <Form.Group className="mb-0">
+                <div className="d-flex flex-column flex-md-row gap-2 gap-md-3">
+                  <Form.Control
+                    as="textarea"
+                    rows={1}
+                    placeholder={active ? "Type your message..." : "Select a conversation"}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                    disabled={!active}
+                    className="gradient-border-input flex-grow-1"
+                    style={{
+                      borderRadius: '12px',
+                      border: '2px solid #e5e7eb',
+                      fontSize: '0.875rem',
+                      padding: '0.875rem 1rem',
+                      transition: 'all 0.2s',
+                      fontFamily: 'inherit',
+                      resize: 'none',
+                      minHeight: '48px'
+                    }}
+                  />
+                  <motion.button
+                    whileHover={{ scale: active && !sending && text.trim() ? 1.05 : 1 }}
+                    whileTap={{ scale: active && !sending && text.trim() ? 0.95 : 1 }}
+                    onClick={handleSend}
+                    disabled={!active || sending || !text.trim()}
+                    className="btn w-100 w-md-auto"
+                    style={{
+                      background: (active && !sending && text.trim())
+                        ? 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)'
+                        : '#d1d5db',
+                      border: 'none',
+                      color: 'white',
+                      borderRadius: '12px',
+                      padding: '0.875rem 2rem',
+                      cursor: (active && !sending && text.trim()) ? 'pointer' : 'not-allowed',
+                      fontWeight: '700',
+                      fontSize: '0.875rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      transition: 'all 0.3s',
+                      boxShadow: (active && !sending && text.trim())
+                        ? '0 6px 20px rgba(124, 58, 237, 0.4)'
+                        : 'none',
+                      minHeight: '48px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <FaPaperPlane /> {sending ? 'Sending…' : 'Send'}
+                  </motion.button>
+                </div>
+              </Form.Group>
+            </Card.Footer>
+          </Card>
+        </motion.div>
       </div>
 
-      {/* New conversation modal */}
+      {/* New Conversation Modal */}
       <Modal show={showNew} onHide={() => setShowNew(false)} centered>
         <Form onSubmit={handleCreate}>
-          <Modal.Header closeButton>
-            <Modal.Title>New Conversation</Modal.Title>
+          <Modal.Header style={{
+            background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+            borderBottom: 'none',
+            padding: '1.5rem'
+          }} closeButton>
+            <Modal.Title style={{ color: 'white', fontWeight: '700' }}>
+              <FaComments style={{ marginRight: '0.5rem' }} />
+              Start New Conversation
+            </Modal.Title>
           </Modal.Header>
-          <Modal.Body>
+          <Modal.Body style={{ padding: '2rem', background: 'white' }}>
             {isAdmin && (
-              <Row className="mb-3">
-                <Col>
-                  <Form.Label>Recipient</Form.Label>
-                  <Form.Select value={targetUserID} onChange={(e) => setTargetUserID(e.target.value)} required>
-                    <option value="">Select a user</option>
-                    {usersList.map(u => (
-                      <option key={u.userID} value={u.userID}>{u.userName} • {u.designation}</option>
-                    ))}
-                  </Form.Select>
-                </Col>
-              </Row>
+              <Form.Group style={{ marginBottom: '1.5rem' }}>
+                <Form.Label style={{
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '0.75rem'
+                }}>Recipient</Form.Label>
+                <Form.Select
+                  value={targetUserID}
+                  onChange={(e) => setTargetUserID(e.target.value)}
+                  required
+                  style={{
+                    borderRadius: '10px',
+                    border: '2px solid #e5e7eb',
+                    fontSize: '0.875rem',
+                    padding: '0.75rem'
+                  }}
+                  className="gradient-border-input"
+                >
+                  <option value="">Select a user</option>
+                  {usersList.map(u => (
+                    <option key={u.userID} value={u.userID}>{u.userName} • {u.designation}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
             )}
             <Form.Group>
-              <Form.Label>Title / First message</Form.Label>
-              <Form.Control as="textarea" rows={3} value={newIssue} onChange={(e) => setNewIssue(e.target.value)} required />
+              <Form.Label style={{
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '0.75rem'
+              }}>Title / First Message</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                value={newIssue}
+                onChange={(e) => setNewIssue(e.target.value)}
+                required
+                placeholder="Describe your issue or concern..."
+                style={{
+                  borderRadius: '10px',
+                  border: '2px solid #e5e7eb',
+                  fontSize: '0.875rem',
+                  padding: '0.75rem',
+                  fontFamily: 'inherit',
+                  resize: 'vertical'
+                }}
+                className="gradient-border-input"
+              />
             </Form.Group>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowNew(false)}>Cancel</Button>
-            <Button type="submit" variant="primary">Create</Button>
+          <Modal.Footer style={{
+            borderTop: '1px solid #e5e7eb',
+            padding: '1.5rem',
+            gap: '0.75rem',
+            background: 'white'
+          }}>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowNew(false)}
+              style={{
+                background: '#f3f4f6',
+                border: '1px solid #e5e7eb',
+                color: '#374151',
+                borderRadius: '10px',
+                padding: '0.75rem 1.5rem',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.875rem',
+                transition: 'all 0.2s'
+              }}
+            >
+              Cancel
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              type="submit"
+              style={{
+                background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                border: 'none',
+                color: 'white',
+                borderRadius: '10px',
+                padding: '0.75rem 2rem',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.875rem',
+                boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
+                transition: 'all 0.2s'
+              }}
+            >
+              <FaPlus style={{ marginRight: '0.5rem' }} />
+              Create Conversation
+            </motion.button>
           </Modal.Footer>
         </Form>
       </Modal>
+
+      <style>{`
+        .gradient-border-input:focus {
+          outline: none !important;
+          box-shadow: none !important;
+          border: 2px solid transparent !important;
+          background: linear-gradient(white, white) padding-box,
+                      linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%) border-box !important;
+        }
+      `}</style>
     </div>
   );
 };

@@ -3,7 +3,6 @@ import { Container, Alert } from 'react-bootstrap';
 import Sidebar from '../../components/Sidebar';
 import Profile from '../../components/shared/Profile';
 import '../Dashboard.css';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminProfilePage = () => {
@@ -30,17 +29,14 @@ const AdminProfilePage = () => {
           <div className="floating-shape shape-2"></div>
           <div className="floating-shape shape-3"></div>
         </div>
-        <Container fluid className="dashboard-content">
-          <h1 className="dashboard-title mb-4">Profile</h1>
+        <Container fluid className="dashboard-content" style={{ padding: 0 }}>
           {expired && (
-            <Alert variant="warning" className="mb-3">
-              Update Your Subscription
-            </Alert>
+            <div style={{ padding: '0 1.5rem', marginTop: '1.5rem' }}>
+              <Alert variant="warning" style={{ borderRadius: '12px' }}>
+                Update Your Subscription
+              </Alert>
+            </div>
           )}
-          <div className="mb-3" style={{ display: 'flex', gap: 8 }}>
-            <Link to="/admin/profile/edit" className="btn btn-primary">Edit Institute Info</Link>
-            <Link to="/admin/profile/password" className="btn btn-outline-secondary">Change Password</Link>
-          </div>
           <Profile />
         </Container>
       </div>

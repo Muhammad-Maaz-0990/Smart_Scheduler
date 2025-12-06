@@ -2,6 +2,7 @@ import React from 'react';
 import { Container } from 'react-bootstrap';
 import Sidebar from '../../components/Sidebar';
 import Feedback from '../../components/shared/Feedback';
+import { motion } from 'framer-motion';
 import '../Dashboard.css';
 
 const AdminFeedbacksPage = () => {
@@ -9,13 +10,27 @@ const AdminFeedbacksPage = () => {
     <>
       <Sidebar activeMenu="feedbacks" />
       <div className="dashboard-page">
-        <div className="bg-animation">
-          <div className="floating-shape shape-1"></div>
-          <div className="floating-shape shape-2"></div>
-          <div className="floating-shape shape-3"></div>
-        </div>
-        <Container fluid className="dashboard-content">
-          <h1 className="dashboard-title mb-4">Feedback Conversations</h1>
+        <Container fluid className="py-4" style={{ maxWidth: '1600px' }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 
+              className="mb-0" 
+              style={{ 
+                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontWeight: 900,
+                fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+                marginBottom: '0.4rem'
+              }}
+            >
+             
+            </h1>
+          </motion.div>
           <Feedback />
         </Container>
       </div>

@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Button, Form, Alert } from 'react-bootstrap';
+import { motion, AnimatePresence } from 'framer-motion';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import {
+  slideInFromLeft,
+  slideInFromRight,
+  slideInFromBottom,
+  fadeInUp,
+  rotateIn,
+  blurIn,
+  popInSpring,
+  staggerChildren
+} from '../components/shared/animation_variants';
 import { useAuth } from '../context/AuthContext';
 import './Register.css';
+
+const MotionButton = motion(Button);
+const MotionDiv = motion.div;
 
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(-1);
@@ -33,6 +47,8 @@ const Register = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -366,14 +382,23 @@ const Register = () => {
   const renderStepIndicator = () => {
     const steps = ['Admin Info', 'Institute Info', 'Terms & Conditions'];
     return (
-      <div className="step-indicator">
+      <motion.div 
+        className="step-indicator"
+        variants={staggerChildren}
+        initial="hidden"
+        animate="visible"
+      >
         {steps.map((step, index) => (
-          <div key={index} className={`step-item ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}`}>
+          <motion.div 
+            key={index} 
+            className={`step-item ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}`}
+            variants={slideInFromBottom}
+          >
             <div className="step-number">{index + 1}</div>
             <div className="step-label">{step}</div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     );
   };
 
@@ -381,105 +406,165 @@ const Register = () => {
     switch(currentStep) {
       case 0:
         return (
-          <div className="form-step">
-            <h3 className="step-title">Admin Information</h3>
+          <motion.div 
+            className="form-step"
+            variants={staggerChildren}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.h3 className="step-title" variants={slideInFromLeft}>Admin Information</motion.h3>
             
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Full Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="userName"
-                value={formData.userName}
-                onChange={handleInputChange}
-                placeholder="Enter your full name"
-                className="futuristic-input"
-                readOnly={!!formData.userName && location.search.includes('email')}
-              />
-            </Form.Group>
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Full Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="userName"
+                  value={formData.userName}
+                  onChange={handleInputChange}
+                  placeholder="Enter your full name"
+                  className="futuristic-input"
+                  readOnly={!!formData.userName && location.search.includes('email')}
+                />
+              </Form.Group>
+            </motion.div>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Email Address</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Enter your email"
-                className="futuristic-input"
-                readOnly={!!formData.email && location.search.includes('email')}
-              />
-              {formData.email && location.search.includes('email') && (
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Email Address</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Enter your email"
+                  className="futuristic-input"
+                  readOnly={!!formData.email && location.search.includes('email')}
+                />
+                {formData.email && location.search.includes('email') && (
+                  <Form.Text className="text-light-muted">
+                    <small>✓ Retrieved from Google</small>
+                  </Form.Text>
+                )}
+              </Form.Group>
+            </motion.div>
+
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Phone Number</Form.Label>
+                <PhoneInput
+                  international
+                  defaultCountry="PK"
+                  value={formData.phoneNumber}
+                  onChange={handlePhoneChange}
+                  className="phone-input-custom"
+                  placeholder="Enter phone number"
+                  smartCaret={true}
+                  countryCallingCodeEditable={false}
+                  limitMaxLength={true}
+                />
+              </Form.Group>
+            </motion.div>
+
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">{getCNICLabel(formData.country)}</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="cnic"
+                  value={formData.cnic}
+                  onChange={handleCNICInput}
+                  placeholder={`Enter your ${getCNICLabel(formData.country)}`}
+                  className="futuristic-input"
+                  maxLength={getCNICMaxLength(formData.country)}
+                  pattern={getCNICPattern(formData.country)}
+                />
                 <Form.Text className="text-light-muted">
-                  <small>✓ Retrieved from Google</small>
+                  <small>Selected country: {formData.country} | Max {getCNICMaxLength(formData.country)} characters</small>
                 </Form.Text>
-              )}
-            </Form.Group>
+              </Form.Group>
+            </motion.div>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Phone Number</Form.Label>
-              <PhoneInput
-                international
-                defaultCountry="PK"
-                value={formData.phoneNumber}
-                onChange={handlePhoneChange}
-                className="phone-input-custom"
-                placeholder="Enter phone number"
-                smartCaret={true}
-                countryCallingCodeEditable={false}
-                limitMaxLength={true}
-              />
-            </Form.Group>
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Password</Form.Label>
+                <div className="password-input-wrapper">
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Create a password (min 6 characters)"
+                    className="futuristic-input"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </Form.Group>
+            </motion.div>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">{getCNICLabel(formData.country)}</Form.Label>
-              <Form.Control
-                type="text"
-                name="cnic"
-                value={formData.cnic}
-                onChange={handleCNICInput}
-                placeholder={`Enter your ${getCNICLabel(formData.country)}`}
-                className="futuristic-input"
-                maxLength={getCNICMaxLength(formData.country)}
-                pattern={getCNICPattern(formData.country)}
-              />
-              <Form.Text className="text-light-muted">
-                <small>Selected country: {formData.country} | Max {getCNICMaxLength(formData.country)} characters</small>
-              </Form.Text>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Password</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                placeholder="Create a password (min 6 characters)"
-                className="futuristic-input"
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Confirm Password</Form.Label>
-              <Form.Control
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder="Confirm your password"
-                className="futuristic-input"
-              />
-            </Form.Group>
-          </div>
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Confirm Password</Form.Label>
+                <div className="password-input-wrapper">
+                  <Form.Control
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="Confirm your password"
+                    className="futuristic-input"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </Form.Group>
+            </motion.div>
+          </motion.div>
         );
 
       case 1:
         return (
-          <div className="form-step">
-            <h3 className="step-title">Institute Information</h3>
+          <motion.div 
+            className="form-step"
+            variants={staggerChildren}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.h3 className="step-title" variants={slideInFromRight}>Institute Information</motion.h3>
             
             {/* Logo Upload */}
-            <div className="logo-upload-section mb-4">
+            <motion.div className="logo-upload-section mb-3" variants={rotateIn}>
               <Form.Label className="form-label text-center d-block">Institute Logo</Form.Label>
               <div className="logo-preview-container">
                 <label htmlFor="logo-upload" className="logo-upload-label">
@@ -507,92 +592,107 @@ const Register = () => {
               <Form.Text className="text-light-muted text-center d-block">
                 <small>Upload institute logo (Max 5MB, PNG, JPG, JPEG)</small>
               </Form.Text>
-            </div>
+            </motion.div>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Institute ID</Form.Label>
-              <Form.Control
-                type="text"
-                name="instituteID"
-                value={formData.instituteID}
-                onChange={handleInputChange}
-                placeholder="Enter institute ID"
-                className="futuristic-input"
-              />
-            </Form.Group>
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Institute ID</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="instituteID"
+                  value={formData.instituteID}
+                  onChange={handleInputChange}
+                  placeholder="Enter institute ID"
+                  className="futuristic-input"
+                />
+              </Form.Group>
+            </motion.div>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Institute Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="instituteName"
-                value={formData.instituteName}
-                onChange={handleInputChange}
-                placeholder="Enter institute name"
-                className="futuristic-input"
-              />
-            </Form.Group>
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Institute Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="instituteName"
+                  value={formData.instituteName}
+                  onChange={handleInputChange}
+                  placeholder="Enter institute name"
+                  className="futuristic-input"
+                />
+              </Form.Group>
+            </motion.div>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Institute Address</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                placeholder="Enter institute address"
-                className="futuristic-input"
-              />
-            </Form.Group>
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Institute Address</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  placeholder="Enter institute address"
+                  className="futuristic-input"
+                />
+              </Form.Group>
+            </motion.div>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Institute Contact Number</Form.Label>
-              <PhoneInput
-                international
-                defaultCountry="PK"
-                value={formData.contactNumber}
-                onChange={handleContactNumberChange}
-                className="phone-input-custom"
-                placeholder="Enter institute contact number"
-                smartCaret={true}
-                countryCallingCodeEditable={false}
-                limitMaxLength={true}
-              />
-            </Form.Group>
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Institute Contact Number</Form.Label>
+                <PhoneInput
+                  international
+                  defaultCountry="PK"
+                  value={formData.contactNumber}
+                  onChange={handleContactNumberChange}
+                  className="phone-input-custom"
+                  placeholder="Enter institute contact number"
+                  smartCaret={true}
+                  countryCallingCodeEditable={false}
+                  limitMaxLength={true}
+                />
+              </Form.Group>
+            </motion.div>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label">Institute Type</Form.Label>
-              <div className="institute-type-options">
-                {['School', 'College', 'University'].map(type => (
-                  <div key={type} className="type-option">
-                    <Form.Check
-                      type="radio"
-                      id={`type-${type}`}
-                      name="instituteType"
-                      value={type}
-                      label={type}
-                      checked={formData.instituteType === type}
-                      onChange={handleInputChange}
-                      className="custom-radio"
-                    />
-                  </div>
-                ))}
-              </div>
-            </Form.Group>
-          </div>
+            <motion.div variants={slideInFromBottom}>
+              <Form.Group className="mb-2">
+                <Form.Label className="form-label">Institute Type</Form.Label>
+                <div className="institute-type-options">
+                  {['School', 'College', 'University'].map(type => (
+                    <div key={type} className="type-option">
+                      <Form.Check
+                        type="radio"
+                        id={`type-${type}`}
+                        name="instituteType"
+                        value={type}
+                        label={type}
+                        checked={formData.instituteType === type}
+                        onChange={handleInputChange}
+                        className="custom-radio"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </Form.Group>
+            </motion.div>
+          </motion.div>
         );
 
       case 2:
         return (
-          <div className="form-step">
-            <h3 className="step-title">Complete Your Registration</h3>
-            <p className="step-subtitle">
+          <motion.div 
+            className="form-step"
+            variants={staggerChildren}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.h3 className="step-title" variants={fadeInUp}>Complete Your Registration</motion.h3>
+            <motion.p className="step-subtitle" variants={fadeInUp}>
               Start your 7-day free trial today! No credit card required.
-            </p>
+            </motion.p>
 
             {/* Terms and Conditions */}
-            <div className="terms-section">
+            <motion.div className="terms-section" variants={slideInFromBottom}>
               <div className="terms-item">
                 <Form.Check
                   type="checkbox"
@@ -621,8 +721,8 @@ const Register = () => {
                   }
                 />
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         );
 
       default:
@@ -633,149 +733,360 @@ const Register = () => {
   // Show welcome screen when currentStep is -1 (initial state changed to 0)
   if (currentStep === -1) {
     return (
-      <div
-        className="register-page"
+      <MotionDiv
+        className="register-page position-relative overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
         style={{
           minHeight: '100vh',
-          background: '#ffffff',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
           fontFamily: 'Poppins, sans-serif'
         }}
       >
-        <Container className="register-container">
+        <style>{`
+          @keyframes floatSlow {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(20px, -20px) rotate(180deg); }
+          }
+          .float-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            animation: floatSlow 20s infinite ease-in-out;
+            pointer-events: none;
+          }
+          .shape-a { width: 350px; height: 350px; top: -150px; right: -150px; animation-delay: 0s; }
+          .shape-b { width: 280px; height: 280px; bottom: -100px; left: -100px; animation-delay: 10s; }
+        `}</style>
+        <div className="float-shape shape-a"></div>
+        <div className="float-shape shape-b"></div>
+        <Container className="register-container" as={motion.div} variants={staggerChildren}>
           <Row className="justify-content-center align-items-center min-vh-100">
-            <Col xs={12} md={6} lg={5} xl={4}>
-              <div
-                className="register-card glass-effect"
+            <Col xs={12} sm={11} md={8} lg={6} xl={5}>
+              <MotionDiv
+                className="register-card position-relative"
+                variants={popInSpring}
+                initial="hidden"
+                animate="visible"
                 style={{
-                  background: '#fffff',
-                  border: '1px solid #e5e7eb',
-                  boxShadow: '0 10px 24px rgba(124, 58, 237, 0.15)',
-                  borderRadius: 24,
-                  padding: '28px 24px'
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)',
+                  borderRadius: '2rem',
+                  padding: 'clamp(1.5rem, 4vw, 2rem)'
                 }}
               >
-                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                  <div style={{
-                    width: '100px',
-                    height: '100px',
-                    margin: '0 auto 12px',
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 8px 24px rgba(126, 34, 206, 0.3)'
-                  }}>
-                    <svg width="50" height="50" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="50" cy="50" r="35" stroke="white" strokeWidth="4"/>
-                      <path d="M50 25V50L65 65" stroke="white" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+                <motion.div 
+                  style={{ textAlign: 'center', marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}
+                  variants={staggerChildren}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <MotionDiv 
+                    variants={rotateIn}
+                    whileHover={{ scale: 1.1, rotate: 360 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                    style={{
+                      width: 'clamp(80px, 18vw, 100px)',
+                      height: 'clamp(80px, 18vw, 100px)',
+                      margin: '0 auto clamp(0.75rem, 2vw, 1rem)',
+                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 10px 40px rgba(126, 34, 206, 0.5), 0 0 0 8px rgba(126, 34, 206, 0.1)',
+                      position: 'relative'
+                    }}
+                  >
+                    <motion.div
+                      animate={{ rotate: -360 }}
+                      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                      style={{ position: 'absolute', inset: '-8px', borderRadius: '50%', border: '2px solid rgba(255, 255, 255, 0.3)' }}
+                    />
+                    <svg width="50" height="50" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '50%', height: '50%', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }}>
+                      <motion.circle 
+                        cx="50" 
+                        cy="50" 
+                        r="35" 
+                        stroke="white" 
+                        strokeWidth="4"
+                        initial={{ pathLength: 0, opacity: 0 }}
+                        animate={{ pathLength: 1, opacity: 1 }}
+                        transition={{ duration: 1.2, ease: "easeInOut" }}
+                      />
+                      <motion.path 
+                        d="M50 25V50L65 65" 
+                        stroke="white" 
+                        strokeWidth="5" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.8, delay: 0.6 }}
+                      />
                       <circle cx="50" cy="50" r="5" fill="white"/>
                     </svg>
-                  </div>
-                </div>
-                <div className="welcome-header" style={{ marginBottom: '8px', border: 'none', padding: '0'}}>
-                  <h1 className="welcome-title" style={{ color: '#111827', margin: 0 }}>Welcome To Smart Scheduler</h1>
-                </div>
+                  </MotionDiv>
+                </motion.div>
+                <motion.div 
+                  className="welcome-header" 
+                  style={{ marginBottom: 'clamp(0.5rem, 1.5vw, 1rem)', border: 'none', padding: '0'}}
+                  variants={slideInFromBottom}
+                >
+                  <h1 className="welcome-title" style={{ 
+                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+                    fontWeight: '800',
+                    margin: 0,
+                    letterSpacing: '-0.5px'
+                  }}>Welcome To<br/>Smart Scheduler</h1>
+                </motion.div>
 
-                <div className="subtitle-box" style={{ marginBottom: '16px', border: 'none'}}>
-                  <p className="subtitle-text" style={{ color: '#6b7280', margin: 0 }}>
+                <motion.div 
+                  className="subtitle-box" 
+                  style={{ marginBottom: 'clamp(1rem, 2.5vw, 1.5rem)', border: 'none'}}
+                  variants={slideInFromBottom}
+                >
+                  <p className="subtitle-text" style={{ 
+                    color: '#6b7280', 
+                    margin: 0,
+                    fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                    fontWeight: '500',
+                    lineHeight: '1.5'
+                  }}>
                     Create conflict‑free timetables for your Institute.
                   </p>
-                </div>
+                </motion.div>
 
-                <Button
-                  className="register-button w-100"
+                <MotionButton
+                  className="w-100 position-relative overflow-hidden"
                   onClick={() => setCurrentStep(0)}
                   style={{
                     background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
                     border: 'none',
-                    padding: '10px 14px',
+                    padding: 'clamp(0.75rem, 2.5vw, 1rem)',
                     fontWeight: 600,
-                    borderRadius: 12,
-                    boxShadow: '0 8px 18px rgba(126, 34, 206, 0.25)',
-                    marginBottom: '12px'
+                    fontSize: 'clamp(0.9375rem, 2.2vw, 1.0625rem)',
+                    borderRadius: '1rem',
+                    boxShadow: '0 10px 30px rgba(126, 34, 206, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
+                    marginBottom: 'clamp(0.75rem, 2vw, 1rem)'
                   }}
+                  variants={{
+                    rest: { scale: 1 },
+                    hover: { 
+                      scale: 1.03,
+                      boxShadow: '0 15px 40px rgba(126, 34, 206, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
+                      transition: { duration: 0.2 }
+                    },
+                    tap: { scale: 0.97 }
+                  }}
+                  initial="rest"
+                  whileHover="hover"
+                  whileTap="tap"
                 >
                   Register Institute
-                </Button>
-                <div className="card-glow"></div>
-              </div>
+                </MotionButton>
+              </MotionDiv>
             </Col>
           </Row>
         </Container>
-      </div>
+      </MotionDiv>
     );
   }
 
   return (
-    <div className="register-page" style={{
-      minHeight: '100vh',
-      background: '#ffffff',
-      fontFamily: 'Poppins, sans-serif'
-    }}>
+    <MotionDiv 
+      className="register-page position-relative overflow-hidden" 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        fontFamily: 'Poppins, sans-serif'
+      }}
+    >
+      <style>{`
+        @keyframes floatAlt {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          33% { transform: translate(-25px, 25px) rotate(-120deg); }
+          66% { transform: translate(25px, -25px) rotate(120deg); }
+        }
+        .float-alt { animation: floatAlt 22s infinite ease-in-out; }
+      `}</style>
+      <div className="float-shape shape-a float-alt"></div>
+      <div className="float-shape shape-b"></div>
+      
       <Container className="register-container">
         <Row className="justify-content-center align-items-center min-vh-100">
-          <Col xs={12} md={8} lg={7} xl={6}>
-            <div className="register-form-card glass-effect">
-              <h2 className="form-main-title">Register Your Institute</h2>
+          <Col xs={12} sm={11} md={10} lg={8} xl={7}>
+            <MotionDiv 
+              className="register-form-card position-relative"
+              variants={blurIn}
+              initial="hidden"
+              animate="visible"
+              style={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '2rem',
+                padding: 'clamp(1.5rem, 4vw, 2.5rem)',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)'
+              }}
+            >
+              <motion.h2 
+                className="form-main-title"
+                variants={slideInFromLeft}
+                initial="hidden"
+                animate="visible"
+                style={{
+                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+                  fontWeight: '800',
+                  textAlign: 'center',
+                  marginBottom: 'clamp(1rem, 3vw, 1.5rem)'
+                }}
+              >
+                Register Your Institute
+              </motion.h2>
               
-              {renderStepIndicator()}
+              <motion.div
+                variants={slideInFromRight}
+                initial="hidden"
+                animate="visible"
+              >
+                {renderStepIndicator()}
+              </motion.div>
 
-              {error && (
-                <Alert variant="danger" className="error-alert mt-3" dismissible onClose={() => setError('')}>
-                  {error}
-                </Alert>
-              )}
+              <AnimatePresence mode="wait">
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                  >
+                    <Alert variant="danger" className="error-alert mt-3" dismissible onClose={() => setError('')}>
+                      {error}
+                    </Alert>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div className="form-content">
-                {renderStep()}
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={currentStep}
+                  className="form-content"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {renderStep()}
+                </motion.div>
+              </AnimatePresence>
 
-              <div className="form-navigation">
+              <motion.div 
+                className="form-navigation d-flex gap-2 mt-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
                 {currentStep > 0 && (
-                  <Button 
-                    variant="outline-light" 
+                  <MotionButton 
+                    variant="outline-secondary" 
                     className="nav-button prev-button"
                     onClick={handlePrevious}
+                    style={{
+                      flex: 1,
+                      padding: 'clamp(0.625rem, 2vw, 0.875rem)',
+                      borderRadius: '0.875rem',
+                      fontWeight: '600',
+                      fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                      border: '2px solid #e5e7eb'
+                    }}
+                    whileHover={{ scale: 1.02, borderColor: '#7e22ce' }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     ← Previous
-                  </Button>
+                  </MotionButton>
                 )}
 
                 {currentStep < 2 ? (
-                  <Button 
-                    variant="primary" 
+                  <MotionButton 
                     className="nav-button next-button"
                     onClick={handleNext}
+                    style={{
+                      flex: 1,
+                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                      border: 'none',
+                      padding: 'clamp(0.625rem, 2vw, 0.875rem)',
+                      borderRadius: '0.875rem',
+                      fontWeight: '600',
+                      fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                      boxShadow: '0 8px 20px rgba(126, 34, 206, 0.3)',
+                      color: 'white'
+                    }}
+                    whileHover={{ 
+                      scale: 1.02,
+                      boxShadow: '0 10px 30px rgba(126, 34, 206, 0.4)'
+                    }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     Next →
-                  </Button>
+                  </MotionButton>
                 ) : (
-                  <Button 
-                    variant="success" 
+                  <MotionButton 
                     className="nav-button submit-button"
                     onClick={handleSubmit}
                     disabled={loading || !formData.termsAccepted || !formData.privacyAccepted}
+                    style={{
+                      flex: 1,
+                      background: 'linear-gradient(90deg, #7e22ce 0%, #3b82f6 100%)',
+                      border: 'none',
+                      padding: 'clamp(0.625rem, 2vw, 0.875rem)',
+                      borderRadius: '0.875rem',
+                      fontWeight: '600',
+                      fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                      boxShadow: '0 8px 20px rgba(126, 34, 206, 0.35)',
+                      color: 'white'
+                    }}
+                    whileHover={{ 
+                      scale: loading ? 1 : 1.02,
+                      boxShadow: loading ? '0 8px 20px rgba(126, 34, 206, 0.35)' : '0 10px 30px rgba(126, 34, 206, 0.5)'
+                    }}
+                    whileTap={{ scale: loading ? 1 : 0.98 }}
                   >
                     {loading ? 'Submitting...' : 'Register'}
-                  </Button>
+                  </MotionButton>
                 )}
-              </div>
+              </motion.div>
 
-              <Button 
+              <MotionButton 
                 variant="link" 
-                className="back-to-login mt-3"
+                className="back-to-login mt-3 d-block text-center"
                 onClick={handleSkip}
+                style={{
+                  color: '#7e22ce',
+                  fontWeight: '600',
+                  fontSize: 'clamp(0.8125rem, 1.8vw, 0.9375rem)',
+                  textDecoration: 'none'
+                }}
+                whileHover={{ scale: 1.02, x: -3 }}
               >
                 Already have an account? Login
-              </Button>
-
-              <div className="card-glow"></div>
-            </div>
+              </MotionButton>
+            </MotionDiv>
           </Col>
         </Row>
       </Container>
-    </div>
+    </MotionDiv>
   );
 };
 
