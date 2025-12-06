@@ -5,6 +5,9 @@ import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import OwnerDashboard from './pages/Owner/OwnerDashboard';
+import Institutes from './pages/Owner/Institutes';
+import OwnerUsers from './pages/Owner/OwnerUsers';
+import OwnerProfile from './pages/Owner/OwnerProfile';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import Rooms from './pages/Admin/Rooms';
 import Classes from './pages/Admin/Classes';
@@ -48,6 +51,30 @@ function App() {
               element={
                 <PrivateRoute allowedRoles={['Owner']}>
                   <OwnerDashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/owner/institutes" 
+              element={
+                <PrivateRoute allowedRoles={['Owner']}>
+                  <Institutes />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/owner/ownerUsers" 
+              element={
+                <PrivateRoute allowedRoles={['Owner']}>
+                  <OwnerUsers />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/owner/profile" 
+              element={
+                <PrivateRoute allowedRoles={['Owner']}>
+                  <OwnerProfile />
                 </PrivateRoute>
               } 
             />

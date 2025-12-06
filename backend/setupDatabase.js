@@ -19,6 +19,17 @@ const requiredCollections = [
 ];
 
 
+// Sample data for collections
+const sampleData = {
+  ownerusers: {
+    userID: 1,
+    userName: "Smart Scheduler",
+    email: "ar.offical.softwarehouse@gmail.com",
+    phoneNumber: "03168563151"
+  },
+  // ...other sample data for other collections if needed
+};
+
 // Function to ensure collections exist and have sample data
 async function ensureCollections() {
   try {
@@ -58,30 +69,37 @@ async function ensureCollections() {
       if (!existingNames.includes(col)) {
         console.log(`🟦 Creating collection: ${col}`);
         await db.createCollection(col);
+        // Insert sample data immediately after creating collection
+        if (sampleData[col]) {
+          let data = { ...sampleData[col] };
+          if (data.hasOwnProperty('instituteID') && data.instituteID === null) {
+            data.instituteID = instituteId;
+          }
+          try {
+            await db.collection(col).insertOne(data);
+            console.log(`   ✅ Successfully inserted sample data into new collection`);
+          } catch (err) {
+            console.log(`   ⚠️  Warning: Could not insert sample data - ${err.message}`);
+          }
+        }
       } else {
         console.log(`✔️  Collection exists: ${col}`);
-      }
-
-      const count = await db.collection(col).countDocuments();
-
-      if (count === 0) {
-        console.log(`➕ Inserting sample data into ${col}`);
-        
-        // Set foreign key references
-        const data = { ...sampleData[col] };
-        
-        if (data.hasOwnProperty('instituteID') && data.instituteID === null) {
-          data.instituteID = instituteId;
+        const count = await db.collection(col).countDocuments();
+        if (count === 0 && sampleData[col]) {
+          console.log(`➕ Inserting sample data into ${col}`);
+          let data = { ...sampleData[col] };
+          if (data.hasOwnProperty('instituteID') && data.instituteID === null) {
+            data.instituteID = instituteId;
+          }
+          try {
+            await db.collection(col).insertOne(data);
+            console.log(`   ✅ Successfully inserted sample data`);
+          } catch (err) {
+            console.log(`   ⚠️  Warning: Could not insert sample data - ${err.message}`);
+          }
+        } else {
+          console.log(`✔️  ${col} already has data (${count} documents)`);
         }
-
-        try {
-          await db.collection(col).insertOne(data);
-          console.log(`   ✅ Successfully inserted sample data`);
-        } catch (err) {
-          console.log(`   ⚠️  Warning: Could not insert sample data - ${err.message}`);
-        }
-      } else {
-        console.log(`✔️  ${col} already has data (${count} documents)`);
       }
     }
 

@@ -107,11 +107,10 @@ const Sidebar = ({ activeMenu }) => {
     { icon: '🔧', label: 'Profile', value: 'profile' }
   ];
 
+  // Remove dashboard menu for Owner, navigation is via logo/name/Owner Panel
   const ownerMenu = [
     { icon: '🏢', label: 'Institutes', value: 'institutes' },
-    { icon: '👥', label: 'Users', value: 'users' },
-    { icon: '📊', label: 'Analytics', value: 'analytics' },
-    { icon: '⚙️', label: 'Settings', value: 'settings' },
+    { icon: '👥', label: 'Owner Users', value: 'ownerUsers' },
     { icon: '🔧', label: 'Profile', value: 'profile' }
   ];
 
@@ -165,22 +164,36 @@ const Sidebar = ({ activeMenu }) => {
       {isVisible && (
       <div className={`sidebar no-print ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
         {/* Institute Info (click to go to dashboard) */}
-        <div className="sidebar-header" onClick={() => handleMenuClick('dashboard')} style={{cursor:'pointer'}}>
-          {instituteInfo?.instituteLogo && (
-            <img 
-              src={instituteInfo.instituteLogo} 
-              alt="Institute Logo" 
-              className="institute-logo"
-            />
-          )}
-          {!isCollapsed && (
-            <div className="institute-info">
-              <div className="institute-name">
-                {instituteInfo?.instituteName || user?.instituteName || ''}
-              </div>
-              <div className="institute-subtitle">{role} Panel</div>
+        {/* Clicking logo/name/Owner Panel navigates to dashboard */}
+        <div className="sidebar-header" onClick={() => {
+          handleMenuClick('dashboard');
+          setIsMobileOpen(false);
+        }} style={{cursor:'pointer'}}>
+          {/* Smart Scheduler Logo and Name */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ 
+              width: 40, 
+              height: 40, 
+              borderRadius: '50%', 
+              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(126, 34, 206, 0.3)'
+            }}>
+              <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="35" stroke="white" strokeWidth="6"/>
+                <path d="M50 25V50L65 65" stroke="white" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="50" cy="50" r="5" fill="white"/>
+              </svg>
             </div>
-          )}
+            {!isCollapsed && (
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>Smart Scheduler</div>
+                <div style={{ fontWeight: 500, fontSize: 13, color: '#e0e7ff', marginTop: 4 }}>Owner Panel</div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Menu Items */}
@@ -197,6 +210,8 @@ const Sidebar = ({ activeMenu }) => {
             </button>
           ))}
         </nav>
+
+
 
         {/* User Info & Logout */}
         <div className="sidebar-footer">

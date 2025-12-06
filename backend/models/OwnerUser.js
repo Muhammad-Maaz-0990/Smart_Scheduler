@@ -31,6 +31,11 @@ const ownerUserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  cnic: {
+    type: String,
+    required: false,
+    default: 'N/A'
+  },
   role: {
     type: String,
     default: 'Owner'

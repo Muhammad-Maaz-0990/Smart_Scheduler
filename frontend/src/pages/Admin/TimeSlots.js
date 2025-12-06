@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Container, Card, Table, Alert, Button, Modal, Form } from 'react-bootstrap';
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
+import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import '../Dashboard.css';
 
 const DAY_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -15,6 +16,74 @@ const TimeSlots = () => {
   const [show, setShow] = useState(false);
   const [mode, setMode] = useState('add');
   const [current, setCurrent] = useState({ days: 'Monday', startTime: '08:00', endTime: '14:00' });
+  // Import/export states
+  const [importPreview, setImportPreview] = useState([]);
+  const [importError, setImportError] = useState('');
+  const fileInputRef = useRef(null);
+  // Import logic
+  const onImportClick = () => {
+    setImportError('');
+    fileInputRef.current?.click();
+  };
+
+  const onFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const { headers, items } = parseCSV(text);
+      const required = ['days','startTime','endTime'];
+      const hasAll = required.every(h => headers.includes(h));
+      if (!hasAll) {
+        setImportError('CSV must include headers: days, startTime, endTime');
+        setImportPreview([]);
+        return;
+      }
+      setImportPreview(items);
+    } catch (err) {
+      setImportError('Failed to parse CSV');
+      setImportPreview([]);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const addImported = async () => {
+    if (!instituteObjectId || importPreview.length === 0) return;
+    setError('');
+    setSuccess('');
+    try {
+      for (const t of importPreview) {
+        const body = {
+          days: t.days,
+          startTime: t.startTime,
+          endTime: t.endTime,
+          instituteID: instituteObjectId
+        };
+        const res = await fetch('http://localhost:5000/api/timeslots', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...tokenHeader() },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(()=>({}));
+          throw new Error(data.message || 'Failed to add some rows');
+        }
+      }
+      setSuccess('Imported timeslots added successfully');
+      setImportPreview([]);
+      fetchList();
+    } catch (err) {
+      setError(err.message || 'Import add failed');
+    }
+  };
+
+  const exportCSV = () => {
+    const headers = ['days','startTime','endTime'];
+    const rows = list.map(t => ({ days: t.days, startTime: t.startTime, endTime: t.endTime }));
+    const csv = toCSV(headers, rows);
+    downloadCSV('timeslots.csv', csv);
+  };
 
   const tokenHeader = () => {
     const token = localStorage.getItem('token');
@@ -121,9 +190,48 @@ const TimeSlots = () => {
               <h1 className="dashboard-title mb-2">Institute Time Slots</h1>
               <p className="dashboard-subtitle mb-0">Configure daily timings</p>
             </div>
-            <Button variant="primary" className="btn-futuristic" onClick={openAdd} disabled={isFullWeek}>
-              <span className="btn-icon">➕</span> Add TimeSlot
-            </Button>
+            <div className="d-flex gap-2">
+              <Button variant="primary" className="btn-futuristic" onClick={openAdd} disabled={isFullWeek}>
+                <span className="btn-icon">➕</span> Add TimeSlot
+              </Button>
+              <Button variant="primary" onClick={exportCSV}>
+                <span className="btn-icon">⬇️</span> Export CSV
+              </Button>
+              <Button variant="primary" onClick={onImportClick}>
+                <span className="btn-icon">⬆️</span> Import CSV
+              </Button>
+              <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={onFileSelected} />
+            </div>
+                    {importError && <Alert variant="danger" dismissible onClose={() => setImportError('')}>{importError}</Alert>}
+                    {importPreview.length > 0 && (
+                      <Card className="mb-3">
+                        <Card.Header>Import Preview</Card.Header>
+                        <Card.Body>
+                          <Table size="sm" bordered>
+                            <thead>
+                              <tr>
+                                <th>Day</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {importPreview.map((row, idx) => (
+                                <tr key={idx}>
+                                  <td>{row.days}</td>
+                                  <td>{row.startTime}</td>
+                                  <td>{row.endTime}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                          <div className="d-flex justify-content-end gap-2">
+                            <Button variant="success" onClick={addImported}>Add Imported</Button>
+                            <Button variant="outline-danger" onClick={()=>setImportPreview([])}>Cancel</Button>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    )}
           </div>
 
           {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
