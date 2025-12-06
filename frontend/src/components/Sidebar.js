@@ -169,31 +169,75 @@ const Sidebar = ({ activeMenu }) => {
           handleMenuClick('dashboard');
           setIsMobileOpen(false);
         }} style={{cursor:'pointer'}}>
-          {/* Smart Scheduler Logo and Name */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ 
-              width: 40, 
-              height: 40, 
-              borderRadius: '50%', 
-              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(126, 34, 206, 0.3)'
-            }}>
-              <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="35" stroke="white" strokeWidth="6"/>
-                <path d="M50 25V50L65 65" stroke="white" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="50" cy="50" r="5" fill="white"/>
-              </svg>
-            </div>
-            {!isCollapsed && (
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>Smart Scheduler</div>
-                <div style={{ fontWeight: 500, fontSize: 13, color: '#e0e7ff', marginTop: 4 }}>Owner Panel</div>
+          {role === 'Owner' ? (
+            /* Smart Scheduler Logo and Name for Owner */
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: '50%', 
+                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(126, 34, 206, 0.3)'
+              }}>
+                <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="50" r="35" stroke="white" strokeWidth="6"/>
+                  <path d="M50 25V50L65 65" stroke="white" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="50" cy="50" r="5" fill="white"/>
+                </svg>
               </div>
-            )}
-          </div>
+              {!isCollapsed && (
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>Smart Scheduler</div>
+                  <div style={{ fontWeight: 500, fontSize: 13, color: '#e0e7ff', marginTop: 4 }}>Owner Panel</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Institute Logo, Name and Designation for Admin/Student/Teacher */
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {instituteInfo?.instituteLogo ? (
+                <img 
+                  src={`http://localhost:5000${instituteInfo.instituteLogo}`}
+                  alt="Institute Logo" 
+                  style={{ 
+                    width: 40, 
+                    height: 40, 
+                    borderRadius: '50%', 
+                    objectFit: 'cover',
+                    border: '2px solid rgba(255,255,255,0.2)'
+                  }} 
+                />
+              ) : (
+                <div style={{ 
+                  width: 40, 
+                  height: 40, 
+                  borderRadius: '50%', 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: '#fff'
+                }}>
+                  {instituteInfo?.instituteName?.charAt(0) || 'I'}
+                </div>
+              )}
+              {!isCollapsed && (
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>
+                    {instituteInfo?.instituteName || 'Institute'}
+                  </div>
+                  <div style={{ fontWeight: 500, fontSize: 13, color: '#e0e7ff', marginTop: 4 }}>
+                    {role}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Menu Items */}
