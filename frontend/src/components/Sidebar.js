@@ -469,19 +469,6 @@ const Sidebar = ({ activeMenu }) => {
               onClick={() => setIsCollapsed(!isCollapsed)}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                border: 'none',
-                color: 'rgba(255, 255, 255, 0.75)',
-                fontSize: '1.1rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                padding: '0.75rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
             >
               {isCollapsed ? '→' : '←'}
             </motion.button>

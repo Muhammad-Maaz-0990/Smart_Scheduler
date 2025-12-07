@@ -314,20 +314,8 @@ const Users = () => {
   return (
     <>
       <Sidebar activeMenu="users" />
-      <div 
-        className="w-100"
-        style={{
-          marginLeft: window.innerWidth > 992 ? '260px' : '0',
-          minHeight: '100vh',
-          background: '#f3f4f6',
-          padding: window.innerWidth > 992 ? '2rem' : '1rem',
-          paddingTop: window.innerWidth > 992 ? '2rem' : '70px',
-          transition: 'margin-left 0.3s ease',
-          maxWidth: '100vw',
-          overflowX: 'hidden',
-          boxSizing: 'border-box'
-        }}>
-        <Container fluid className="px-2 px-md-3">
+      <div className="dashboard-page">
+        <Container fluid className="dashboard-content">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}

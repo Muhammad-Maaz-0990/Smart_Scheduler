@@ -21,9 +21,16 @@ const Feedback = () => {
   const [showNew, setShowNew] = useState(false);
   const [newIssue, setNewIssue] = useState('');
   const [targetUserID, setTargetUserID] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
   const isAdmin = (user?.designation === 'Admin');
 
   const canStartThread = isAdmin || true; // non-admin can start own thread
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 992);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadThreads = useCallback(async () => {
     setLoading(true);
@@ -101,50 +108,50 @@ const Feedback = () => {
   }, [isAdmin]);
 
   return (
-    <div style={{ minHeight: '100vh', padding: '2rem 0' }}>
+    <div style={{ minHeight: '100vh', padding: isMobile ? '1rem 0' : '2rem 0' }}>
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
+      <div style={{ marginBottom: isMobile ? '1rem' : '2rem' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '1rem',
+          gap: isMobile ? '0.75rem' : '1rem',
           marginBottom: '0.5rem'
         }}>
           <div style={{
-            width: '50px',
-            height: '50px',
+            width: isMobile ? '40px' : '50px',
+            height: isMobile ? '40px' : '50px',
             borderRadius: '12px',
             background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <FaComments style={{ fontSize: '1.5rem', color: 'white' }} />
+            <FaComments style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', color: 'white' }} />
           </div>
           <div>
             <h1 style={{
-              fontSize: '1.875rem',
+              fontSize: isMobile ? '1.5rem' : '1.875rem',
               fontWeight: '700',
               color: '#7c3aed',
               margin: 0
             }}>Feedback & Messages</h1>
-            <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
+            <p style={{ color: '#6b7280', fontSize: isMobile ? '0.75rem' : '0.875rem', margin: 0 }}>
               Manage conversations with your team
             </p>
           </div>
         </div>
       </div>
 
-      <div className="d-flex gap-3" style={{ minHeight: 600 }}>
+      <div className="d-flex flex-column flex-lg-row gap-3" style={{ minHeight: isMobile ? 'auto' : 600 }}>
         {/* Threads list */}
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
-          style={{ width: 380, maxWidth: '100%' }}
+          style={{ width: isMobile ? '100%' : 380, maxWidth: '100%' }}
         >
           {/* Search and New Button */}
-          <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem' }}>
+          <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.75rem' }}>
             <div style={{ flex: 1, position: 'relative' }}>
               <FaSearch style={{
                 position: 'absolute',
@@ -156,7 +163,7 @@ const Feedback = () => {
               }} />
               <Form.Control
                 type="text"
-                placeholder="Search conversations..."
+                placeholder={isMobile ? "Search..." : "Search conversations..."}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
@@ -164,7 +171,8 @@ const Feedback = () => {
                   borderRadius: '10px',
                   border: '2px solid #e5e7eb',
                   fontSize: '0.875rem',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  width: '100%'
                 }}
                 className="gradient-border-input"
               />
@@ -187,7 +195,8 @@ const Feedback = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem',
-                  boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
+                  boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
+                  width: isMobile ? '100%' : 'auto'
                 }}
               >
                 <FaPlus /> New
@@ -317,11 +326,12 @@ const Feedback = () => {
           >
             <Card style={{
               borderRadius: '16px',
-              border: '1px solid #e5e7eb',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-              overflow: 'hidden'
+              border: '2px solid #e5e7eb',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+              overflow: 'hidden',
+              background: '#ffffff'
             }}>
-              <ListGroup variant="flush">
+              <ListGroup variant="flush" style={{ background: 'transparent' }}>
                 {error ? (
                   <ListGroup.Item style={{
                     padding: '2rem',
@@ -329,7 +339,8 @@ const Feedback = () => {
                     color: '#dc2626',
                     background: '#fee2e2',
                     borderRadius: '12px',
-                    margin: '1rem'
+                    margin: '1rem',
+                    border: 'none'
                   }}>
                     <FaTimes style={{ marginRight: '0.5rem' }} />
                     {error}
@@ -339,18 +350,22 @@ const Feedback = () => {
                     padding: '2rem',
                     textAlign: 'center',
                     color: '#7c3aed',
-                    fontWeight: '600'
+                    fontWeight: '600',
+                    background: 'transparent',
+                    border: 'none'
                   }}>
                     Loading conversations…
                   </ListGroup.Item>
                 ) : threads.length === 0 ? (
                   <ListGroup.Item style={{
-                    padding: '2rem',
+                    padding: isMobile ? '1.5rem' : '2rem',
                     textAlign: 'center',
                     color: '#6b7280',
-                    fontSize: '0.875rem'
+                    fontSize: isMobile ? '0.8rem' : '0.875rem',
+                    background: 'transparent',
+                    border: 'none'
                   }}>
-                    <FaComments style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }} />
+                    <FaComments style={{ fontSize: isMobile ? '1.5rem' : '2rem', marginBottom: '0.5rem', opacity: 0.5 }} />
                     <div>No conversations yet</div>
                   </ListGroup.Item>
                 ) : (
@@ -374,34 +389,41 @@ const Feedback = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.2, delay: idx * 0.05 }}
+                        style={{ padding: isMobile ? '0.5rem' : '0.5rem 0.75rem' }}
                       >
                         <ListGroup.Item
                           action
                           onClick={() => setActive(t.feedbackID)}
                           style={{
                             background: t.feedbackID === active 
-                              ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)'
+                              ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%)'
                               : 'white',
                             border: t.feedbackID === active
                               ? '2px solid #7c3aed'
-                              : '1px solid transparent',
-                            borderRadius: '10px',
-                            padding: '1rem',
-                            margin: '0.5rem',
+                              : '2px solid #e5e7eb',
+                            borderRadius: '14px',
+                            padding: isMobile ? '0.875rem' : '1rem',
+                            margin: 0,
                             cursor: 'pointer',
-                            transition: 'all 0.2s',
+                            transition: 'all 0.2s ease',
                             boxShadow: t.feedbackID === active
-                              ? '0 4px 12px rgba(124, 58, 237, 0.2)'
-                              : 'none'
+                              ? '0 6px 16px rgba(124, 58, 237, 0.25)'
+                              : '0 2px 4px rgba(0, 0, 0, 0.05)',
+                            position: 'relative',
+                            overflow: 'hidden'
                           }}
                           onMouseEnter={(e) => {
                             if (t.feedbackID !== active) {
                               e.currentTarget.style.background = '#f9fafb';
+                              e.currentTarget.style.borderColor = '#d1d5db';
+                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.08)';
                             }
                           }}
                           onMouseLeave={(e) => {
                             if (t.feedbackID !== active) {
                               e.currentTarget.style.background = 'white';
+                              e.currentTarget.style.borderColor = '#e5e7eb';
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
                             }
                           }}
                         >
@@ -409,21 +431,28 @@ const Feedback = () => {
                             fontWeight: 700,
                             color: t.feedbackID === active ? '#7c3aed' : '#111827',
                             marginBottom: '0.5rem',
-                            fontSize: '0.95rem'
+                            fontSize: isMobile ? '0.875rem' : '0.95rem',
+                            lineHeight: 1.4
                           }}>
                             {t.title}
                           </div>
                           <div style={{
-                            fontSize: '0.75rem',
+                            fontSize: isMobile ? '0.7rem' : '0.75rem',
                             color: '#6b7280',
                             display: 'flex',
                             gap: '0.5rem',
-                            flexWrap: 'wrap'
+                            flexWrap: 'wrap',
+                            alignItems: 'center'
                           }}>
-                            <span>{t.user?.userName || 'User'}</span>
-                            <span>•</span>
+                            <span style={{ 
+                              fontWeight: 600,
+                              color: t.feedbackID === active ? '#7c3aed' : '#374151'
+                            }}>
+                              {t.user?.userName || 'User'}
+                            </span>
+                            <span style={{ opacity: 0.4 }}>•</span>
                             <span>{t.user?.designation || ''}</span>
-                            <span>•</span>
+                            <span style={{ opacity: 0.4 }}>•</span>
                             <span>{new Date(t.issueDate).toLocaleDateString()}</span>
                           </div>
                         </ListGroup.Item>
@@ -449,7 +478,7 @@ const Feedback = () => {
             transition={{ duration: 0.3 }}
             style={{
               marginBottom: '1.5rem',
-              padding: '1.5rem',
+              padding: isMobile ? '1rem' : '1.5rem',
               borderRadius: '16px',
               background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
               border: '2px solid #e5e7eb',
@@ -458,7 +487,7 @@ const Feedback = () => {
           >
             <div style={{
               fontWeight: 800,
-              fontSize: '1.375rem',
+              fontSize: isMobile ? '1.125rem' : '1.375rem',
               background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -469,7 +498,7 @@ const Feedback = () => {
             </div>
             {activeThread && (
               <div style={{
-                fontSize: '0.875rem',
+                fontSize: isMobile ? '0.75rem' : '0.875rem',
                 color: '#6b7280',
                 display: 'flex',
                 gap: '0.75rem',
@@ -481,7 +510,8 @@ const Feedback = () => {
                   color: '#7c3aed',
                   background: 'rgba(124, 58, 237, 0.1)',
                   padding: '0.25rem 0.75rem',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  fontSize: isMobile ? '0.7rem' : '0.875rem'
                 }}>
                   {activeThread.user?.userName || 'User'}
                 </span>
@@ -490,14 +520,14 @@ const Feedback = () => {
                   background: '#f3f4f6',
                   padding: '0.25rem 0.75rem',
                   borderRadius: '8px',
-                  fontSize: '0.8rem'
+                  fontSize: isMobile ? '0.7rem' : '0.8rem'
                 }}>
                   {activeThread.user?.designation || ''}
                 </span>
                 <span style={{ opacity: 0.5 }}>•</span>
                 <span style={{
                   color: '#9ca3af',
-                  fontSize: '0.8rem'
+                  fontSize: isMobile ? '0.7rem' : '0.8rem'
                 }}>
                   {new Date(activeThread.issueDate).toLocaleDateString()}
                 </span>
@@ -509,7 +539,7 @@ const Feedback = () => {
           <Card style={{
             display: 'flex',
             flexDirection: 'column',
-            height: 520,
+            height: isMobile ? 400 : 520,
             borderRadius: '16px',
             border: '2px solid #e5e7eb',
             boxShadow: '0 8px 16px rgba(124, 58, 237, 0.08)',
@@ -518,7 +548,7 @@ const Feedback = () => {
           }}>
             <Card.Body style={{
               overflowY: 'auto',
-              padding: '1.5rem',
+              padding: isMobile ? '1rem' : '1.5rem',
               display: 'flex',
               flexDirection: 'column',
               gap: '1rem',
@@ -584,12 +614,12 @@ const Feedback = () => {
                 })
               )}
             </Card.Body>
-            <Card.Footer className="p-3 p-md-4" style={{
+            <Card.Footer className={`${isMobile ? 'p-3' : 'p-md-4'}`} style={{
               background: 'white',
               borderTop: '2px solid #e5e7eb'
             }}>
               <Form.Group className="mb-0">
-                <div className="d-flex flex-column flex-md-row gap-2 gap-md-3">
+                <div className={`d-flex ${isMobile ? 'flex-column gap-2' : 'flex-md-row gap-md-3'}`}>
                   <Form.Control
                     as="textarea"
                     rows={1}
@@ -615,7 +645,7 @@ const Feedback = () => {
                     whileTap={{ scale: active && !sending && text.trim() ? 0.95 : 1 }}
                     onClick={handleSend}
                     disabled={!active || sending || !text.trim()}
-                    className="btn w-100 w-md-auto"
+                    className={`btn ${isMobile ? 'w-100' : 'w-md-auto'}`}
                     style={{
                       background: (active && !sending && text.trim())
                         ? 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)'

@@ -98,26 +98,12 @@ const AdminDashboard = () => {
   return (
     <>
       <Sidebar activeMenu="dashboard" />
-      <div 
-        className="w-100"
-        style={{ 
-          marginLeft: window.innerWidth > 992 ? '260px' : '0', 
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
-          padding: window.innerWidth > 992 ? '2rem' : '1rem',
-          paddingTop: window.innerWidth > 992 ? '2rem' : '70px',
-          position: 'relative',
-          overflow: 'hidden',
-          transition: 'margin-left 0.3s ease',
-          maxWidth: '100vw',
-          overflowX: 'hidden',
-          boxSizing: 'border-box'
-        }}>
+      <div className="dashboard-page">
         {/* Animated Background Elements */}
         <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(126, 34, 206, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
         <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 15s ease-in-out infinite reverse' }}></div>
 
-        <Container fluid>
+        <Container fluid className="dashboard-content">
           {/* Title Section */}
           <motion.div 
             style={{ textAlign: 'center', marginBottom: '3rem' }}

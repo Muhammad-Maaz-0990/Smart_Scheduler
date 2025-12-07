@@ -72,8 +72,8 @@ const TeacherDashboard = () => {
 
       <Container fluid className="dashboard-content">
         <div className="welcome-section mb-5">
-          <h1 className="dashboard-title">Teacher Dashboard 👨‍🏫</h1>
-          <p className="dashboard-subtitle">Welcome, {user?.userName}!</p>
+          <h1 className="dashboard-title" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>Teacher Dashboard 👨‍🏫</h1>
+          <p className="dashboard-subtitle" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>Welcome, {user?.userName}!</p>
         </div>
         
         <Row className="g-4 mt-4">
