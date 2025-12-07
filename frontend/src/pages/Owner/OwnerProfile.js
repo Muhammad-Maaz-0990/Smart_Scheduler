@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaLock, FaEdit, FaSave, FaTimes, FaUserCircle, FaKey, FaEye, FaEyeSlash } from 'react-icons/fa';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
 const OwnerProfile = () => {
@@ -292,10 +293,7 @@ const OwnerProfile = () => {
               <Card.Body className="p-4">
                 {loading ? (
                   <div className="text-center py-5">
-                    <div className="spinner-border" style={{ color: '#7e22ce', width: '2.5rem', height: '2.5rem' }} role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p className="mt-3 mb-0" style={{ color: '#6b7280', fontWeight: 500 }}>Loading profile...</p>
+                    <LoadingSpinner message="Loading profile..." size="large" />
                   </div>
                 ) : (
                   <Form>

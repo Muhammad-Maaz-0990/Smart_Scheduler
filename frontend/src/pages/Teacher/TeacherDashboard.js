@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Table } from 'react-bootstrap';
+import { Container, Card, Table, Badge } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import axios from 'axios';
+import { motion } from 'framer-motion';
+import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
+import { FaChalkboardTeacher, FaBookOpen, FaDoorOpen, FaClock, FaCalendarDay, FaUserTie, FaUsers } from 'react-icons/fa';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
 const TeacherDashboard = () => {
@@ -64,71 +68,175 @@ const TeacherDashboard = () => {
     <>
       <Sidebar activeMenu="dashboard" />
       <div className="dashboard-page">
-      <div className="bg-animation">
-        <div className="floating-shape shape-1"></div>
-        <div className="floating-shape shape-2"></div>
-        <div className="floating-shape shape-3"></div>
-      </div>
-
-      <Container fluid className="dashboard-content">
-        <div className="welcome-section mb-5">
-          <h1 className="dashboard-title" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>Teacher Dashboard 👨‍🏫</h1>
-          <p className="dashboard-subtitle" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>Welcome, {user?.userName}!</p>
+        <div className="bg-animation">
+          <div className="floating-shape shape-1"></div>
+          <div className="floating-shape shape-2"></div>
+          <div className="floating-shape shape-3"></div>
         </div>
-        
-        <Row className="g-4 mt-4">
-          <Col lg={8}>
-            <Card className="schedule-card glass-effect">
-              <Card.Header>
-                <h4 className="card-title">Today's Schedule</h4>
+
+        <Container fluid className="dashboard-content" style={{ padding: '2rem' }}>
+          {/* Welcome Header */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            className="mb-4"
+          >
+            <div style={{
+              background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+              borderRadius: '16px',
+              padding: '2rem',
+              boxShadow: '0 4px 6px rgba(126, 34, 206, 0.2)',
+              color: '#fff'
+            }}>
+              <h1 style={{
+                fontSize: '2rem',
+                fontWeight: 700,
+                marginBottom: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <FaChalkboardTeacher style={{ fontSize: '2.5rem' }} />
+                Teacher Dashboard
+              </h1>
+              <p style={{ fontSize: '1.1rem', marginBottom: 0, opacity: 0.9 }}>
+                Welcome back, <strong>{user?.userName}</strong>!
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Today's Schedule Card */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={scaleIn}
+          >
+            <Card style={{
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '16px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)'
+            }}>
+              <Card.Header style={{
+                background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                borderTopLeftRadius: '16px',
+                borderTopRightRadius: '16px',
+                padding: '1rem 1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <FaCalendarDay />
+                Today's Schedule
               </Card.Header>
-              <Card.Body>
+              <Card.Body className="p-0">
+                {todaySlot && todaySlot.startTime && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.1) 0%, rgba(107, 33, 168, 0.1) 100%)',
+                    padding: '12px 20px',
+                    borderBottom: '1px solid rgba(126, 34, 206, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: '#7e22ce',
+                    fontWeight: 600,
+                    fontSize: '0.9rem'
+                  }}>
+                    <FaClock />
+                    Institute Hours: {todaySlot.days} • {to12hAmpm(todaySlot.startTime)} - {to12hAmpm(todaySlot.endTime)}
+                  </div>
+                )}
                 <div className="table-responsive">
-                  <Table variant="dark" className="schedule-table">
-                    <thead>
+                  <Table hover style={{ marginBottom: 0 }}>
+                    <thead style={{
+                      background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                      color: '#fff'
+                    }}>
                       <tr>
-                        <th>#</th>
-                        <th>Class</th>
-                        <th>Course</th>
-                        <th>Room</th>
-                        <th>Time</th>
-                        <th>Instructor</th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>#</th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                          <FaUsers className="me-2" />Class
+                        </th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                          <FaBookOpen className="me-2" />Course
+                        </th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                          <FaDoorOpen className="me-2" />Room
+                        </th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                          <FaClock className="me-2" />Time
+                        </th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                          <FaUserTie className="me-2" />Instructor
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="6" className="text-center text-white-50">Loading…</td></tr>
+                        <tr>
+                          <td colSpan="6" className="text-center py-5">
+                            <LoadingSpinner message="Loading schedule..." size="large" />
+                          </td>
+                        </tr>
                       ) : todayClasses.length > 0 ? (
                         todayClasses.map((c, idx) => (
-                          <tr key={`${c.timeTableID}-${idx}`}>
-                            <td>{idx + 1}</td>
-                            <td>{c.class}</td>
-                            <td>{c.course}</td>
-                            <td>{c.roomNumber}</td>
-                            <td>{formatTimeText(c.time)}</td>
-                            <td>{c.instructorName}</td>
-                          </tr>
+                          <motion.tr
+                            key={`${c.timeTableID}-${idx}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            style={{ borderBottom: '1px solid #e5e7eb' }}
+                          >
+                            <td style={{ padding: '14px 16px', fontSize: '0.9rem', color: '#6b7280', fontWeight: 600 }}>{idx + 1}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '0.9rem', color: '#111827', fontWeight: 600 }}>
+                              <Badge bg="primary" style={{
+                                background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                fontSize: '0.85rem'
+                              }}>
+                                {c.class}
+                              </Badge>
+                            </td>
+                            <td style={{ padding: '14px 16px', fontSize: '0.9rem', color: '#111827', fontWeight: 500 }}>{c.course}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#6b7280' }}>
+                              <Badge bg="secondary" style={{
+                                background: '#6b7280',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                fontSize: '0.85rem'
+                              }}>
+                                {c.roomNumber}
+                              </Badge>
+                            </td>
+                            <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#7e22ce', fontWeight: 600 }}>
+                              {formatTimeText(c.time)}
+                            </td>
+                            <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#111827', fontWeight: 500 }}>{c.instructorName}</td>
+                          </motion.tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="6" className="text-center text-white-50">
-                            {error || 'No classes scheduled for today'}
+                          <td colSpan="6" className="text-center py-5">
+                            <FaCalendarDay style={{ fontSize: '3rem', color: '#d1d5db', marginBottom: '1rem' }} />
+                            <p style={{ color: '#6b7280', fontWeight: 500, fontSize: '1rem' }}>
+                              {error || 'No classes scheduled for today'}
+                            </p>
                           </td>
                         </tr>
                       )}
                     </tbody>
                   </Table>
-                  {todaySlot && todaySlot.startTime && (
-                    <div style={{ color: '#ddd', marginTop: 8 }}>
-                      Institute timeslot: {todaySlot.days} • {to12hAmpm(todaySlot.startTime)} - {to12hAmpm(todaySlot.endTime)}
-                    </div>
-                  )}
                 </div>
               </Card.Body>
             </Card>
-          </Col>
-        </Row>
-      </Container>
+          </motion.div>
+        </Container>
       </div>
     </>
   );

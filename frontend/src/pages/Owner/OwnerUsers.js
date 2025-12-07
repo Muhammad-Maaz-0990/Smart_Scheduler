@@ -11,6 +11,7 @@ import {
   FaUsers, FaUserPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaFileImport,
   FaEnvelope, FaPhone, FaIdCard, FaTimes, FaDownload, FaUpload, FaUserShield, FaEye, FaEyeSlash
 } from 'react-icons/fa';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
 const OwnerUsers = () => {
@@ -729,10 +730,7 @@ const OwnerUsers = () => {
                       {loading ? (
                         <tr>
                           <td colSpan="6" className="text-center py-5">
-                            <div className="spinner-border" style={{ color: '#7e22ce', width: '2.5rem', height: '2.5rem' }} role="status">
-                              <span className="visually-hidden">Loading...</span>
-                            </div>
-                            <p className="mt-3 mb-0" style={{ color: '#6b7280', fontWeight: 500 }}>Loading users...</p>
+                            <LoadingSpinner message="Loading users..." size="large" />
                           </td>
                         </tr>
                       ) : users.length === 0 ? (

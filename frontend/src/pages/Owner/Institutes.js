@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
 import { FaBuilding, FaEye, FaUsers, FaChalkboardTeacher, FaGraduationCap, FaEnvelope, FaPhone, FaMapMarkerAlt, FaIdCard, FaCrown, FaCalendarAlt } from 'react-icons/fa';
 import Sidebar from '../../components/Sidebar';
-import { useAuth } from '../../context/AuthContext';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
 const Institutes = () => {
@@ -152,11 +152,8 @@ const Institutes = () => {
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan="6" className="text-center py-5">
-                            <div className="spinner-border" style={{ color: '#7e22ce', width: '2.5rem', height: '2.5rem' }} role="status">
-                              <span className="visually-hidden">Loading...</span>
-                            </div>
-                            <p className="mt-3 mb-0" style={{ color: '#6b7280', fontWeight: 500 }}>Loading institutes...</p>
+                          <td colSpan="5" className="text-center py-5">
+                            <LoadingSpinner message="Loading institutes..." size="large" />
                           </td>
                         </tr>
                       ) : institutes.length === 0 ? (

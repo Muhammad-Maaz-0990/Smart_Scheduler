@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Container, Form, Button, Card, Alert, Spinner } from 'react-bootstrap';
+import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 import { motion } from 'framer-motion';
 import { FaBuilding, FaMapMarkerAlt, FaPhone, FaImage, FaCheckCircle, FaSave, FaArrowLeft } from 'react-icons/fa';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
 const MotionCard = motion(Card);
@@ -212,7 +213,7 @@ const EditInstitute = () => {
 
           {loading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
-              <Spinner animation="border" style={{ color: '#7c3aed', width: '3rem', height: '3rem' }} />
+              <LoadingSpinner message="Loading institute data..." size="large" />
             </div>
           ) : (
             <MotionCard
