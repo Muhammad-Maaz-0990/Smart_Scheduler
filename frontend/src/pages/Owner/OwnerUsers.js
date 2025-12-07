@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Table, Alert, Button, Modal, Form } from 'react-bootstrap';
+import { Container, Card, Table, Alert, Button, Modal, Form, Badge, Row, Col } from 'react-bootstrap';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
+import {
+  FaUsers, FaUserPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaFileImport,
+  FaEnvelope, FaPhone, FaIdCard, FaTimes, FaDownload, FaUpload, FaUserShield, FaEye, FaEyeSlash
+} from 'react-icons/fa';
 import '../Dashboard.css';
 
 const OwnerUsers = () => {
@@ -30,6 +36,7 @@ const OwnerUsers = () => {
   const [searchName, setSearchName] = useState('');
   const [filterCNIC, setFilterCNIC] = useState('');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const tokenHeader = () => {
     const token = localStorage.getItem('token');
@@ -309,177 +316,626 @@ const OwnerUsers = () => {
           <div className="floating-shape shape-2"></div>
           <div className="floating-shape shape-3"></div>
         </div>
-        <Container fluid className="dashboard-content">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
-            <div>
-              <h1 className="dashboard-title mb-2">Owner Users</h1>
-              <p className="dashboard-subtitle mb-0">Manage owner users in the system</p>
-            </div>
-            <div className="d-flex gap-2">
-              <Button variant="primary" className="btn-futuristic" onClick={openAdd}>
-                <span className="btn-icon">➕</span> Add Owner User
-              </Button>
-              <Button className="btn-futuristic" onClick={onImportClick}>📥 Import CSV</Button>
-              <Button className="btn-futuristic" onClick={exportCSV}>📤 Export CSV</Button>
-              <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
-            </div>
-          </div>
-
-          {/* Search and Filter Row */}
-          <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3">
-            <div className="d-flex align-items-center gap-2" style={{ flex: 1 }}>
-              <Form.Control
-                type="text"
-                placeholder="Search by name..."
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-              />
-            </div>
-            <div className="position-relative" style={{ minWidth: 200 }}>
-              <Button variant="light" className="border" onClick={() => setShowFilterMenu(s => !s)}>
-                ⋮
-              </Button>
-              {showFilterMenu && (
-                <div className="card shadow-sm" style={{ position: 'absolute', right: 0, zIndex: 10, minWidth: 260 }}>
-                  <div className="card-body p-2">
-                    <div className="mb-2" style={{ fontWeight: 600 }}>Filter Options</div>
-                    <Form.Control
-                      size="sm"
-                      type="text"
-                      placeholder="Filter by National ID (CNIC/SSN)"
-                      value={filterCNIC}
-                      onChange={(e) => setFilterCNIC(e.target.value)}
-                      className="mb-2"
-                    />
-                    <div className="d-flex justify-content-end gap-2 mt-2">
-                      <Button size="sm" variant="secondary" onClick={() => { setFilterCNIC(''); setShowFilterMenu(false); }}>Reset</Button>
-                      <Button size="sm" variant="primary" onClick={() => setShowFilterMenu(false)}>Apply</Button>
-                    </div>
-                  </div>
+        <Container fluid className="dashboard-content p-3 p-md-4">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            className="mb-4"
+          >
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+              <div className="d-flex align-items-center gap-3">
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(126, 34, 206, 0.3)'
+                }}>
+                  <FaUsers style={{ color: '#fff', fontSize: '24px' }} />
                 </div>
-              )}
+                <div>
+                  <h2 style={{
+                    fontSize: 'clamp(1.5rem, 3vw, 1.75rem)',
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    marginBottom: '0.25rem',
+                    letterSpacing: '-0.5px'
+                  }}>
+                    Owner Users
+                  </h2>
+                  <p style={{
+                    fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
+                    color: '#6b7280',
+                    fontWeight: 500,
+                    marginBottom: 0
+                  }}>
+                    Manage owner users in the system
+                  </p>
+                </div>
+              </div>
+              <div className="d-flex flex-wrap gap-2">
+                <Button onClick={openAdd} style={{
+                  background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '8px 16px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  boxShadow: '0 1px 3px rgba(126, 34, 206, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <FaUserPlus /> Add Owner User
+                </Button>
+                <Button onClick={onImportClick} style={{
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '8px 16px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  boxShadow: '0 1px 3px rgba(59, 130, 246, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <FaUpload /> Import CSV
+                </Button>
+                <Button onClick={exportCSV} style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '8px 16px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  boxShadow: '0 1px 3px rgba(16, 185, 129, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <FaDownload /> Export CSV
+                </Button>
+                <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
+              </div>
             </div>
-          </div>
+          </motion.div>
 
-          {error && (
-            <Alert variant="danger" className="error-alert" onClose={() => setError('')} dismissible>
-              {error}
-            </Alert>
-          )}
-          {success && (
-            <Alert variant="success" className="error-alert" onClose={() => setSuccess('')} dismissible>
-              {success}
-            </Alert>
-          )}
-          {importError && (
-            <Alert variant="warning" className="error-alert" onClose={() => setImportError('')} dismissible>
-              {importError}
-            </Alert>
-          )}
-          {importPreview.length > 0 && (
-            <Card className="glass-effect mb-3">
-              <Card.Header>Import Preview</Card.Header>
-              <Card.Body>
-                <Table size="sm" hover>
-                  <thead><tr><th>#</th><th>userName</th><th>email</th><th>phoneNumber</th><th>cnic</th></tr></thead>
-                  <tbody>
-                    {importPreview.map((r, idx) => (
-                      <tr key={idx}><td>{idx+1}</td><td>{r.userName}</td><td>{r.email}</td><td>{r.phoneNumber}</td><td>{r.cnic}</td></tr>
-                    ))}
-                  </tbody>
-                </Table>
-                <Button variant="primary" onClick={addImported}>Add Imported</Button>
-                <Button variant="secondary" className="ms-2" onClick={()=>setImportPreview([])}>Clear</Button>
+          {/* Search and Filter */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={scaleIn}
+            className="mb-3"
+            style={{ position: 'relative', zIndex: 10 }}
+          >
+            <Card style={{
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '12px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              position: 'relative'
+            }}>
+              <Card.Body className="p-3">
+                <Row className="g-3">
+                  <Col md={8}>
+                    <div className="position-relative">
+                      <FaSearch style={{
+                        position: 'absolute',
+                        left: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#9ca3af',
+                        fontSize: '14px'
+                      }} />
+                      <Form.Control
+                        type="text"
+                        placeholder="Search by name..."
+                        value={searchName}
+                        onChange={(e) => setSearchName(e.target.value)}
+                        style={{
+                          paddingLeft: '36px',
+                          borderRadius: '8px',
+                          border: '1px solid #e5e7eb',
+                          fontSize: '0.9rem'
+                        }}
+                      />
+                    </div>
+                  </Col>
+                  <Col md={4}>
+                    <div className="position-relative">
+                      <Button
+                        onClick={() => setShowFilterMenu(s => !s)}
+                        style={{
+                          width: '100%',
+                          background: showFilterMenu ? 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)' : '#f3f4f6',
+                          color: showFilterMenu ? '#fff' : '#374151',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '8px 16px',
+                          fontWeight: 600,
+                          fontSize: '0.85rem',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <FaFilter /> Filter Options
+                      </Button>
+                      <AnimatePresence>
+                        {showFilterMenu && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            style={{
+                              position: 'absolute',
+                              right: 0,
+                              top: 'calc(100% + 8px)',
+                              zIndex: 9999,
+                              minWidth: '280px',
+                              background: '#fff',
+                              borderRadius: '12px',
+                              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+                              padding: '16px',
+                              border: '1px solid #e5e7eb'
+                            }}
+                          >
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827' }}>
+                                <FaFilter className="me-2" />Filters
+                              </span>
+                              <Button
+                                size="sm"
+                                onClick={() => setShowFilterMenu(false)}
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#6b7280',
+                                  padding: '4px'
+                                }}
+                              >
+                                <FaTimes />
+                              </Button>
+                            </div>
+                            <Form.Group className="mb-3">
+                              <Form.Label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>
+                                <FaIdCard className="me-1" />National ID
+                              </Form.Label>
+                              <Form.Control
+                                size="sm"
+                                type="text"
+                                placeholder="Filter by CNIC/SSN"
+                                value={filterCNIC}
+                                onChange={(e) => setFilterCNIC(e.target.value)}
+                                style={{
+                                  borderRadius: '6px',
+                                  fontSize: '0.85rem'
+                                }}
+                              />
+                            </Form.Group>
+                            <div className="d-flex justify-content-end gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => { setFilterCNIC(''); setShowFilterMenu(false); }}
+                                style={{
+                                  background: '#f3f4f6',
+                                  color: '#374151',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '6px 12px',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 600
+                                }}
+                              >
+                                Reset
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => setShowFilterMenu(false)}
+                                style={{
+                                  background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '6px 12px',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 600
+                                }}
+                              >
+                                Apply
+                              </Button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </Col>
+                </Row>
               </Card.Body>
             </Card>
-          )}
+          </motion.div>
 
-          <Card className="glass-effect">
-            <Card.Body>
-              <div className="table-responsive">
-                <Table hover className="table-custom">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>National ID</th>
-                      <th>Phone</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr><td colSpan="6" className="text-center">Loading...</td></tr>
-                    ) : users.length === 0 ? (
-                      <tr><td colSpan="6" className="text-center">No owner users found</td></tr>
-                    ) : (
-                      users
-                        .filter(u => String(u.userName || '').toLowerCase().includes(searchName.trim().toLowerCase()))
-                        .filter(u => filterCNIC.trim() ? String(u.cnic || '').toLowerCase().includes(filterCNIC.trim().toLowerCase()) : true)
-                        .map((u, idx) => (
-                        <tr key={u._id}>
-                          <td>{idx + 1}</td>
-                          <td>{u.userName}</td>
-                          <td>{u.email}</td>
-                          <td>{u.cnic === 'N/A' ? '-' : u.cnic}</td>
-                          <td>{u.phoneNumber === 'N/A' ? '-' : u.phoneNumber}</td>
-                          <td>
-                            <Button size="sm" variant="warning" className="me-2" onClick={() => openEdit(u)}>✏️ Edit</Button>
-                            <Button size="sm" variant="danger" onClick={() => handleDelete(u._id)}>🗑️ Delete</Button>
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Alert variant="danger" onClose={() => setError('')} dismissible className="mb-3">
+                  {error}
+                </Alert>
+              </motion.div>
+            )}
+            {success && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Alert variant="success" onClose={() => setSuccess('')} dismissible className="mb-3">
+                  {success}
+                </Alert>
+              </motion.div>
+            )}
+            {importError && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Alert variant="warning" onClose={() => setImportError('')} dismissible className="mb-3">
+                  {importError}
+                </Alert>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {importPreview.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="mb-3"
+              >
+                <Card style={{
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  borderRadius: '12px',
+                  boxShadow: '0 1px 3px rgba(59, 130, 246, 0.2)',
+                  background: 'rgba(239, 246, 255, 0.5)',
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <Card.Header style={{
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '0.95rem',
+                    borderTopLeftRadius: '12px',
+                    borderTopRightRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <FaFileImport />Import Preview ({importPreview.length} rows)
+                  </Card.Header>
+                  <Card.Body className="p-3">
+                    <div className="table-responsive" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                      <Table size="sm" hover style={{ marginBottom: 0 }}>
+                        <thead style={{ position: 'sticky', top: 0, background: '#f9fafb', zIndex: 1 }}>
+                          <tr>
+                            <th style={{ padding: '10px', fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>#</th>
+                            <th style={{ padding: '10px', fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>userName</th>
+                            <th style={{ padding: '10px', fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>email</th>
+                            <th style={{ padding: '10px', fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>phoneNumber</th>
+                            <th style={{ padding: '10px', fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>cnic</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {importPreview.map((r, idx) => (
+                            <tr key={idx}>
+                              <td style={{ padding: '8px', fontSize: '0.85rem', color: '#6b7280' }}>{idx+1}</td>
+                              <td style={{ padding: '8px', fontSize: '0.85rem', color: '#111827', fontWeight: 500 }}>{r.userName}</td>
+                              <td style={{ padding: '8px', fontSize: '0.85rem', color: '#6b7280' }}>{r.email}</td>
+                              <td style={{ padding: '8px', fontSize: '0.85rem', color: '#6b7280' }}>{r.phoneNumber}</td>
+                              <td style={{ padding: '8px', fontSize: '0.85rem', color: '#6b7280' }}>{r.cnic}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                    <div className="d-flex gap-2 mt-3">
+                      <Button onClick={addImported} style={{
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                        boxShadow: '0 1px 2px rgba(16, 185, 129, 0.2)'
+                      }}>
+                        Add Imported Users
+                      </Button>
+                      <Button onClick={()=>setImportPreview([])} style={{
+                        background: '#f3f4f6',
+                        color: '#374151',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                      }}>
+                        Clear Preview
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={scaleIn}
+            style={{ position: 'relative', zIndex: 1 }}
+          >
+            <Card style={{
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '16px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              position: 'relative',
+              zIndex: 1
+            }}>
+              <Card.Body className="p-0">
+                <div className="table-responsive">
+                  <Table hover style={{ marginBottom: 0 }}>
+                    <thead style={{
+                      background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                      color: '#fff'
+                    }}>
+                      <tr>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>#</th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                          <FaUserShield className="me-2" />Name
+                        </th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                          <FaEnvelope className="me-2" />Email
+                        </th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                          <FaIdCard className="me-2" />National ID
+                        </th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                          <FaPhone className="me-2" />Phone
+                        </th>
+                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none', textAlign: 'center' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading ? (
+                        <tr>
+                          <td colSpan="6" className="text-center py-5">
+                            <div className="spinner-border" style={{ color: '#7e22ce', width: '2.5rem', height: '2.5rem' }} role="status">
+                              <span className="visually-hidden">Loading...</span>
+                            </div>
+                            <p className="mt-3 mb-0" style={{ color: '#6b7280', fontWeight: 500 }}>Loading users...</p>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </Table>
-              </div>
-            </Card.Body>
-          </Card>
+                      ) : users.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="text-center py-5">
+                            <FaUsers style={{ fontSize: '3rem', color: '#d1d5db', marginBottom: '1rem' }} />
+                            <p style={{ color: '#6b7280', fontWeight: 500, fontSize: '1rem' }}>No owner users found</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        users
+                          .filter(u => String(u.userName || '').toLowerCase().includes(searchName.trim().toLowerCase()))
+                          .filter(u => filterCNIC.trim() ? String(u.cnic || '').toLowerCase().includes(filterCNIC.trim().toLowerCase()) : true)
+                          .map((u, idx) => (
+                          <motion.tr
+                            key={u._id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            style={{ borderBottom: '1px solid #e5e7eb' }}
+                          >
+                            <td style={{ padding: '14px 16px', fontSize: '0.9rem', color: '#6b7280', fontWeight: 600 }}>{idx + 1}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '0.9rem', color: '#111827', fontWeight: 600 }}>{u.userName}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#6b7280' }}>{u.email}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#6b7280' }}>{u.cnic === 'N/A' ? '-' : u.cnic}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#6b7280' }}>{u.phoneNumber === 'N/A' ? '-' : u.phoneNumber}</td>
+                            <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                              <div className="d-flex justify-content-center gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => openEdit(u)}
+                                  style={{
+                                    background: 'linear-gradient(135deg, #5b024bff 0%, #110263ff 100%)',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '6px 12px',
+                                    fontWeight: 600,
+                                    fontSize: '0.8rem',
+                                    boxShadow: '0 1px 2px rgba(245, 158, 11, 0.2)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                >
+                                  <FaEdit /> Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleDelete(u._id)}
+                                  style={{
+                                    background: 'linear-gradient(135deg, #7b0505ff 0%, #dc2626 100%)',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '6px 12px',
+                                    fontWeight: 600,
+                                    fontSize: '0.8rem',
+                                    boxShadow: '0 1px 2px rgba(239, 68, 68, 0.2)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                >
+                                  <FaTrash /> Delete
+                                </Button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+              </Card.Body>
+            </Card>
+          </motion.div>
         </Container>
       </div>
 
       <Modal show={showModal} onHide={closeModal} centered>
-        <Modal.Header closeButton className="glass-effect">
-          <Modal.Title>{mode === 'add' ? 'Add New Owner User' : 'Edit Owner User'}</Modal.Title>
+        <Modal.Header closeButton style={{
+          background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+          color: '#fff',
+          borderBottom: 'none'
+        }}>
+          <Modal.Title style={{ fontSize: '1.15rem', fontWeight: 700 }}>
+            <FaUserPlus className="me-2" />
+            {mode === 'add' ? 'Add New Owner User' : 'Edit Owner User'}
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="glass-effect">
+        <Modal.Body className="p-4" style={{ background: '#f9fafb' }}>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Full Name</Form.Label>
+              <Form.Label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151' }}>
+                <FaUserShield className="me-1" />Full Name
+              </Form.Label>
               <Form.Control
                 type="text"
                 value={current.userName}
                 onChange={(e) => setCurrent({ ...current, userName: e.target.value })}
                 required
+                style={{
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  padding: '10px 12px',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.border = '2px solid transparent';
+                  e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
+                  e.target.style.backgroundOrigin = 'border-box';
+                  e.target.style.backgroundClip = 'padding-box, border-box';
+                }}
+                onBlur={(e) => {
+                  e.target.style.border = '1px solid #d1d5db';
+                  e.target.style.backgroundImage = 'none';
+                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
+              <Form.Label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151' }}>
+                <FaEnvelope className="me-1" />Email
+              </Form.Label>
               <Form.Control
                 type="email"
                 value={current.email}
                 onChange={(e) => setCurrent({ ...current, email: e.target.value })}
                 required
+                style={{
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  padding: '10px 12px',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.border = '2px solid transparent';
+                  e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
+                  e.target.style.backgroundOrigin = 'border-box';
+                  e.target.style.backgroundClip = 'padding-box, border-box';
+                }}
+                onBlur={(e) => {
+                  e.target.style.border = '1px solid #d1d5db';
+                  e.target.style.backgroundImage = 'none';
+                }}
               />
             </Form.Group>
 
             {mode === 'add' && (
               <Form.Group className="mb-3">
-                <Form.Label>Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  value={current.password}
-                  onChange={(e) => setCurrent({ ...current, password: e.target.value })}
-                  minLength={6}
-                  required
-                />
+                <Form.Label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151' }}>
+                  Password
+                </Form.Label>
+                <div style={{ position: 'relative' }}>
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    value={current.password}
+                    onChange={(e) => setCurrent({ ...current, password: e.target.value })}
+                    minLength={6}
+                    required
+                    style={{
+                      borderRadius: '8px',
+                      border: '1px solid #d1d5db',
+                      padding: '10px 40px 10px 12px',
+                      fontSize: '0.9rem',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.border = '2px solid transparent';
+                      e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
+                      e.target.style.backgroundOrigin = 'border-box';
+                      e.target.style.backgroundClip = 'padding-box, border-box';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.border = '1px solid #d1d5db';
+                      e.target.style.backgroundImage = 'none';
+                    }}
+                  />
+                  <Button
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#7e22ce',
+                      padding: '4px 8px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </Button>
+                </div>
               </Form.Group>
             )}
 
             <Form.Group className="mb-3">
-              <Form.Label>Phone</Form.Label>
+              <Form.Label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151' }}>
+                <FaPhone className="me-1" />Phone
+              </Form.Label>
               <PhoneInput
                 international
                 defaultCountry="PK"
@@ -494,7 +950,9 @@ const OwnerUsers = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>{getCNICLabel(country)}</Form.Label>
+              <Form.Label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151' }}>
+                <FaIdCard className="me-1" />{getCNICLabel(country)}
+              </Form.Label>
               <Form.Control
                 type="text"
                 value={current.cnic}
@@ -503,15 +961,51 @@ const OwnerUsers = () => {
                 maxLength={getCNICMaxLength(country)}
                 pattern={getCNICPattern(country)}
                 required
+                style={{
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  padding: '10px 12px',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.border = '2px solid transparent';
+                  e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
+                  e.target.style.backgroundOrigin = 'border-box';
+                  e.target.style.backgroundClip = 'padding-box, border-box';
+                }}
+                onBlur={(e) => {
+                  e.target.style.border = '1px solid #d1d5db';
+                  e.target.style.backgroundImage = 'none';
+                }}
               />
-              <Form.Text className="text-light-muted">
-                <small>Selected country: {country} | Max {getCNICMaxLength(country)} characters</small>
+              <Form.Text style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                Selected country: <Badge bg="secondary" style={{ fontSize: '0.7rem', padding: '2px 6px' }}>{country}</Badge> | Max {getCNICMaxLength(country)} characters
               </Form.Text>
             </Form.Group>
 
-            <div className="d-flex justify-content-end gap-2">
-              <Button variant="secondary" onClick={closeModal}>Cancel</Button>
-              <Button variant="primary" type="submit" className="btn-futuristic">
+            <div className="d-flex justify-content-end gap-2 mt-4">
+              <Button onClick={closeModal} style={{
+                background: '#f3f4f6',
+                color: '#374151',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+              }}>
+                Cancel
+              </Button>
+              <Button type="submit" style={{
+                background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                boxShadow: '0 1px 3px rgba(126, 34, 206, 0.3)'
+              }}>
                 {mode === 'add' ? 'Add Owner User' : 'Update Owner User'}
               </Button>
             </div>

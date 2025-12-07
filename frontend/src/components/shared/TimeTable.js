@@ -1,5 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Container, Card, Button, Badge, Form, Row, Col } from 'react-bootstrap';
+import { motion, AnimatePresence } from 'framer-motion';
+import { fadeInUp, fadeIn, scaleIn } from './animation_variants';
+import { FaPrint, FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen } from 'react-icons/fa';
 
 function TimeTable({ isAdmin = false }) {
   const navigate = useNavigate();
@@ -194,182 +198,397 @@ function TimeTable({ isAdmin = false }) {
   }, [instituteInfo]);
 
   return (
-    <div style={{ padding: '24px', background: '#fff', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ margin: 0, color: '#333' }} className="no-print">Time Tables</h2>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {selected && (
-            <button
-              onClick={handlePrint}
-              style={{
-                background: '#10b981', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '14px'
-              }}
-              className="no-print"
-            >
-              🖨️ Print Timetable
-            </button>
-          )}
-          {isAdmin && (
-            <>
-              <button
-                onClick={generateTimetable}
-                disabled={loading}
-                style={{
-                  background: '#7c3aed', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '14px', opacity: loading ? 0.6 : 1
-                }}
-                className="no-print"
-              >
-                Generate Timetable
-              </button>
-              {selected && (
-                <button
-                  onClick={async () => {
-                    try {
-                      const confirmDel = window.confirm(`Delete timetable ${selected.instituteTimeTableID}? This cannot be undone.`);
-                      if (!confirmDel) return;
-                      const token = localStorage.getItem('token');
-                      const res = await fetch(`http://localhost:5000/api/timetables-gen/${encodeURIComponent(selected.instituteTimeTableID)}`, {
-                        method: 'DELETE',
-                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                      });
-                      if (!res.ok) throw new Error(await res.text());
-                      // Refresh list; fetchList will auto-select current or first
-                      await fetchList();
-                    } catch (e) {
-                      setError('Failed to delete timetable');
-                    }
-                  }}
-                  disabled={loading}
-                  style={{
-                    background: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '14px', opacity: loading ? 0.6 : 1
-                  }}
-                  className="no-print"
-                >
-                  🗑️ Delete Timetable
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {error && (
-        <div style={{ color: '#dc2626', marginBottom: '16px', padding: '12px', background: '#fee2e2', borderRadius: '8px' }}>{error}</div>
-      )}
-
-      {/* Timetable Selector Dropdown */}
-      {items.length > 0 && (
-        <div style={{ marginBottom: '24px' }} className="no-print">
-          <label style={{ display: 'block', fontWeight: 600, color: '#374151', marginBottom: '8px', fontSize: '14px' }}>
-            Select Timetable:
-          </label>
-          <select
-            value={selected?.instituteTimeTableID || ''}
-            onChange={(e) => {
-              const selectedId = parseInt(e.target.value);
-              const timetable = items.find(h => h.instituteTimeTableID === selectedId);
-              if (timetable) setSelected(timetable);
-            }}
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              padding: '12px 16px',
-              fontSize: '14px',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              backgroundColor: '#fff',
-              color: '#111827',
-              cursor: 'pointer',
-              outline: 'none'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#7c3aed'}
-            onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-          >
-            {items.map(h => (
-              <option key={h.instituteTimeTableID} value={h.instituteTimeTableID}>
-                Timetable {h.instituteTimeTableID} - {h.session} • {h.year}
-                {h.currentStatus ? ' (Current)' : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {items.length === 0 && (
-        <div style={{ color: '#6b7280', marginBottom: '24px', padding: '12px' }} className="no-print">
-          No timetables found. Click Generate to create one.
-        </div>
-      )}
-
-      {/* Details for selected timetable */}
-      {selected && (
-        <div style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '16px' }} id="timetable-print-content">
-          {/* Print Header with Institute Info */}
-          {(
-            () => {
-              // Fallbacks: prefer instituteInfo, then selected header, then user from localStorage
-              let displayName = instituteInfo?.instituteName || selected?.instituteName;
-              if (!displayName) {
-                try {
-                  const userStr = localStorage.getItem('user');
-                  if (userStr) {
-                    const u = JSON.parse(userStr);
-                    displayName = u?.instituteName || displayName;
-                  }
-                } catch {}
-              }
-              if (!displayName) displayName = 'Institute';
-              const logoUrl = instituteInfo?.instituteLogo || '';
-              return (
-                <div className="print-only" style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '2px solid #e5e7eb', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                    {logoUrl ? (
-                      <img src={logoUrl} alt="Institute Logo" style={{ height: '80px', width: '80px', borderRadius: '50%', objectFit: 'cover', marginRight: '18px' }} />
-                    ) : null}
-                    <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: 0 }}>{displayName}</h1>
-                  </div>
-                  <div style={{ fontSize: '16px', color: '#6b7280', margin: '18px 0 0 0', textAlign: 'center', width: '100%' }}>
-                    Academic Year: {selected.session}
-                  </div>
-                  <div style={{ position: 'absolute', right: 24, bottom: 8, fontSize: '14px', color: '#9ca3af', textAlign: 'right' }}>
-                    Generated on: {new Date(selected.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </div>
-                </div>
-              );
-            }
-          )()}
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }} className="no-print">
-            {isAdmin && (
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }} className="no-print">
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#374151' }}>
-                  <input
-                    type="checkbox"
-                    checked={!!selected.visibility}
-                    onChange={(e) => updateHeader(selected.instituteTimeTableID, { visibility: e.target.checked })}
-                  />
-                  Visible
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#374151' }}>
-                  <input
-                    type="checkbox"
-                    checked={!!selected.currentStatus}
-                    onChange={(e) => updateHeader(selected.instituteTimeTableID, { currentStatus: e.target.checked })}
-                  />
-                  Current
-                </label>
-              </div>
-            )}
+    <Container fluid className="p-3 p-md-4" style={{ minHeight: '100vh' }}>
+      {/* Header Section */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        className="mb-4"
+      >
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4">
+          <div>
+            <h2 style={{ 
+              fontSize: 'clamp(1.5rem, 3vw, 1.75rem)',
+              fontWeight: 700,
+              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              marginBottom: '0.5rem',
+              letterSpacing: '-0.5px'
+            }}>
+              Time Tables Management
+            </h2>
+            <p style={{ 
+              fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
+              color: '#6b7280',
+              fontWeight: 500,
+              marginBottom: 0
+            }}>
+              Explore all timetables of your institute
+            </p>
           </div>
 
-          {loading ? (
-            <div style={{ color: '#6b7280' }}>Loading details…</div>
-          ) : (
-            <TimetableTables details={details} header={selected} />
-          )}
+          <div className="d-flex flex-wrap gap-2 no-print">
+            {selected && (
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  variant="success"
+                  onClick={handlePrint}
+                  className="d-flex align-items-center gap-2"
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)'
+                  }}
+                >
+                  <FaPrint style={{ fontSize: '0.875rem' }} /> Print
+                </Button>
+              </motion.div>
+            )}
+            {isAdmin && (
+              <>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={generateTimetable}
+                    disabled={loading}
+                    className="d-flex align-items-center gap-2"
+                    style={{
+                      background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '10px',
+                      fontWeight: 600,
+                      fontSize: '0.875rem',
+                      boxShadow: '0 2px 8px rgba(126, 34, 206, 0.25)',
+                      opacity: loading ? 0.6 : 1
+                    }}
+                  >
+                    <FaPlus style={{ fontSize: '0.875rem' }} /> Generate New
+                  </Button>
+                </motion.div>
+                {selected && (
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const confirmDel = window.confirm(`Delete timetable ${selected.instituteTimeTableID}? This cannot be undone.`);
+                          if (!confirmDel) return;
+                          const token = localStorage.getItem('token');
+                          const res = await fetch(`http://localhost:5000/api/timetables-gen/${encodeURIComponent(selected.instituteTimeTableID)}`, {
+                            method: 'DELETE',
+                            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                          });
+                          if (!res.ok) throw new Error(await res.text());
+                          await fetchList();
+                        } catch (e) {
+                          setError('Failed to delete timetable');
+                        }
+                      }}
+                      disabled={loading}
+                      variant="danger"
+                      className="d-flex align-items-center gap-2"
+                      style={{
+                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '10px',
+                        fontWeight: 600,
+                        fontSize: '0.875rem',
+                        boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)',
+                        opacity: loading ? 0.6 : 1
+                      }}
+                    >
+                      <FaTrash style={{ fontSize: '0.875rem' }} /> Delete
+                    </Button>
+                  </motion.div>
+                )}
+              </>
+            )}
+          </div>
         </div>
+      </motion.div>
+
+      {/* Error Alert */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="mb-4" style={{
+              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%)',
+              border: '2px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)'
+            }}>
+              <Card.Body className="p-3">
+                <p className="mb-0" style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ {error}</p>
+              </Card.Body>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Timetable Selector */}
+      {items.length > 0 && (
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
+          className="mb-4 no-print"
+        >
+          <Card className="glass-effect" style={{
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '16px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <Card.Body className="p-3 p-md-4">
+              <Form.Group>
+                <Form.Label className="mb-2 d-flex align-items-center gap-2" style={{ fontWeight: 600, color: '#374151', fontSize: '0.9rem' }}>
+                  <FaCalendarAlt style={{ color: '#7e22ce', fontSize: '0.875rem' }} />
+                  Select Timetable
+                </Form.Label>
+                <Form.Select
+                  value={selected?.instituteTimeTableID || ''}
+                  onChange={(e) => {
+                    const selectedId = parseInt(e.target.value);
+                    const timetable = items.find(h => h.instituteTimeTableID === selectedId);
+                    if (timetable) setSelected(timetable);
+                  }}
+                  style={{
+                    padding: '10px 14px',
+                    fontSize: '0.9rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    backgroundColor: '#fff',
+                    color: '#111827',
+                    fontWeight: 500,
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#7e22ce';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(126, 34, 206, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                  }}
+                >
+                  {items.map(h => (
+                    <option key={h.instituteTimeTableID} value={h.instituteTimeTableID}>
+                      Timetable {h.instituteTimeTableID} - {h.session} • {h.year}
+                      {h.currentStatus ? ' ⭐ (Current)' : ''}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Card.Body>
+          </Card>
+        </motion.div>
       )}
-    </div>
+
+      {/* Empty State */}
+      {items.length === 0 && (
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={scaleIn}
+          className="no-print"
+        >
+          <Card className="text-center glass-effect" style={{
+            border: '2px dashed rgba(126, 34, 206, 0.3)',
+            borderRadius: '16px',
+            padding: '2.5rem 1.5rem',
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <Card.Body>
+              <div style={{ fontSize: '3rem', marginBottom: '0.75rem', opacity: 0.3 }}>📅</div>
+              <h3 style={{ color: '#6b7280', fontWeight: 600, fontSize: '1.125rem', marginBottom: '0.5rem' }}>No Timetables Found</h3>
+              <p style={{ color: '#9ca3af', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                {isAdmin ? 'Click Generate to create your first timetable' : 'No timetables available yet'}
+              </p>
+              {isAdmin && (
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={generateTimetable}
+                    style={{
+                      background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                      border: 'none',
+                      padding: '10px 24px',
+                      borderRadius: '10px',
+                      fontWeight: 600,
+                      fontSize: '0.9rem',
+                      boxShadow: '0 2px 8px rgba(126, 34, 206, 0.25)'
+                    }}
+                  >
+                    <FaPlus className="me-2" style={{ fontSize: '0.875rem' }} />
+                    Generate Timetable
+                  </Button>
+                </motion.div>
+              )}
+            </Card.Body>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Timetable Details */}
+      {selected && (
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          id="timetable-print-content"
+        >
+          <Card className="glass-effect" style={{
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '20px',
+            overflow: 'hidden',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.12)',
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(15px)'
+          }}>
+            {/* Print Header with Institute Info */}
+            {(
+              () => {
+                let displayName = instituteInfo?.instituteName || selected?.instituteName;
+                if (!displayName) {
+                  try {
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                      const u = JSON.parse(userStr);
+                      displayName = u?.instituteName || displayName;
+                    }
+                  } catch {}
+                }
+                if (!displayName) displayName = 'Institute';
+                const logoUrl = instituteInfo?.instituteLogo || '';
+                return (
+                  <div className="print-only" style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '2px solid #e5e7eb', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                      {logoUrl ? (
+                        <img src={logoUrl} alt="Institute Logo" style={{ height: '80px', width: '80px', borderRadius: '50%', objectFit: 'cover', marginRight: '18px' }} />
+                      ) : null}
+                      <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: 0 }}>{displayName}</h1>
+                    </div>
+                    <div style={{ fontSize: '16px', color: '#6b7280', margin: '18px 0 0 0', textAlign: 'center', width: '100%' }}>
+                      Academic Year: {selected.session}
+                    </div>
+                    <div style={{ position: 'absolute', right: 24, bottom: 8, fontSize: '14px', color: '#9ca3af', textAlign: 'right' }}>
+                      Generated on: {new Date(selected.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </div>
+                  </div>
+                );
+              }
+            )()}
+
+            {/* Card Header */}
+            <Card.Header className="no-print" style={{
+              background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+              border: 'none',
+              padding: '1.25rem 1.5rem'
+            }}>
+              <Row className="align-items-center">
+                <Col xs={12} lg={6}>
+                  <div className="d-flex align-items-center gap-3 mb-3 mb-lg-0">
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '10px',
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '20px'
+                    }}>
+                      📚
+                    </div>
+                    <div>
+                      <h4 className="mb-1" style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>
+                        Timetable #{selected.instituteTimeTableID}
+                      </h4>
+                      <div className="d-flex flex-wrap gap-2 align-items-center">
+                        <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', padding: '3px 8px', borderRadius: '6px' }}>
+                          <FaCalendarAlt className="me-1" style={{ fontSize: '0.75rem' }} />
+                          {selected.session} • {selected.year}
+                        </Badge>
+                        {selected.currentStatus && (
+                          <Badge style={{
+                            background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                            fontSize: '0.8rem',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            border: 'none'
+                          }}>
+                            <FaStar className="me-1" style={{ fontSize: '0.75rem' }} />
+                            Current
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+                
+                {isAdmin && (
+                  <Col xs={12} lg={6}>
+                    <div className="d-flex flex-wrap gap-3 justify-content-lg-end">
+                      <Form.Check
+                        type="switch"
+                        id="visibility-switch"
+                        label={
+                          <span className="d-flex align-items-center gap-2" style={{ color: '#fff', fontWeight: 500, fontSize: '0.9rem' }}>
+                            {selected.visibility ? <FaEye style={{ fontSize: '0.875rem' }} /> : <FaEyeSlash style={{ fontSize: '0.875rem' }} />}
+                            {selected.visibility ? 'Visible' : 'Hidden'}
+                          </span>
+                        }
+                        checked={!!selected.visibility}
+                        onChange={(e) => updateHeader(selected.instituteTimeTableID, { visibility: e.target.checked })}
+                      />
+                      <Form.Check
+                        type="switch"
+                        id="current-switch"
+                        label={
+                          <span className="d-flex align-items-center gap-2" style={{ color: '#fff', fontWeight: 500, fontSize: '0.9rem' }}>
+                            <FaStar style={{ fontSize: '0.875rem' }} />
+                            Current
+                          </span>
+                        }
+                        checked={!!selected.currentStatus}
+                        onChange={(e) => updateHeader(selected.instituteTimeTableID, { currentStatus: e.target.checked })}
+                      />
+                    </div>
+                  </Col>
+                )}
+              </Row>
+            </Card.Header>
+
+            <Card.Body className="p-3 p-md-4">
+              {loading ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border" style={{ color: '#7e22ce', width: '2.5rem', height: '2.5rem' }} role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-3" style={{ color: '#6b7280', fontWeight: 500, fontSize: '0.9rem' }}>Loading timetable details...</p>
+                </div>
+              ) : (
+                <TimetableTables details={details} header={selected} />
+              )}
+            </Card.Body>
+          </Card>
+        </motion.div>
+      )}
+    </Container>
   );
 }
 
@@ -435,7 +654,21 @@ function parseStartMinutes(timeRange) {
 
 function TimetableTables({ details, header }) {
   if (!Array.isArray(details) || details.length === 0) {
-    return <div style={{ color: '#6b7280' }}>No rows</div>;
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-center py-5"
+        style={{
+          background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%)',
+          borderRadius: '14px',
+          border: '2px dashed rgba(126, 34, 206, 0.2)'
+        }}
+      >
+        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: 0.3 }}>📋</div>
+        <p style={{ color: '#6b7280', fontWeight: 500, fontSize: '0.95rem' }}>No schedule data available</p>
+      </motion.div>
+    );
   }
 
   // Build unique sets
@@ -496,89 +729,264 @@ function TimetableTables({ details, header }) {
     classMap.get(klass).push({ ...d, day, time });
   }
 
-  const containerStyle = { display: 'grid', gap: '16px' };
-  const tableWrapper = { border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', background: '#fff' };
-  const titleStyle = { padding: '10px 12px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb', fontWeight: 700, color: '#111827' };
-  const gridStyle = {
-    display: 'grid',
-    gridTemplateColumns: `160px repeat(${allTimes.length}, 1fr)`,
-    borderTop: '1px solid #e5e7eb'
-  };
-  const cellStyle = { borderRight: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb', padding: 10, minHeight: 72 };
-  const headCellStyle = { ...cellStyle, background: '#f3f4f6', fontWeight: 600, color: '#374151', textAlign: 'center' };
-  const headBreakStyle = { ...headCellStyle, background: '#fff7ed', color: '#9a3412' };
-  const dayCellStyle = { ...cellStyle, background: '#fafafa', fontWeight: 600, color: '#374151', width: 160 };
-
   return (
-    <div style={containerStyle}>
-      {Array.from(classMap.entries()).map(([klass, rows]) => {
+    <div style={{ display: 'grid', gap: '24px' }}>
+      {Array.from(classMap.entries()).map(([klass, rows], classIndex) => {
         // Index rows for O(1) cell lookup: key = day|time
         const byKey = new Map();
         for (const r of rows) byKey.set(`${r.day}|${r.time}`, r);
 
         return (
-          <div key={klass} style={tableWrapper}>
-            <div style={{ ...titleStyle, textAlign: 'center' }}>Class: {klass}</div>
-            <div style={gridStyle}>
-              <div style={headCellStyle}></div>
-              {allTimes.map((t, idx) => (
-                <div key={idx} style={typeof t !== 'string' && t.__break ? headBreakStyle : headCellStyle}>
-                  {typeof t === 'string' ? t : (t.__break ? t.range : '')}
-                </div>
-              ))}
-
-              {days.map((day, di) => (
-                <React.Fragment key={day}>
-                  <div style={dayCellStyle}>{day}</div>
-                  {allTimes.map((t, i) => {
-                    if (typeof t !== 'string' && t.__break) {
-                      if (di === 0) {
-                        // Single merged break cell spanning all day rows
-                        return (
-                          <div
-                            key={`break-col-${i}`}
-                            style={{
-                              ...cellStyle,
-                              background: '#fff7ed',
-                              textAlign: 'center',
-                              color: '#9a3412',
-                              fontWeight: 700,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gridRow: `span ${days.length}`
-                            }}
-                          >
-                            Break
-                          </div>
-                        );
-                      }
-                      // Omit for other days — spanned cell covers them
-                      return null;
-                    }
-                    const row = byKey.get(`${day}|${t}`);
-                    return (
-                      <div key={`${day}-${i}`} style={cellStyle}>
-                        {row ? (
-                          <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>
-                              {row.roomNumber}
-                            </div>
-                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', textAlign: 'center', margin: '4px 0' }}>
-                              {row.course}
-                            </div>
-                            <div style={{ fontSize: '12px', fontWeight: 500, color: '#374151', textAlign: 'right' }}>
-                              {row.instructorName}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </React.Fragment>
-              ))}
+          <motion.div
+            key={klass}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: classIndex * 0.1 }}
+            style={{
+              border: '1px solid rgba(126, 34, 206, 0.15)',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
+            }}
+          >
+            {/* Class Title Header */}
+            <div style={{
+              padding: '14px 18px',
+              background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+              borderBottom: '1px solid rgba(126, 34, 206, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px'
+              }}>
+                <FaGraduationCap style={{ color: '#fff' }} />
+              </div>
+              <h5 style={{
+                margin: 0,
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 'clamp(0.95rem, 1.8vw, 1.1rem)',
+                letterSpacing: '0.3px'
+              }}>
+                Class: {klass}
+              </h5>
             </div>
-          </div>
+
+            {/* Responsive Table Wrapper */}
+            <div className="table-responsive">
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: `minmax(100px, 160px) repeat(${allTimes.length}, minmax(140px, 1fr))`,
+                minWidth: 'fit-content'
+              }}>
+                {/* Header Row */}
+                <div style={{
+                  padding: '12px 10px',
+                  background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+                  fontWeight: 700,
+                  color: '#374151',
+                  fontSize: '0.8rem',
+                  borderRight: '1px solid #e5e7eb',
+                  borderBottom: '2px solid #7e22ce',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'sticky',
+                  left: 0,
+                  zIndex: 2,
+                  boxShadow: '2px 0 4px rgba(0, 0, 0, 0.05)'
+                }}>
+                  <FaClock className="me-2" style={{ color: '#7e22ce', fontSize: '0.75rem' }} />
+                  Day / Time
+                </div>
+
+                {allTimes.map((t, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: '12px 10px',
+                      background: typeof t !== 'string' && t.__break
+                        ? 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)'
+                        : 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+                      fontWeight: 600,
+                      color: typeof t !== 'string' && t.__break ? '#9a3412' : '#374151',
+                      fontSize: '0.75rem',
+                      textAlign: 'center',
+                      borderRight: '1px solid #e5e7eb',
+                      borderBottom: '2px solid #7e22ce',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    {typeof t !== 'string' && t.__break && <FaClock style={{ fontSize: '0.7rem' }} />}
+                    {typeof t === 'string' ? t : (t.__break ? t.range : '')}
+                  </div>
+                ))}
+
+                {/* Data Rows */}
+                {days.map((day, di) => (
+                  <React.Fragment key={day}>
+                    <div style={{
+                      padding: '14px 10px',
+                      background: di % 2 === 0
+                        ? 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%)'
+                        : 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
+                      fontWeight: 700,
+                      color: '#374151',
+                      fontSize: '0.85rem',
+                      borderRight: '1px solid #e5e7eb',
+                      borderBottom: di === days.length - 1 ? 'none' : '1px solid #e5e7eb',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      position: 'sticky',
+                      left: 0,
+                      zIndex: 1,
+                      boxShadow: '2px 0 4px rgba(0, 0, 0, 0.03)'
+                    }}>
+                      <FaCalendarAlt style={{ color: '#7e22ce', fontSize: '0.75rem' }} />
+                      {day}
+                    </div>
+
+                    {allTimes.map((t, i) => {
+                      if (typeof t !== 'string' && t.__break) {
+                        if (di === 0) {
+                          return (
+                            <div
+                              key={`break-col-${i}`}
+                              style={{
+                                padding: '14px 10px',
+                                background: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)',
+                                textAlign: 'center',
+                                color: '#9a3412',
+                                fontWeight: 700,
+                                fontSize: '0.85rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                gridRow: `span ${days.length}`,
+                                borderRight: '1px solid #fdba74',
+                                borderLeft: '2px solid #fb923c',
+                                boxShadow: 'inset 0 2px 4px rgba(154, 52, 18, 0.1)'
+                              }}
+                            >
+                              <FaClock style={{ fontSize: '0.75rem' }} />
+                              Break Time
+                            </div>
+                          );
+                        }
+                        return null;
+                      }
+
+                      const row = byKey.get(`${day}|${t}`);
+                      return (
+                        <div
+                          key={`${day}-${i}`}
+                          style={{
+                            padding: row ? '12px' : '16px',
+                            background: di % 2 === 0 ? '#ffffff' : '#fafafa',
+                            borderRight: '1px solid #e5e7eb',
+                            borderBottom: di === days.length - 1 ? 'none' : '1px solid #e5e7eb',
+                            minHeight: row ? '100px' : '80px',
+                            transition: 'all 0.3s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (row) {
+                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(126, 34, 206, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)';
+                              e.currentTarget.style.transform = 'scale(1.02)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(126, 34, 206, 0.15)';
+                              e.currentTarget.style.zIndex = '3';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (row) {
+                              e.currentTarget.style.background = di % 2 === 0 ? '#ffffff' : '#fafafa';
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.boxShadow = 'none';
+                              e.currentTarget.style.zIndex = '0';
+                            }
+                          }}
+                        >
+                          {row ? (
+                            <div style={{
+                              position: 'relative',
+                              height: '100%',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '8px'
+                            }}>
+                              {/* Room Number */}
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                color: '#7e22ce',
+                                background: 'rgba(126, 34, 206, 0.1)',
+                                padding: '3px 6px',
+                                borderRadius: '5px',
+                                width: 'fit-content'
+                              }}>
+                                <FaDoorOpen style={{ fontSize: '0.65rem' }} />
+                                {row.roomNumber}
+                              </div>
+
+                              {/* Course Name */}
+                              <div style={{
+                                fontSize: '0.8rem',
+                                fontWeight: 700,
+                                color: '#111827',
+                                textAlign: 'center',
+                                flex: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                lineHeight: '1.2',
+                                padding: '2px 0'
+                              }}>
+                                {row.course}
+                              </div>
+
+                              {/* Instructor Name */}
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'flex-end',
+                                gap: '4px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                color: '#6b7280',
+                                background: 'rgba(107, 114, 128, 0.08)',
+                                padding: '3px 6px',
+                                borderRadius: '5px'
+                              }}>
+                                <FaChalkboardTeacher style={{ fontSize: '0.65rem' }} />
+                                {row.instructorName}
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </motion.div>
         );
       })}
     </div>
