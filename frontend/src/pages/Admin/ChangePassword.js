@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 import { motion } from 'framer-motion';
-import { FaLock, FaKey, FaCheckCircle, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaLock, FaKey, FaCheckCircle, FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa';
 import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
@@ -10,6 +11,7 @@ const MotionCard = motion(Card);
 const MotionButton = motion(Button);
 
 const ChangePassword = () => {
+  const navigate = useNavigate();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [saving, setSaving] = useState(false);
@@ -47,18 +49,41 @@ const ChangePassword = () => {
           <div className="floating-shape shape-3"></div>
         </div>
         <Container fluid className="dashboard-content">
-          <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{
-              fontSize: '1.875rem',
-              fontWeight: '700',
-              color: '#7c3aed',
-              marginBottom: '0.5rem'
-            }}>
-              Change Password
-            </h1>
-            <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
-              Update your account password
-            </p>
+          <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <MotionButton
+              whileHover={{ scale: 1.05, x: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/admin/profile')}
+              style={{
+                background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '0.6rem 0.8rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              title="Back to Profile"
+            >
+              <FaArrowLeft style={{ fontSize: '1.1rem', color: 'white' }} />
+            </MotionButton>
+            <div>
+              <h1 style={{
+                fontSize: '1.875rem',
+                fontWeight: '700',
+                color: '#7c3aed',
+                marginBottom: '0.5rem',
+                margin: 0
+              }}>
+                Change Password
+              </h1>
+              <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
+                Update your account password
+              </p>
+            </div>
           </div>
 
           <MotionCard

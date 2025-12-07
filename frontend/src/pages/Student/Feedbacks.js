@@ -15,7 +15,6 @@ const StudentFeedbacksPage = () => {
           <div className="floating-shape shape-3"></div>
         </div>
         <Container fluid className="dashboard-content">
-          <h1 className="dashboard-title mb-4">Feedback Conversations</h1>
           <Feedback />
         </Container>
       </div>
