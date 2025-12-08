@@ -1,19 +1,237 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Card, Button, Badge, Form, Row, Col } from 'react-bootstrap';
+import { Container, Card, Button, Badge, Form, Row, Col, Alert } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeInUp, fadeIn, scaleIn } from './animation_variants';
-import { FaPrint, FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen } from 'react-icons/fa';
+import { FaPrint, FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen, FaEdit, FaSave, FaTimes, FaExchangeAlt } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 function TimeTable({ isAdmin = false }) {
   const navigate = useNavigate();
+  const { user, instituteObjectId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]); // headers list
   const [selected, setSelected] = useState(null); // selected header
   const [details, setDetails] = useState([]); // details for selected
   const [instituteInfo, setInstituteInfo] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editDetails, setEditDetails] = useState([]);
+  const [swapBox, setSwapBox] = useState({}); // Organized by class: { className: [cells] }
+  const [selectedCells, setSelectedCells] = useState([]); // Array of {index, class}
+  const [successMessage, setSuccessMessage] = useState('');
+  const [renderKey, setRenderKey] = useState(0);
+  const [swappingCells, setSwappingCells] = useState(null); // { cell1: index, cell2: index }
+  const [showCellModal, setShowCellModal] = useState(false);
+  const [modalCellData, setModalCellData] = useState(null);
+  const [hoveredCell, setHoveredCell] = useState(null);
+  const [allCourses, setAllCourses] = useState([]);
+  const [allRooms, setAllRooms] = useState([]);
+  const [allTeachers, setAllTeachers] = useState([]);
+  const [modalForm, setModalForm] = useState({ course: '', room: '', instructor: '' });
+  const [allClasses, setAllClasses] = useState([]);
 
+  // Auto-scroll during drag
+  useEffect(() => {
+    let scrollInterval = null;
+    
+    const handleDragOver = (e) => {
+      if (!isEditMode) return;
+      
+      const scrollZone = 100; // pixels from edge to trigger scroll
+      const scrollSpeed = 10; // pixels per interval
+      const viewportHeight = window.innerHeight;
+      const mouseY = e.clientY;
+      
+      // Clear any existing interval
+      if (scrollInterval) {
+        clearInterval(scrollInterval);
+        scrollInterval = null;
+      }
+      
+      // Scroll down if near bottom
+      if (mouseY > viewportHeight - scrollZone) {
+        scrollInterval = setInterval(() => {
+          window.scrollBy(0, scrollSpeed);
+        }, 20);
+      }
+      // Scroll up if near top
+      else if (mouseY < scrollZone) {
+        scrollInterval = setInterval(() => {
+          window.scrollBy(0, -scrollSpeed);
+        }, 20);
+      }
+    };
+    
+    const handleDragEnd = () => {
+      if (scrollInterval) {
+        clearInterval(scrollInterval);
+        scrollInterval = null;
+      }
+    };
+    
+    if (isEditMode) {
+      document.addEventListener('dragover', handleDragOver);
+      document.addEventListener('dragend', handleDragEnd);
+      document.addEventListener('drop', handleDragEnd);
+    }
+    
+    return () => {
+      if (scrollInterval) {
+        clearInterval(scrollInterval);
+      }
+      document.removeEventListener('dragover', handleDragOver);
+      document.removeEventListener('dragend', handleDragEnd);
+      document.removeEventListener('drop', handleDragEnd);
+    };
+  }, [isEditMode]);
+
+  // Fetch courses, rooms, teachers for modal dropdowns
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        console.log('=== CHECKING AUTH ===');
+        console.log('Token exists:', !!token);
+        console.log('User from context:', user);
+        console.log('instituteObjectId from context:', instituteObjectId);
+        
+        if (!token) {
+          console.error('No token found');
+          return;
+        }
+        
+        if (!user) {
+          console.error('No user in AuthContext');
+          return;
+        }
+
+        // Use instituteObjectId from AuthContext (same as Courses page)
+        const instituteParam = instituteObjectId || user?.instituteID;
+
+        console.log('=== FETCHING DROPDOWN DATA ===');
+        console.log('Using Institute ID:', instituteParam);
+        
+        if (!instituteParam) {
+          console.error('No institute ID found in user data');
+          // Continue anyway - we can still fetch data
+        }
+
+        // Fetch courses - needs instituteID in URL path
+        if (instituteParam) {
+          try {
+            const coursesUrl = `http://localhost:5000/api/courses/${instituteParam}`;
+            console.log('Fetching courses from:', coursesUrl);
+            const coursesRes = await fetch(coursesUrl, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            console.log('Courses response status:', coursesRes.status);
+            
+            if (coursesRes.ok) {
+              const coursesData = await coursesRes.json();
+              console.log('Raw courses response:', coursesData);
+              
+              let courses = Array.isArray(coursesData) ? coursesData : (coursesData.data || coursesData.courses || []);
+              console.log('Parsed courses array:', courses);
+              console.log('Number of courses:', courses.length);
+              
+              // Log first course to see structure
+              if (courses.length > 0) {
+                console.log('First course object:', courses[0]);
+                console.log('First course fields:', {
+                  courseCode: courses[0].courseCode,
+                  courseTitle: courses[0].courseTitle,
+                  courseName: courses[0].courseName,
+                  name: courses[0].name
+                });
+              }
+              
+              setAllCourses(courses);
+            } else {
+              const errorText = await coursesRes.text();
+              console.error('Courses fetch failed with status:', coursesRes.status, 'Error:', errorText);
+              setAllCourses([]);
+            }
+          } catch (err) {
+            console.error('Error fetching courses:', err);
+            setAllCourses([]);
+          }
+        } else {
+          console.warn('Skipping courses fetch - no institute ID');
+          setAllCourses([]);
+        }
+
+        // Fetch rooms
+        try {
+          const roomsUrl = 'http://localhost:5000/api/rooms';
+          console.log('Fetching rooms from:', roomsUrl);
+          const roomsRes = await fetch(roomsUrl, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          console.log('Rooms response status:', roomsRes.status);
+          
+          if (roomsRes.ok) {
+            const roomsData = await roomsRes.json();
+            console.log('Raw rooms response:', roomsData);
+            
+            let rooms = Array.isArray(roomsData) ? roomsData : (roomsData.data || roomsData.rooms || []);
+            console.log('Parsed rooms array:', rooms);
+            console.log('Number of rooms:', rooms.length);
+            
+            setAllRooms(rooms);
+          } else {
+            const errorText = await roomsRes.text();
+            console.error('Rooms fetch failed with status:', roomsRes.status, 'Error:', errorText);
+            setAllRooms([]);
+          }
+        } catch (err) {
+          console.error('Error fetching rooms:', err);
+          setAllRooms([]);
+        }
+
+        // Fetch teachers - use /institute endpoint with protection
+        try {
+          const teachersUrl = 'http://localhost:5000/api/users/institute';
+          console.log('Fetching teachers from:', teachersUrl);
+          const teachersRes = await fetch(teachersUrl, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          console.log('Teachers response status:', teachersRes.status);
+          
+          if (teachersRes.ok) {
+            const teachersData = await teachersRes.json();
+            console.log('Raw teachers response:', teachersData);
+            
+            let teachers = Array.isArray(teachersData) ? teachersData : (teachersData.data || teachersData.users || []);
+            // Filter only teachers
+            teachers = teachers.filter(t => t.designation === 'Teacher');
+            console.log('Parsed teachers array:', teachers);
+            console.log('Number of teachers:', teachers.length);
+            
+            setAllTeachers(teachers);
+          } else {
+            const errorText = await teachersRes.text();
+            console.error('Teachers fetch failed with status:', teachersRes.status, 'Error:', errorText);
+            setAllTeachers([]);
+          }
+        } catch (err) {
+          console.error('Error fetching teachers:', err);
+          setAllTeachers([]);
+        }
+
+        console.log('=== FETCH COMPLETE ===');
+      } catch (err) {
+        console.error('Error in fetchDropdownData:', err);
+      }
+    };
+
+    if (isEditMode) {
+      console.log('Edit mode enabled, fetching dropdown data...');
+      fetchDropdownData();
+    }
+  }, [isEditMode, user, instituteObjectId]);
+  
   useEffect(() => {
     const fetchInstituteInfo = async () => {
       try {
@@ -197,6 +415,287 @@ function TimeTable({ isAdmin = false }) {
     }
   }, [instituteInfo]);
 
+  const enterEditMode = useCallback(() => {
+    // Create a complete grid with all possible cells (including empty ones)
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    const allClasses = [...new Set(details.map(d => String(d.class || '')))];
+    const allTimes = [...new Set(details.map(d => String(d.time || '')).filter(Boolean))].sort();
+    
+    // Store all classes for removal boxes
+    setAllClasses(allClasses);
+    
+    // Build a map of existing data
+    const existingData = new Map();
+    details.forEach(d => {
+      const key = `${d.class}|${d.day}|${d.time}`;
+      existingData.set(key, { ...d });
+    });
+    
+    // Create complete grid with all cells
+    const completeGrid = [];
+    allClasses.forEach(cls => {
+      days.forEach(day => {
+        allTimes.forEach(time => {
+          const key = `${cls}|${day}|${time}`;
+          if (existingData.has(key)) {
+            completeGrid.push(existingData.get(key));
+          } else {
+            // Create empty cell placeholder
+            completeGrid.push({
+              class: cls,
+              day: day,
+              time: time,
+              course: '',
+              roomNumber: '',
+              instructorName: '',
+              breakStart: details[0]?.breakStart || '',
+              breakEnd: details[0]?.breakEnd || ''
+            });
+          }
+        });
+      });
+    });
+    
+    setEditDetails(completeGrid);
+    setSwapBox({});
+    setSelectedCells([]);
+    setIsEditMode(true);
+    setSuccessMessage('');
+    setError('');
+  }, [details]);
+
+  const cancelEditMode = useCallback(() => {
+    setIsEditMode(false);
+    setEditDetails([]);
+    setSwapBox({});
+    setSelectedCells([]);
+    setShowCellModal(false);
+    setModalCellData(null);
+    setHoveredCell(null);
+    setSuccessMessage('');
+    setError('');
+  }, []);
+
+  const saveEditedTimetable = useCallback(async () => {
+    if (!selected) return;
+    try {
+      setLoading(true);
+      setError('');
+      setSuccessMessage('');
+      const token = localStorage.getItem('token');
+      
+      const res = await fetch(`http://localhost:5000/api/timetables-gen/details/${encodeURIComponent(selected.instituteTimeTableID)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ details: editDetails })
+      });
+      
+      if (!res.ok) throw new Error(await res.text());
+      
+      setDetails(editDetails);
+      setIsEditMode(false);
+      setSwapBox({});
+      setSelectedCells([]);
+      setSuccessMessage('Timetable updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (e) {
+      setError('Failed to save timetable changes');
+    } finally {
+      setLoading(false);
+    }
+  }, [selected, editDetails]);
+
+  // Click to select cells
+  const handleCellClick = useCallback((cellIndex, className) => {
+    if (!isEditMode) return;
+    
+    const alreadySelected = selectedCells.findIndex(s => s.index === cellIndex);
+    if (alreadySelected >= 0) {
+      // Deselect
+      setSelectedCells(selectedCells.filter((_, i) => i !== alreadySelected));
+    } else {
+      // Only allow selecting up to 2 cells from same class
+      if (selectedCells.length >= 2) {
+        // Already have 2 selected, don't allow more
+        return;
+      }
+      
+      if (selectedCells.length === 1 && selectedCells[0].class !== className) {
+        // First selection is from different class, don't allow
+        return;
+      }
+      
+      setSelectedCells([...selectedCells, { index: cellIndex, class: className }]);
+    }
+  }, [isEditMode, selectedCells]);
+
+  // Remove cell content (make it empty)
+  const handleRemoveCell = useCallback((cellIndex) => {
+    const newDetails = [...editDetails];
+    newDetails[cellIndex] = {
+      ...newDetails[cellIndex],
+      course: '',
+      roomNumber: '',
+      instructorName: ''
+    };
+    setEditDetails(newDetails);
+    setSelectedCells(selectedCells.filter(s => s.index !== cellIndex));
+  }, [editDetails, selectedCells]);
+
+  // Open modal to add/update cell
+  const handleOpenCellModal = useCallback((cellIndex, isEmpty) => {
+    const cellData = editDetails[cellIndex];
+    setModalCellData({ index: cellIndex, isEmpty });
+    setModalForm({
+      course: cellData?.course || '',
+      room: cellData?.roomNumber || '',
+      instructor: cellData?.instructorName || ''
+    });
+    setShowCellModal(true);
+  }, [editDetails]);
+
+  // Save cell data from modal
+  const handleSaveCellModal = useCallback(() => {
+    if (!modalCellData || !modalForm.course) return;
+    
+    const newDetails = [...editDetails];
+    newDetails[modalCellData.index] = {
+      ...newDetails[modalCellData.index],
+      course: modalForm.course,
+      roomNumber: modalForm.room,
+      instructorName: modalForm.instructor
+    };
+    setEditDetails(newDetails);
+    setShowCellModal(false);
+    setModalCellData(null);
+    setHoveredCell(null);
+  }, [editDetails, modalCellData, modalForm]);
+
+  // Close modal
+  const handleCloseCellModal = useCallback(() => {
+    setShowCellModal(false);
+    setModalCellData(null);
+  }, []);
+
+  // Drag start from timetable cell
+  const handleDragStart = useCallback((e, cell, cellIndex, className) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('cellIndex', cellIndex.toString());
+    e.dataTransfer.setData('cellData', JSON.stringify(cell));
+    e.dataTransfer.setData('className', className);
+  }, []);
+
+  // Drop to swap box (removes from timetable, adds to swap box)
+  const handleDropToSwapBox = useCallback((e, targetClass) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const cellIndex = parseInt(e.dataTransfer.getData('cellIndex'), 10);
+      const className = e.dataTransfer.getData('className');
+      const cellDataStr = e.dataTransfer.getData('cellData');
+      
+      if (isNaN(cellIndex) || cellIndex < 0 || !className || !cellDataStr) return;
+      
+      const cellData = JSON.parse(cellDataStr);
+      const actualClass = className; // Use the class from the dragged cell
+      
+      // Add to swap box for this class
+      setSwapBox(prev => ({
+        ...prev,
+        [actualClass]: [...(prev[actualClass] || []), { ...cellData, originalIndex: cellIndex }]
+      }));
+      
+      // Make the cell empty in timetable
+      const newDetails = [...editDetails];
+      newDetails[cellIndex] = {
+        ...newDetails[cellIndex],
+        course: '',
+        roomNumber: '',
+        instructorName: ''
+      };
+      setEditDetails(newDetails);
+    } catch (error) {
+      console.error('Drop to swap box error:', error);
+    }
+  }, [editDetails]);
+
+  // Remove from swap box (just removes, doesn't put back)
+  const handleRemoveFromSwapBox = useCallback((className, idx) => {
+    setSwapBox(prev => ({
+      ...prev,
+      [className]: prev[className].filter((_, i) => i !== idx)
+    }));
+  }, []);
+
+  // Drop from swap box or timetable to empty cell
+  const handleDropToCell = useCallback((e, targetCellIndex, targetClassName) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const sourceCellIndex = e.dataTransfer.getData('cellIndex');
+      const sourceClassName = e.dataTransfer.getData('className');
+      const cellDataStr = e.dataTransfer.getData('cellData');
+      const swapBoxIndex = e.dataTransfer.getData('swapBoxIndex');
+      
+      // Must be same class
+      if (sourceClassName !== targetClassName) return;
+      
+      // Target must be valid and empty
+      const targetCell = editDetails[targetCellIndex];
+      if (!targetCell || targetCell.course) return; // Invalid or not empty
+      
+      const cellData = JSON.parse(cellDataStr);
+      const newDetails = [...editDetails];
+      
+      // Place the data in target cell
+      newDetails[targetCellIndex] = {
+        ...newDetails[targetCellIndex],
+        course: cellData.course,
+        roomNumber: cellData.roomNumber,
+        instructorName: cellData.instructorName
+      };
+      
+      // If source was from timetable (has valid index), clear it
+      if (sourceCellIndex && sourceCellIndex !== 'swap') {
+        const srcIdx = parseInt(sourceCellIndex, 10);
+        if (!isNaN(srcIdx) && srcIdx >= 0) {
+          newDetails[srcIdx] = {
+            ...newDetails[srcIdx],
+            course: '',
+            roomNumber: '',
+            instructorName: ''
+          };
+        }
+      }
+      // If source was from swap box, remove it from swap box
+      else if (sourceCellIndex === 'swap' && swapBoxIndex) {
+        const idx = parseInt(swapBoxIndex, 10);
+        if (!isNaN(idx) && idx >= 0) {
+          setSwapBox(prev => ({
+            ...prev,
+            [sourceClassName]: prev[sourceClassName].filter((_, i) => i !== idx)
+          }));
+        }
+      }
+      
+      setEditDetails(newDetails);
+    } catch (error) {
+      console.error('Drop to cell error:', error);
+    }
+  }, [editDetails]);
+
+  // Drag start from swap box
+  const handleDragFromSwapBox = useCallback((e, cell, className, swapBoxIndex) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('cellIndex', 'swap');
+    e.dataTransfer.setData('cellData', JSON.stringify(cell));
+    e.dataTransfer.setData('className', className);
+    e.dataTransfer.setData('swapBoxIndex', swapBoxIndex.toString());
+  }, []);
+
   return (
     <Container fluid className="p-3 p-md-4" style={{ minHeight: '100vh' }}>
       {/* Header Section */}
@@ -231,7 +730,7 @@ function TimeTable({ isAdmin = false }) {
           </div>
 
           <div className="d-flex flex-wrap gap-2 no-print">
-            {selected && (
+            {selected && !isEditMode && (
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   variant="success"
@@ -253,60 +752,125 @@ function TimeTable({ isAdmin = false }) {
             )}
             {isAdmin && (
               <>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    onClick={generateTimetable}
-                    disabled={loading}
-                    className="d-flex align-items-center gap-2"
-                    style={{
-                      background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '10px',
-                      fontWeight: 600,
-                      fontSize: '0.875rem',
-                      boxShadow: '0 2px 8px rgba(126, 34, 206, 0.25)',
-                      opacity: loading ? 0.6 : 1
-                    }}
-                  >
-                    <FaPlus style={{ fontSize: '0.875rem' }} /> Generate New
-                  </Button>
-                </motion.div>
-                {selected && (
+                {!isEditMode && (
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button
-                      onClick={async () => {
-                        try {
-                          const confirmDel = window.confirm(`Delete timetable ${selected.instituteTimeTableID}? This cannot be undone.`);
-                          if (!confirmDel) return;
-                          const token = localStorage.getItem('token');
-                          const res = await fetch(`http://localhost:5000/api/timetables-gen/${encodeURIComponent(selected.instituteTimeTableID)}`, {
-                            method: 'DELETE',
-                            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                          });
-                          if (!res.ok) throw new Error(await res.text());
-                          await fetchList();
-                        } catch (e) {
-                          setError('Failed to delete timetable');
-                        }
-                      }}
+                      onClick={generateTimetable}
                       disabled={loading}
-                      variant="danger"
                       className="d-flex align-items-center gap-2"
                       style={{
-                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                        background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '10px',
                         fontWeight: 600,
                         fontSize: '0.875rem',
-                        boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)',
+                        boxShadow: '0 2px 8px rgba(126, 34, 206, 0.25)',
                         opacity: loading ? 0.6 : 1
                       }}
                     >
-                      <FaTrash style={{ fontSize: '0.875rem' }} /> Delete
+                      <FaPlus style={{ fontSize: '0.875rem' }} /> Generate New
                     </Button>
                   </motion.div>
+                )}
+                {selected && isEditMode && (
+                  <>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        onClick={saveEditedTimetable}
+                        disabled={loading}
+                        className="d-flex align-items-center gap-2"
+                        style={{
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem',
+                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
+                          opacity: loading ? 0.6 : 1
+                        }}
+                      >
+                        <FaSave style={{ fontSize: '0.875rem' }} /> Save Changes
+                      </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        onClick={cancelEditMode}
+                        disabled={loading}
+                        variant="secondary"
+                        className="d-flex align-items-center gap-2"
+                        style={{
+                          background: '#6b7280',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem',
+                          boxShadow: '0 2px 8px rgba(107, 114, 128, 0.25)'
+                        }}
+                      >
+                        <FaTimes style={{ fontSize: '0.875rem' }} /> Cancel
+                      </Button>
+                    </motion.div>
+                  </>
+                )}
+                {selected && !isEditMode && (
+                  <>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        onClick={enterEditMode}
+                        disabled={loading}
+                        className="d-flex align-items-center gap-2"
+                        style={{
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem',
+                          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.25)',
+                          opacity: loading ? 0.6 : 1
+                        }}
+                      >
+                        <FaEdit style={{ fontSize: '0.875rem' }} /> Edit
+                      </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            const confirmDel = window.confirm(`Delete timetable ${selected.instituteTimeTableID}? This cannot be undone.`);
+                            if (!confirmDel) return;
+                            const token = localStorage.getItem('token');
+                            const res = await fetch(`http://localhost:5000/api/timetables-gen/${encodeURIComponent(selected.instituteTimeTableID)}`, {
+                              method: 'DELETE',
+                              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                            });
+                            if (!res.ok) throw new Error(await res.text());
+                            await fetchList();
+                          } catch (e) {
+                            setError('Failed to delete timetable');
+                          }
+                        }}
+                        disabled={loading}
+                        variant="danger"
+                        className="d-flex align-items-center gap-2"
+                        style={{
+                          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem',
+                          boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)',
+                          opacity: loading ? 0.6 : 1
+                        }}
+                      >
+                        <FaTrash style={{ fontSize: '0.875rem' }} /> Delete
+                      </Button>
+                    </motion.div>
+                  </>
                 )}
               </>
             )}
@@ -331,6 +895,25 @@ function TimeTable({ isAdmin = false }) {
             }}>
               <Card.Body className="p-3">
                 <p className="mb-0" style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ {error}</p>
+              </Card.Body>
+            </Card>
+          </motion.div>
+        )}
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="mb-4" style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
+              border: '2px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)'
+            }}>
+              <Card.Body className="p-3">
+                <p className="mb-0" style={{ color: '#059669', fontWeight: 600 }}>✅ {successMessage}</p>
               </Card.Body>
             </Card>
           </motion.div>
@@ -582,12 +1165,396 @@ function TimeTable({ isAdmin = false }) {
                   <p className="mt-3" style={{ color: '#6b7280', fontWeight: 500, fontSize: '0.9rem' }}>Loading timetable details...</p>
                 </div>
               ) : (
-                <TimetableTables details={details} header={selected} />
+                <>
+                  {/* Removal Boxes - Only in Edit Mode */}
+                  {isEditMode && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-4"
+                    >
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        <FaTrash style={{ color: '#ef4444', fontSize: '1.2rem' }} />
+                        <h5 className="mb-0" style={{
+                          fontSize: '1rem',
+                          fontWeight: 700,
+                          color: '#dc2626'
+                        }}>
+                          Removed Cells
+                        </h5>
+                      </div>
+
+                      {Object.keys(swapBox).length === 0 ? (
+                        <Card style={{
+                          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(220, 38, 38, 0.05) 100%)',
+                          border: '2px dashed #ef4444',
+                          borderRadius: '16px',
+                          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.1)'
+                        }}>
+                          <Card.Body className="p-3">
+                            <div
+                              style={{
+                                minHeight: '100px',
+                                padding: '16px',
+                                borderRadius: '12px',
+                                border: '2px dashed rgba(239, 68, 68, 0.3)',
+                                background: 'rgba(239, 68, 68, 0.03)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#9ca3af',
+                                fontSize: '0.875rem',
+                                fontStyle: 'italic',
+                                transition: 'all 0.3s ease'
+                              }}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.currentTarget.style.borderColor = '#ef4444';
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                              }}
+                              onDragLeave={(e) => {
+                                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.03)';
+                              }}
+                              onDrop={(e) => {
+                                handleDropToSwapBox(e, null);
+                                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.03)';
+                              }}
+                            >
+                              Drag cells here to remove them from timetable
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      ) : (
+                        <div className="d-flex flex-column gap-3">
+                          {Object.keys(swapBox).map(className => (
+                          <Card key={className} style={{
+                            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(220, 38, 38, 0.05) 100%)',
+                            border: '2px dashed #ef4444',
+                            borderRadius: '16px',
+                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.1)'
+                          }}>
+                            <Card.Body className="p-3">
+                              <div style={{
+                                fontSize: '0.9rem',
+                                fontWeight: 700,
+                                color: '#374151',
+                                marginBottom: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                              }}>
+                                <FaDoorOpen style={{ color: '#ef4444', fontSize: '1rem' }} />
+                                Class: {className}
+                              </div>
+
+                              <div
+                                style={{
+                                  minHeight: '80px',
+                                  padding: '12px',
+                                  borderRadius: '12px',
+                                  border: '2px dashed rgba(239, 68, 68, 0.3)',
+                                  background: 'rgba(239, 68, 68, 0.03)',
+                                  transition: 'all 0.3s ease'
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.currentTarget.style.borderColor = '#ef4444';
+                                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                                }}
+                                onDragLeave={(e) => {
+                                  e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.03)';
+                                }}
+                                onDrop={(e) => {
+                                  handleDropToSwapBox(e, className);
+                                  e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.03)';
+                                }}
+                              >
+                                <div className="d-flex gap-2 flex-wrap">
+                                  {swapBox[className].map((cell, idx) => (
+                                      <motion.div
+                                        key={idx}
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        draggable
+                                        onDragStart={(e) => handleDragFromSwapBox(e, cell, className, idx)}
+                                        style={{
+                                          background: 'white',
+                                          border: '2px solid #ef4444',
+                                          borderRadius: '10px',
+                                          padding: '10px',
+                                          minWidth: '180px',
+                                          boxShadow: '0 2px 8px rgba(239, 68, 68, 0.15)',
+                                          position: 'relative',
+                                          cursor: 'grab'
+                                        }}
+                                        onMouseDown={(e) => e.currentTarget.style.cursor = 'grabbing'}
+                                        onMouseUp={(e) => e.currentTarget.style.cursor = 'grab'}
+                                      >
+                                        <button
+                                          onClick={() => handleRemoveFromSwapBox(className, idx)}
+                                          style={{
+                                            position: 'absolute',
+                                            top: '4px',
+                                            right: '4px',
+                                            background: '#ef4444',
+                                            border: 'none',
+                                            color: 'white',
+                                            borderRadius: '50%',
+                                            width: '20px',
+                                            height: '20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            fontSize: '0.7rem',
+                                            fontWeight: 'bold'
+                                          }}
+                                        >
+                                          ×
+                                        </button>
+                                        <div style={{
+                                          fontSize: '0.75rem',
+                                          fontWeight: 700,
+                                          color: '#111827',
+                                          marginBottom: '4px'
+                                        }}>
+                                          {cell.course}
+                                        </div>
+                                        <div style={{
+                                          fontSize: '0.65rem',
+                                          fontWeight: 600,
+                                          color: '#6b7280',
+                                          marginBottom: '2px'
+                                        }}>
+                                          <FaDoorOpen className="me-1" style={{ fontSize: '0.6rem' }} />
+                                          {cell.roomNumber}
+                                        </div>
+                                        <div style={{
+                                          fontSize: '0.65rem',
+                                          fontWeight: 600,
+                                          color: '#6b7280'
+                                        }}>
+                                          <FaChalkboardTeacher className="me-1" style={{ fontSize: '0.6rem' }} />
+                                          {cell.instructorName}
+                                        </div>
+                                        <div style={{
+                                          fontSize: '0.6rem',
+                                          fontWeight: 600,
+                                          color: '#9ca3af',
+                                          marginTop: '4px'
+                                        }}>
+                                          {cell.day} - {cell.time}
+                                        </div>
+                                      </motion.div>
+                                    ))}
+                                  </div>
+                                </div>
+                            </Card.Body>
+                          </Card>
+                        ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                  
+                  <TimetableTables 
+                    key={`timetable-${renderKey}`}
+                    details={isEditMode ? editDetails : details} 
+                    header={selected} 
+                    isEditMode={isEditMode}
+                    onDragStart={handleDragStart}
+                    onDropToCell={handleDropToCell}
+                    onCellClick={handleCellClick}
+                    onRemoveCell={handleRemoveCell}
+                    selectedCells={selectedCells}
+                    setSelectedCells={setSelectedCells}
+                    editDetails={editDetails}
+                    swappingCells={swappingCells}
+                    setSwappingCells={setSwappingCells}
+                    hoveredCell={hoveredCell}
+                    setHoveredCell={setHoveredCell}
+                    handleOpenCellModal={handleOpenCellModal}
+                    setEditDetails={(newDetails) => {
+                      setEditDetails(newDetails);
+                      setRenderKey(prev => prev + 1);
+                    }}
+                  />
+                </>
               )}
             </Card.Body>
           </Card>
         </motion.div>
       )}
+
+      {/* Cell Add/Update Modal */}
+      <AnimatePresence>
+        {showCellModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999
+            }}
+            onClick={handleCloseCellModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '24px',
+                maxWidth: '500px',
+                width: '90%',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+              }}
+            >
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
+                  {modalCellData?.isEmpty ? (
+                    <>
+                      <FaPlus style={{ marginRight: '8px', color: '#10b981' }} />
+                      Add Class
+                    </>
+                  ) : (
+                    <>
+                      <FaEdit style={{ marginRight: '8px', color: '#3b82f6' }} />
+                      Update Class
+                    </>
+                  )}
+                </h4>
+                <button
+                  onClick={handleCloseCellModal}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: '#6b7280'
+                  }}
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <Form>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FaGraduationCap color="#7e22ce" />
+                    Course * ({allCourses.length} available)
+                  </Form.Label>
+                  <Form.Select
+                    value={modalForm.course}
+                    onChange={(e) => setModalForm({ ...modalForm, course: e.target.value })}
+                    style={{ borderColor: '#d1d5db' }}
+                  >
+                    <option value="">Select Course</option>
+                    {allCourses.map((course, idx) => {
+                      const displayText = course.courseCode && course.courseTitle 
+                        ? `${course.courseCode} - ${course.courseTitle}`
+                        : (course.courseTitle || course.courseCode || course.courseName || course.name || 'Unknown');
+                      const valueText = course.courseTitle || course.courseCode || course.courseName || course.name;
+                      return (
+                        <option key={course._id || idx} value={valueText}>
+                          {displayText}
+                        </option>
+                      );
+                    })}
+                  </Form.Select>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FaDoorOpen color="#059669" />
+                    Room ({allRooms.length} available)
+                  </Form.Label>
+                  <Form.Select
+                    value={modalForm.room}
+                    onChange={(e) => setModalForm({ ...modalForm, room: e.target.value })}
+                    style={{ borderColor: '#d1d5db' }}
+                  >
+                    <option value="">Select Room</option>
+                    {allRooms.map((room, idx) => (
+                      <option key={room._id || idx} value={room.roomNumber || room.number}>
+                        {room.roomNumber || room.number}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FaChalkboardTeacher color="#3b82f6" />
+                    Instructor ({allTeachers.length} available)
+                  </Form.Label>
+                  <Form.Select
+                    value={modalForm.instructor}
+                    onChange={(e) => setModalForm({ ...modalForm, instructor: e.target.value })}
+                    style={{ borderColor: '#d1d5db' }}
+                  >
+                    <option value="">Select Instructor</option>
+                    {allTeachers.map((teacher, idx) => (
+                      <option key={teacher._id || idx} value={teacher.userName || teacher.name}>
+                        {teacher.userName || teacher.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+                  <Button
+                    variant="success"
+                    onClick={handleSaveCellModal}
+                    disabled={!modalForm.course}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontWeight: 600
+                    }}
+                  >
+                    <FaSave />
+                    Save
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleCloseCellModal}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontWeight: 600
+                    }}
+                  >
+                    <FaTimes />
+                    Cancel
+                  </Button>
+                </div>
+              </Form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Container>
   );
 }
@@ -652,7 +1619,24 @@ function parseStartMinutes(timeRange) {
   return 0;
 }
 
-function TimetableTables({ details, header }) {
+function TimetableTables({ 
+  details, 
+  header, 
+  isEditMode = false, 
+  onDragStart = null, 
+  onDropToCell = null,
+  onCellClick = null,
+  onRemoveCell = null,
+  selectedCells = [],
+  setSelectedCells = null,
+  editDetails = [],
+  setEditDetails = null,
+  swappingCells = null,
+  setSwappingCells = null,
+  hoveredCell = null,
+  setHoveredCell = null,
+  handleOpenCellModal = null
+}) {
   if (!Array.isArray(details) || details.length === 0) {
     return (
       <motion.div
@@ -728,6 +1712,17 @@ function TimetableTables({ details, header }) {
     if (!classMap.has(klass)) classMap.set(klass, []);
     classMap.get(klass).push({ ...d, day, time });
   }
+
+  // Create a global index map for all cells (including empty ones in edit mode)
+  const cellIndexMap = new Map();
+  const dataSource = isEditMode ? editDetails : details;
+  dataSource.forEach((d, idx) => {
+    // For empty cells, use class|day|time as key; for filled cells, include course
+    const key = d.course 
+      ? `${d.class}|${normalizeDay(d.day)}|${d.time}|${d.course}`
+      : `${d.class}|${normalizeDay(d.day)}|${d.time}|`;
+    cellIndexMap.set(key, idx);
+  });
 
   return (
     <div style={{ display: 'grid', gap: '24px' }}>
@@ -892,19 +1887,90 @@ function TimetableTables({ details, header }) {
                       }
 
                       const row = byKey.get(`${day}|${t}`);
+                      const isEmpty = !row || !row.course;
+                      
+                      // Build cell key - for empty cells use trailing |, for filled include course
+                      const cellKey = isEmpty 
+                        ? `${klass}|${day}|${t}|`
+                        : `${klass}|${day}|${t}|${row.course}`;
+                      const cellIndex = cellIndexMap.get(cellKey) ?? -1;
+                      
+                      const isSelected = isEditMode && selectedCells.some(s => s.index === cellIndex);
+                      const isSwapping = swappingCells && (swappingCells.cell1 === cellIndex || swappingCells.cell2 === cellIndex);
+                      const isFirstSwapCell = swappingCells && swappingCells.cell1 === cellIndex;
+                      
                       return (
-                        <div
+                        <motion.div
                           key={`${day}-${i}`}
+                          data-cell-index={cellIndex}
+                          animate={isSwapping ? {
+                            scale: [1, 1.08, 1],
+                            opacity: [1, 0.8, 1],
+                            backgroundColor: [
+                              'rgba(255, 255, 255, 0)',
+                              'rgba(16, 185, 129, 0.15)',
+                              'rgba(255, 255, 255, 0)'
+                            ]
+                          } : {}}
+                          transition={{
+                            duration: 0.8,
+                            ease: "easeInOut"
+                          }}
+                          draggable={isEditMode && !isEmpty}
+                          onClick={() => {
+                            if (isEditMode && !isEmpty && onCellClick) {
+                              onCellClick(cellIndex, klass);
+                            }
+                          }}
+                          onDragStart={(e) => {
+                            if (isEditMode && !isEmpty && onDragStart) {
+                              onDragStart(e, row, cellIndex, klass);
+                            }
+                          }}
+                          onDragOver={(e) => {
+                            if (isEditMode && isEmpty) {
+                              e.preventDefault();
+                              e.dataTransfer.dropEffect = 'move';
+                              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)';
+                              e.currentTarget.style.border = '2px dashed #3b82f6';
+                            }
+                          }}
+                          onDragLeave={(e) => {
+                            if (isEditMode && isEmpty) {
+                              e.currentTarget.style.background = di % 2 === 0 ? '#ffffff' : '#fafafa';
+                              e.currentTarget.style.border = 'none';
+                            }
+                          }}
+                          onDrop={(e) => {
+                            if (isEditMode && isEmpty && onDropToCell) {
+                              e.preventDefault();
+                              onDropToCell(e, cellIndex, klass);
+                              e.currentTarget.style.background = di % 2 === 0 ? '#ffffff' : '#fafafa';
+                              e.currentTarget.style.border = 'none';
+                            }
+                          }}
                           style={{
-                            padding: row ? '12px' : '16px',
-                            background: di % 2 === 0 ? '#ffffff' : '#fafafa',
+                            padding: isEmpty ? '16px' : '12px',
+                            background: isSelected 
+                              ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%)'
+                              : isSwapping
+                              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%)'
+                              : di % 2 === 0 ? '#ffffff' : '#fafafa',
                             borderRight: '1px solid #e5e7eb',
                             borderBottom: di === days.length - 1 ? 'none' : '1px solid #e5e7eb',
-                            minHeight: row ? '100px' : '80px',
-                            transition: 'all 0.3s ease'
+                            border: isSelected ? '2px solid #f59e0b' : isSwapping ? '2px solid #10b981' : undefined,
+                            minHeight: isEmpty ? '80px' : '100px',
+                            transition: 'all 0.3s ease',
+                            cursor: isEditMode && !isEmpty ? 'pointer' : 'default',
+                            position: 'relative',
+                            userSelect: 'none',
+                            zIndex: isSwapping ? 999 : isSelected ? 10 : 0
                           }}
                           onMouseEnter={(e) => {
-                            if (row) {
+                            if (isEditMode) {
+                              setHoveredCell(cellIndex);
+                            }
+                            if (!isEmpty && !isSelected) {
                               e.currentTarget.style.background = 'linear-gradient(135deg, rgba(126, 34, 206, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)';
                               e.currentTarget.style.transform = 'scale(1.02)';
                               e.currentTarget.style.boxShadow = '0 4px 12px rgba(126, 34, 206, 0.15)';
@@ -912,7 +1978,8 @@ function TimetableTables({ details, header }) {
                             }
                           }}
                           onMouseLeave={(e) => {
-                            if (row) {
+                            setHoveredCell(null);
+                            if (!isEmpty && !isSelected) {
                               e.currentTarget.style.background = di % 2 === 0 ? '#ffffff' : '#fafafa';
                               e.currentTarget.style.transform = 'scale(1)';
                               e.currentTarget.style.boxShadow = 'none';
@@ -920,7 +1987,198 @@ function TimetableTables({ details, header }) {
                             }
                           }}
                         >
-                          {row ? (
+                          {/* Add/Update Button on Hover - positioned above cell like swap button */}
+                          {isEditMode && hoveredCell === cellIndex && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenCellModal(cellIndex, isEmpty);
+                              }}
+                              style={{
+                                position: 'absolute',
+                                top: '-20px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                background: isEmpty ? '#10b981' : '#3b82f6',
+                                border: 'none',
+                                color: 'white',
+                                borderRadius: '6px',
+                                padding: '6px 12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                zIndex: 1000,
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                transition: 'all 0.2s',
+                                whiteSpace: 'nowrap'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = isEmpty ? '#059669' : '#2563eb';
+                                e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = isEmpty ? '#10b981' : '#3b82f6';
+                                e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                              }}
+                            >
+                              {isEmpty ? (
+                                <>
+                                  <FaPlus size={10} />
+                                  Add
+                                </>
+                              ) : (
+                                <>
+                                  <FaEdit size={10} />
+                                  Update
+                                </>
+                              )}
+                            </button>
+                          )}
+                          
+                          {isEditMode && !isEmpty && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onRemoveCell) onRemoveCell(cellIndex);
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  top: '4px',
+                                  right: '4px',
+                                  background: '#ef4444',
+                                  border: 'none',
+                                  color: 'white',
+                                  borderRadius: '50%',
+                                  width: '22px',
+                                  height: '22px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  cursor: 'pointer',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'bold',
+                                  zIndex: 10,
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                  transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#dc2626';
+                                  e.currentTarget.style.transform = 'scale(1.1)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = '#ef4444';
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                }}
+                              >
+                                ×
+                              </button>
+                              {isSelected && (
+                                <>
+                                  <div style={{
+                                    position: 'absolute',
+                                    top: '4px',
+                                    left: '4px',
+                                    background: '#f59e0b',
+                                    color: 'white',
+                                    borderRadius: '4px',
+                                    padding: '2px 6px',
+                                    fontSize: '0.65rem',
+                                    fontWeight: 700
+                                  }}>
+                                    SELECTED
+                                  </div>
+                                  {selectedCells.length === 2 && selectedCells[0].class === selectedCells[1].class && selectedCells[1].index === cellIndex && setEditDetails && (
+                                    <motion.button
+                                      initial={{ scale: 0, opacity: 0 }}
+                                      animate={{ scale: 1, opacity: 1 }}
+                                      exit={{ scale: 0, opacity: 0 }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        
+                                        const [cell1, cell2] = selectedCells;
+                                        
+                                        // Trigger swap animation
+                                        setSwappingCells({ 
+                                          cell1: cell1.index, 
+                                          cell2: cell2.index
+                                        });
+                                        
+                                        // Swap data at midpoint of animation
+                                        setTimeout(() => {
+                                          const newDetails = [...editDetails];
+                                          
+                                          const temp = {
+                                            course: newDetails[cell1.index].course,
+                                            roomNumber: newDetails[cell1.index].roomNumber,
+                                            instructorName: newDetails[cell1.index].instructorName
+                                          };
+                                          
+                                          newDetails[cell1.index] = {
+                                            ...newDetails[cell1.index],
+                                            course: newDetails[cell2.index].course,
+                                            roomNumber: newDetails[cell2.index].roomNumber,
+                                            instructorName: newDetails[cell2.index].instructorName
+                                          };
+                                          
+                                          newDetails[cell2.index] = {
+                                            ...newDetails[cell2.index],
+                                            course: temp.course,
+                                            roomNumber: temp.roomNumber,
+                                            instructorName: temp.instructorName
+                                          };
+                                          
+                                          setEditDetails(newDetails);
+                                        }, 400);
+                                        
+                                        // Clear animation state
+                                        setTimeout(() => {
+                                          setSwappingCells(null);
+                                          if (setSelectedCells) setSelectedCells([]);
+                                        }, 800);
+                                      }}
+                                      style={{
+                                        position: 'absolute',
+                                        top: '-45px',
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                        border: 'none',
+                                        color: 'white',
+                                        borderRadius: '8px',
+                                        padding: '8px 16px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 700,
+                                        cursor: 'pointer',
+                                        zIndex: 100,
+                                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+                                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.5)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                                      }}
+                                    >
+                                      <FaExchangeAlt /> SWAP
+                                    </motion.button>
+                                  )}
+                                </>
+                              )}
+                            </>
+                          )}
+                          {!isEmpty ? (
                             <div style={{
                               position: 'relative',
                               height: '100%',
@@ -979,7 +2237,7 @@ function TimetableTables({ details, header }) {
                               </div>
                             </div>
                           ) : null}
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </React.Fragment>
