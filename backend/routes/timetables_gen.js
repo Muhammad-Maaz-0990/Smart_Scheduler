@@ -234,13 +234,64 @@ router.get('/details/:id', protect, async (req, res) => {
     const header = await InstituteTimeTables.findOne({ instituteTimeTableID, instituteID }).lean();
     if (!header) return res.status(404).json({ message: 'Timetable not found' });
     const key = keyFor(instituteTimeTableID, instituteID, header.year);
-    console.log(`Fetching details for key: ${key}`);
     const details = await InstituteTimeTableDetails.find({ key }).lean();
-    console.log(`Found ${details.length} detail rows for key: ${key}`);
     return res.json({ header, details });
   } catch (err) {
     console.error('Details timetables error:', err?.message || err);
     return res.status(500).json({ message: 'Failed to fetch timetable' });
+  }
+});
+
+// PUT /api/timetables-gen/details/:id
+// Body: { details: [...] }
+// Updates all detail rows for a timetable
+router.put('/details/:id', protect, async (req, res) => {
+  try {
+    const { instituteID, designation } = req.user || {};
+    if (!instituteID) return res.status(400).json({ message: 'User has no institute' });
+    if (String(designation).toLowerCase() !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+
+    const instituteTimeTableID = Number(req.params.id);
+    const { details } = req.body || {};
+
+    if (!Array.isArray(details)) {
+      return res.status(400).json({ message: 'Details must be an array' });
+    }
+
+    const header = await InstituteTimeTables.findOne({ instituteTimeTableID, instituteID });
+    if (!header) return res.status(404).json({ message: 'Timetable not found' });
+
+    const key = keyFor(instituteTimeTableID, instituteID, header.year);
+
+    // Delete all existing details
+    await InstituteTimeTableDetails.deleteMany({ key });
+
+    // Insert new details (filter out empty cells)
+    const validDetails = details.filter(d => d.course && d.course.trim() !== '');
+    
+    if (validDetails.length > 0) {
+      const rows = validDetails.map(d => ({
+        key,
+        timeTableID: header.timeTableID || instituteTimeTableID,
+        instituteTimeTableID,
+        instituteID,
+        year: header.year,
+        class: String(d.class || ''),
+        day: String(d.day || ''),
+        time: String(d.time || ''),
+        course: String(d.course || ''),
+        roomNumber: String(d.roomNumber || ''),
+        instructorName: String(d.instructorName || ''),
+        breakStart: String(d.breakStart || ''),
+        breakEnd: String(d.breakEnd || '')
+      }));
+      await InstituteTimeTableDetails.insertMany(rows);
+    }
+
+    return res.json({ ok: true, updated: validDetails.length });
+  } catch (err) {
+    console.error('Update details error:', err?.message || err);
+    return res.status(500).json({ message: 'Failed to update timetable details' });
   }
 });
 

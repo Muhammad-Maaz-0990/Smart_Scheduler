@@ -92,29 +92,18 @@ function TimeTable({ isAdmin = false }) {
       try {
         const token = localStorage.getItem('token');
         
-        console.log('=== CHECKING AUTH ===');
-        console.log('Token exists:', !!token);
-        console.log('User from context:', user);
-        console.log('instituteObjectId from context:', instituteObjectId);
-        
         if (!token) {
-          console.error('No token found');
           return;
         }
         
         if (!user) {
-          console.error('No user in AuthContext');
           return;
         }
 
         // Use instituteObjectId from AuthContext (same as Courses page)
         const instituteParam = instituteObjectId || user?.instituteID;
-
-        console.log('=== FETCHING DROPDOWN DATA ===');
-        console.log('Using Institute ID:', instituteParam);
         
         if (!instituteParam) {
-          console.error('No institute ID found in user data');
           // Continue anyway - we can still fetch data
         }
 
@@ -122,112 +111,67 @@ function TimeTable({ isAdmin = false }) {
         if (instituteParam) {
           try {
             const coursesUrl = `http://localhost:5000/api/courses/${instituteParam}`;
-            console.log('Fetching courses from:', coursesUrl);
             const coursesRes = await fetch(coursesUrl, {
               headers: { Authorization: `Bearer ${token}` }
             });
-            console.log('Courses response status:', coursesRes.status);
             
             if (coursesRes.ok) {
               const coursesData = await coursesRes.json();
-              console.log('Raw courses response:', coursesData);
-              
               let courses = Array.isArray(coursesData) ? coursesData : (coursesData.data || coursesData.courses || []);
-              console.log('Parsed courses array:', courses);
-              console.log('Number of courses:', courses.length);
-              
-              // Log first course to see structure
-              if (courses.length > 0) {
-                console.log('First course object:', courses[0]);
-                console.log('First course fields:', {
-                  courseCode: courses[0].courseCode,
-                  courseTitle: courses[0].courseTitle,
-                  courseName: courses[0].courseName,
-                  name: courses[0].name
-                });
-              }
-              
               setAllCourses(courses);
             } else {
-              const errorText = await coursesRes.text();
-              console.error('Courses fetch failed with status:', coursesRes.status, 'Error:', errorText);
               setAllCourses([]);
             }
           } catch (err) {
-            console.error('Error fetching courses:', err);
             setAllCourses([]);
           }
         } else {
-          console.warn('Skipping courses fetch - no institute ID');
           setAllCourses([]);
         }
 
         // Fetch rooms
         try {
           const roomsUrl = 'http://localhost:5000/api/rooms';
-          console.log('Fetching rooms from:', roomsUrl);
           const roomsRes = await fetch(roomsUrl, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          console.log('Rooms response status:', roomsRes.status);
           
           if (roomsRes.ok) {
             const roomsData = await roomsRes.json();
-            console.log('Raw rooms response:', roomsData);
-            
             let rooms = Array.isArray(roomsData) ? roomsData : (roomsData.data || roomsData.rooms || []);
-            console.log('Parsed rooms array:', rooms);
-            console.log('Number of rooms:', rooms.length);
-            
             setAllRooms(rooms);
           } else {
-            const errorText = await roomsRes.text();
-            console.error('Rooms fetch failed with status:', roomsRes.status, 'Error:', errorText);
             setAllRooms([]);
           }
         } catch (err) {
-          console.error('Error fetching rooms:', err);
           setAllRooms([]);
         }
 
         // Fetch teachers - use /institute endpoint with protection
         try {
           const teachersUrl = 'http://localhost:5000/api/users/institute';
-          console.log('Fetching teachers from:', teachersUrl);
           const teachersRes = await fetch(teachersUrl, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          console.log('Teachers response status:', teachersRes.status);
           
           if (teachersRes.ok) {
             const teachersData = await teachersRes.json();
-            console.log('Raw teachers response:', teachersData);
-            
             let teachers = Array.isArray(teachersData) ? teachersData : (teachersData.data || teachersData.users || []);
             // Filter only teachers
             teachers = teachers.filter(t => t.designation === 'Teacher');
-            console.log('Parsed teachers array:', teachers);
-            console.log('Number of teachers:', teachers.length);
-            
             setAllTeachers(teachers);
           } else {
-            const errorText = await teachersRes.text();
-            console.error('Teachers fetch failed with status:', teachersRes.status, 'Error:', errorText);
             setAllTeachers([]);
           }
         } catch (err) {
-          console.error('Error fetching teachers:', err);
           setAllTeachers([]);
         }
-
-        console.log('=== FETCH COMPLETE ===');
       } catch (err) {
-        console.error('Error in fetchDropdownData:', err);
+        // Error fetching dropdown data
       }
     };
 
     if (isEditMode) {
-      console.log('Edit mode enabled, fetching dropdown data...');
       fetchDropdownData();
     }
   }, [isEditMode, user, instituteObjectId]);
@@ -253,11 +197,10 @@ function TimeTable({ isAdmin = false }) {
           if (data.instituteLogo && !data.instituteLogo.startsWith('data:') && !data.instituteLogo.startsWith('http')) {
             data.instituteLogo = `http://localhost:5000${data.instituteLogo}`;
           }
-          console.log('Institute info loaded:', data);
           setInstituteInfo(data);
         }
       } catch (err) {
-        console.error('Failed to fetch institute info:', err);
+        
       }
     };
     fetchInstituteInfo();
@@ -618,7 +561,7 @@ function TimeTable({ isAdmin = false }) {
       };
       setEditDetails(newDetails);
     } catch (error) {
-      console.error('Drop to swap box error:', error);
+      // Error dropping to swap box
     }
   }, [editDetails]);
 
@@ -683,7 +626,7 @@ function TimeTable({ isAdmin = false }) {
       
       setEditDetails(newDetails);
     } catch (error) {
-      console.error('Drop to cell error:', error);
+      // Error dropping to cell
     }
   }, [editDetails]);
 
