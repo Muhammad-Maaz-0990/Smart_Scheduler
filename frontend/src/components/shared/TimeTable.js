@@ -30,6 +30,9 @@ function TimeTable({ isAdmin = false }) {
   const [allTeachers, setAllTeachers] = useState([]);
   const [modalForm, setModalForm] = useState({ course: '', room: '', instructor: '' });
   const [allClasses, setAllClasses] = useState([]);
+  const [showAddClassModal, setShowAddClassModal] = useState(false);
+  const [newClassName, setNewClassName] = useState('');
+  const [existingClassesFromDB, setExistingClassesFromDB] = useState([]);
 
   // Auto-scroll during drag
   useEffect(() => {
@@ -639,6 +642,91 @@ function TimeTable({ isAdmin = false }) {
     e.dataTransfer.setData('swapBoxIndex', swapBoxIndex.toString());
   }, []);
 
+  // Add new class
+  const handleAddNewClass = useCallback(() => {
+    if (!newClassName || !newClassName.trim()) return;
+    
+    const className = newClassName.trim();
+    
+    // Check if class already exists
+    if (allClasses.includes(className)) {
+      setError('Class already exists');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    
+    // Get time slots from existing details
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    const allTimes = [...new Set(editDetails.map(d => String(d.time || '')).filter(Boolean))].sort();
+    
+    if (allTimes.length === 0) {
+      setError('No time slots found. Cannot create class.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    
+    // Create empty cells for new class
+    const newCells = [];
+    days.forEach(day => {
+      allTimes.forEach(time => {
+        newCells.push({
+          class: className,
+          day: day,
+          time: time,
+          course: '',
+          roomNumber: '',
+          instructorName: '',
+          breakStart: editDetails[0]?.breakStart || '',
+          breakEnd: editDetails[0]?.breakEnd || ''
+        });
+      });
+    });
+    
+    // Add new cells to editDetails
+    setEditDetails([...editDetails, ...newCells]);
+    setAllClasses([...allClasses, className]);
+    setShowAddClassModal(false);
+    setNewClassName('');
+    setSuccessMessage(`Class ${className} added successfully!`);
+    setTimeout(() => setSuccessMessage(''), 3000);
+  }, [newClassName, allClasses, editDetails]);
+
+  // Open add class modal
+  const handleOpenAddClassModal = useCallback(async () => {
+    setNewClassName('');
+    setShowAddClassModal(true);
+    
+    // Fetch existing classes from database
+    try {
+      const token = localStorage.getItem('token');
+      const instituteParam = instituteObjectId || user?.instituteID;
+      
+      if (instituteParam) {
+        const response = await fetch(`http://localhost:5000/api/classes/${instituteParam}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const classesData = await response.json();
+          // Extract class names from the database
+          const classNames = classesData.map(c => {
+            // Build class name from degree, session, section
+            return `${c.degree || ''}${c.section || ''}`.trim() || c.className || c.name || String(c.classID);
+          }).filter(Boolean);
+          setExistingClassesFromDB(classNames);
+        }
+      }
+    } catch (err) {
+      // If fetch fails, just continue without suggestions
+    }
+  }, [user, instituteObjectId]);
+
+  // Close add class modal
+  const handleCloseAddClassModal = useCallback(() => {
+    setShowAddClassModal(false);
+    setNewClassName('');
+  }, []);
+
   return (
     <Container fluid className="p-3 p-md-4" style={{ minHeight: '100vh' }}>
       {/* Header Section */}
@@ -718,6 +806,25 @@ function TimeTable({ isAdmin = false }) {
                 )}
                 {selected && isEditMode && (
                   <>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        onClick={handleOpenAddClassModal}
+                        disabled={loading}
+                        className="d-flex align-items-center gap-2"
+                        style={{
+                          background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem',
+                          boxShadow: '0 2px 8px rgba(139, 92, 246, 0.25)',
+                          opacity: loading ? 0.6 : 1
+                        }}
+                      >
+                        <FaPlus style={{ fontSize: '0.875rem' }} /> Add Class
+                      </Button>
+                    </motion.div>
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button
                         onClick={saveEditedTimetable}
@@ -1332,6 +1439,138 @@ function TimeTable({ isAdmin = false }) {
           </Card>
         </motion.div>
       )}
+
+      {/* Add Class Modal */}
+      <AnimatePresence>
+        {showAddClassModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999
+            }}
+            onClick={handleCloseAddClassModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '24px',
+                maxWidth: '450px',
+                width: '90%',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+              }}
+            >
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
+                  <FaPlus style={{ marginRight: '8px', color: '#8b5cf6' }} />
+                  Add New Class
+                </h4>
+                <button
+                  onClick={handleCloseAddClassModal}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: '#6b7280'
+                  }}
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <Form>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FaDoorOpen color="#8b5cf6" />
+                    Class Name *
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="e.g., B203, CS-A, Grade 10A"
+                    value={newClassName}
+                    onChange={(e) => setNewClassName(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddNewClass();
+                      }
+                    }}
+                    list="existing-classes-list"
+                    style={{ borderColor: '#d1d5db' }}
+                    autoFocus
+                  />
+                  <datalist id="existing-classes-list">
+                    {existingClassesFromDB.map((className, idx) => (
+                      <option key={idx} value={className} />
+                    ))}
+                  </datalist>
+                  <Form.Text className="text-muted">
+                    {existingClassesFromDB.length > 0 ? (
+                      <>
+                        Showing {existingClassesFromDB.length} existing class{existingClassesFromDB.length !== 1 ? 'es' : ''} from database. Type to see suggestions or enter a new unique name.
+                      </>
+                    ) : (
+                      'Enter a unique name for the new class. A complete timetable grid will be created.'
+                    )}
+                  </Form.Text>
+                </Form.Group>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+                  <Button
+                    onClick={handleAddNewClass}
+                    disabled={!newClassName || !newClassName.trim()}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontWeight: 600,
+                      background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                      border: 'none',
+                      opacity: (!newClassName || !newClassName.trim()) ? 0.5 : 1
+                    }}
+                  >
+                    <FaPlus />
+                    Add Class
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleCloseAddClassModal}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontWeight: 600
+                    }}
+                  >
+                    <FaTimes />
+                    Cancel
+                  </Button>
+                </div>
+              </Form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Cell Add/Update Modal */}
       <AnimatePresence>
