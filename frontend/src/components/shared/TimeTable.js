@@ -33,6 +33,15 @@ function TimeTable({ isAdmin = false }) {
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [newClassName, setNewClassName] = useState('');
   const [existingClassesFromDB, setExistingClassesFromDB] = useState([]);
+  const [showTimeSettingsModal, setShowTimeSettingsModal] = useState(false);
+  const [timeSettings, setTimeSettings] = useState({
+    startTime: '08:00',
+    endTime: '17:00',
+    lectureDuration: 60,
+    hasBreak: true,
+    breakAfterLecture: 3,
+    breakDuration: 30
+  });
 
   // Auto-scroll during drag
   useEffect(() => {
@@ -727,6 +736,207 @@ function TimeTable({ isAdmin = false }) {
     setNewClassName('');
   }, []);
 
+  // Open time settings modal
+  const handleOpenTimeSettingsModal = useCallback(() => {
+    // Extract current time settings from existing details
+    if (editDetails.length > 0) {
+      const times = [...new Set(editDetails.map(d => d.time).filter(Boolean))];
+      if (times.length > 0) {
+        // Parse first and last time to get start and end
+        const sortedTimes = times.sort();
+        const firstTime = sortedTimes[0].split('-')[0];
+        const lastTimeRange = sortedTimes[sortedTimes.length - 1];
+        const lastTime = lastTimeRange.split('-')[1];
+        
+        // Calculate duration from first time slot
+        const [start, end] = sortedTimes[0].split('-');
+        let duration = 60;
+        if (start && end) {
+          const startMinutes = parseInt(start.split(':')[0]) * 60 + parseInt(start.split(':')[1]);
+          const endMinutes = parseInt(end.split(':')[0]) * 60 + parseInt(end.split(':')[1]);
+          duration = endMinutes - startMinutes;
+        }
+        
+        // Extract break settings
+        const sampleDetail = editDetails.find(d => d.breakStart && d.breakEnd);
+        let hasBreak = false;
+        let breakAfterLecture = 3;
+        let breakDuration = 30;
+        
+        if (sampleDetail && sampleDetail.breakStart && sampleDetail.breakEnd) {
+          hasBreak = true;
+          const [breakStartHour, breakStartMin] = sampleDetail.breakStart.split(':').map(Number);
+          const breakStartMinutes = breakStartHour * 60 + breakStartMin;
+          const [breakEndHour, breakEndMin] = sampleDetail.breakEnd.split(':').map(Number);
+          const breakEndMinutes = breakEndHour * 60 + breakEndMin;
+          breakDuration = breakEndMinutes - breakStartMinutes;
+          
+          // Find which lecture the break comes after
+          for (let i = 0; i < sortedTimes.length; i++) {
+            const [, slotEnd] = sortedTimes[i].split('-');
+            const [slotEndHour, slotEndMin] = slotEnd.split(':').map(Number);
+            const slotEndMinutes = slotEndHour * 60 + slotEndMin;
+            
+            if (slotEndMinutes === breakStartMinutes) {
+              breakAfterLecture = i + 1;
+              break;
+            } else if (slotEndMinutes < breakStartMinutes) {
+              breakAfterLecture = i + 1;
+            }
+          }
+        }
+          
+        setTimeSettings({
+          startTime: firstTime,
+          endTime: lastTime,
+          lectureDuration: duration,
+          hasBreak,
+          breakAfterLecture,
+          breakDuration
+        });
+      }
+    }
+    setShowTimeSettingsModal(true);
+  }, [editDetails]);
+
+  // Close time settings modal
+  const handleCloseTimeSettingsModal = useCallback(() => {
+    setShowTimeSettingsModal(false);
+  }, []);
+
+  // Update time settings and regenerate all timetables
+  const handleUpdateTimeSettings = useCallback(() => {
+    const { startTime, endTime, lectureDuration, hasBreak, breakAfterLecture, breakDuration } = timeSettings;
+    
+    if (!startTime || !endTime || !lectureDuration || lectureDuration <= 0) {
+      setError('Please enter valid time settings');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    
+    if (hasBreak && (!breakAfterLecture || breakAfterLecture <= 0 || !breakDuration || breakDuration <= 0)) {
+      setError('Please enter valid break settings');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    
+    // Parse start and end times
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    
+    if (startMinutes >= endMinutes) {
+      setError('End time must be after start time');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    
+    // Use break settings from modal
+    const breakAfterLectureNum = hasBreak ? breakAfterLecture : null;
+    const breakDurationMinutes = hasBreak ? breakDuration : 0;
+    
+    // Generate new time slots with break inserted
+    const newTimeSlots = [];
+    let currentMinutes = startMinutes;
+    let lectureCount = 0;
+    let newBreakStart = '';
+    let newBreakEnd = '';
+    
+    while (currentMinutes + lectureDuration <= endMinutes) {
+      lectureCount++;
+      
+      const slotStartHour = Math.floor(currentMinutes / 60);
+      const slotStartMin = currentMinutes % 60;
+      const slotEndMinutes = currentMinutes + lectureDuration;
+      const slotEndHour = Math.floor(slotEndMinutes / 60);
+      const slotEndMin = slotEndMinutes % 60;
+      
+      const slotStart = `${String(slotStartHour).padStart(2, '0')}:${String(slotStartMin).padStart(2, '0')}`;
+      const slotEnd = `${String(slotEndHour).padStart(2, '0')}:${String(slotEndMin).padStart(2, '0')}`;
+      newTimeSlots.push(`${slotStart}-${slotEnd}`);
+      
+      currentMinutes += lectureDuration;
+      
+      // Insert break after the determined lecture position
+      if (breakAfterLectureNum !== null && lectureCount === breakAfterLectureNum && breakDurationMinutes > 0) {
+        // Calculate new break times
+        const breakStartMinutes = currentMinutes;
+        const breakEndMinutes = currentMinutes + breakDurationMinutes;
+        
+        const breakStartHour = Math.floor(breakStartMinutes / 60);
+        const breakStartMin = breakStartMinutes % 60;
+        const breakEndHour = Math.floor(breakEndMinutes / 60);
+        const breakEndMin = breakEndMinutes % 60;
+        
+        newBreakStart = `${String(breakStartHour).padStart(2, '0')}:${String(breakStartMin).padStart(2, '0')}`;
+        newBreakEnd = `${String(breakEndHour).padStart(2, '0')}:${String(breakEndMin).padStart(2, '0')}`;
+        
+        // Skip ahead by break duration
+        currentMinutes += breakDurationMinutes;
+      }
+    }
+    
+    if (newTimeSlots.length === 0) {
+      setError('No time slots can be generated with these settings');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    
+    // Create a map of existing data by class, day, and old time index
+    const existingDataMap = new Map();
+    const oldTimeSlots = [...new Set(editDetails.map(d => d.time).filter(Boolean))].sort();
+    
+    editDetails.forEach(detail => {
+      const oldTimeIndex = oldTimeSlots.indexOf(detail.time);
+      const key = `${detail.class}|${detail.day}|${oldTimeIndex}`;
+      existingDataMap.set(key, {
+        course: detail.course,
+        roomNumber: detail.roomNumber,
+        instructorName: detail.instructorName
+      });
+    });
+    
+    // Regenerate all timetable data with new time slots
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    const newEditDetails = [];
+    
+    allClasses.forEach(className => {
+      days.forEach(day => {
+        newTimeSlots.forEach((timeSlot, newTimeIndex) => {
+          // Try to preserve data from corresponding old time slot
+          const key = `${className}|${day}|${newTimeIndex}`;
+          const existingData = existingDataMap.get(key) || {
+            course: '',
+            roomNumber: '',
+            instructorName: ''
+          };
+          
+          newEditDetails.push({
+            class: className,
+            day: day,
+            time: timeSlot,
+            course: existingData.course,
+            roomNumber: existingData.roomNumber,
+            instructorName: existingData.instructorName,
+            breakStart: newBreakStart,
+            breakEnd: newBreakEnd
+          });
+        });
+      });
+    });
+    
+    setEditDetails(newEditDetails);
+    setShowTimeSettingsModal(false);
+    setRenderKey(prev => prev + 1); // Force re-render
+    
+    const breakMsg = hasBreak 
+      ? ` Break set after lecture ${breakAfterLecture} (${breakDuration} min).`
+      : ' No break time set.';
+    setSuccessMessage(`Time settings updated successfully! All timetables regenerated.${breakMsg}`);
+    setTimeout(() => setSuccessMessage(''), 4000);
+  }, [timeSettings, editDetails, allClasses]);
+
   return (
     <Container fluid className="p-3 p-md-4" style={{ minHeight: '100vh' }}>
       {/* Header Section */}
@@ -806,6 +1016,25 @@ function TimeTable({ isAdmin = false }) {
                 )}
                 {selected && isEditMode && (
                   <>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        onClick={handleOpenTimeSettingsModal}
+                        disabled={loading}
+                        className="d-flex align-items-center gap-2"
+                        style={{
+                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem',
+                          boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
+                          opacity: loading ? 0.6 : 1
+                        }}
+                      >
+                        <FaClock style={{ fontSize: '0.875rem' }} /> Time Settings
+                      </Button>
+                    </motion.div>
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button
                         onClick={handleOpenAddClassModal}
@@ -970,8 +1199,8 @@ function TimeTable({ isAdmin = false }) {
         )}
       </AnimatePresence>
 
-      {/* Timetable Selector */}
-      {items.length > 0 && (
+      {/* Timetable Selector - Hide in Edit Mode */}
+      {items.length > 0 && !isEditMode && (
         <motion.div
           initial="hidden"
           animate="visible"
@@ -1440,6 +1669,227 @@ function TimeTable({ isAdmin = false }) {
         </motion.div>
       )}
 
+      {/* Time Settings Modal */}
+      <AnimatePresence>
+        {showTimeSettingsModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999
+            }}
+            onClick={handleCloseTimeSettingsModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '24px',
+                maxWidth: '500px',
+                width: '90%',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+              }}
+            >
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
+                  <FaClock style={{ marginRight: '8px', color: '#f59e0b' }} />
+                  Update Time Settings
+                </h4>
+                <button
+                  onClick={handleCloseTimeSettingsModal}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: '#6b7280'
+                  }}
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <div style={{
+                padding: '16px',
+                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                border: '1px solid rgba(245, 158, 11, 0.2)'
+              }}>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: '#92400e', fontWeight: 500 }}>
+                  ⚠️ This will regenerate all time slots for all classes. Existing data will be preserved where possible based on time slot position.
+                </p>
+              </div>
+
+              <Form>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FaClock color="#f59e0b" />
+                        Start Time *
+                      </Form.Label>
+                      <Form.Control
+                        type="time"
+                        value={timeSettings.startTime}
+                        onChange={(e) => setTimeSettings({ ...timeSettings, startTime: e.target.value })}
+                        style={{ borderColor: '#d1d5db' }}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FaClock color="#f59e0b" />
+                        End Time *
+                      </Form.Label>
+                      <Form.Control
+                        type="time"
+                        value={timeSettings.endTime}
+                        onChange={(e) => setTimeSettings({ ...timeSettings, endTime: e.target.value })}
+                        style={{ borderColor: '#d1d5db' }}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FaClock color="#f59e0b" />
+                    Lecture Duration (minutes) *
+                  </Form.Label>
+                  <Form.Control
+                    type="number"
+                    min="15"
+                    max="180"
+                    step="15"
+                    value={timeSettings.lectureDuration}
+                    onChange={(e) => setTimeSettings({ ...timeSettings, lectureDuration: parseInt(e.target.value) || 60 })}
+                    style={{ borderColor: '#d1d5db' }}
+                  />
+                  <Form.Text className="text-muted">
+                    Common values: 50 minutes (1 hour class), 60 minutes, 75 minutes, 90 minutes
+                  </Form.Text>
+                </Form.Group>
+
+                <hr style={{ margin: '24px 0', border: 'none', borderTop: '2px solid #e5e7eb' }} />
+
+                <Form.Group className="mb-3">
+                  <Form.Check
+                    type="switch"
+                    id="break-time-switch"
+                    label={
+                      <span style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FaClock color="#f59e0b" />
+                        Include Break Time
+                      </span>
+                    }
+                    checked={timeSettings.hasBreak}
+                    onChange={(e) => setTimeSettings({ ...timeSettings, hasBreak: e.target.checked })}
+                    style={{ fontSize: '1rem' }}
+                  />
+                  <Form.Text className="text-muted">
+                    Toggle to add or remove break time from the timetable
+                  </Form.Text>
+                </Form.Group>
+
+                {timeSettings.hasBreak && (
+                  <>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label style={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
+                            Break After Lecture # *
+                          </Form.Label>
+                          <Form.Control
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={timeSettings.breakAfterLecture}
+                            onChange={(e) => setTimeSettings({ ...timeSettings, breakAfterLecture: parseInt(e.target.value) || 3 })}
+                            style={{ borderColor: '#d1d5db' }}
+                          />
+                          <Form.Text className="text-muted">
+                            e.g., 3 = after 3rd lecture
+                          </Form.Text>
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label style={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
+                            Break Duration (min) *
+                          </Form.Label>
+                          <Form.Control
+                            type="number"
+                            min="10"
+                            max="90"
+                            step="5"
+                            value={timeSettings.breakDuration}
+                            onChange={(e) => setTimeSettings({ ...timeSettings, breakDuration: parseInt(e.target.value) || 30 })}
+                            style={{ borderColor: '#d1d5db' }}
+                          />
+                          <Form.Text className="text-muted">
+                            Common: 15, 30, 45 min
+                          </Form.Text>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                  </>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+                  <Button
+                    onClick={handleUpdateTimeSettings}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontWeight: 600,
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      border: 'none'
+                    }}
+                  >
+                    <FaSave />
+                    Update All Tables
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleCloseTimeSettingsModal}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontWeight: 600
+                    }}
+                  >
+                    <FaTimes />
+                    Cancel
+                  </Button>
+                </div>
+              </Form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Add Class Modal */}
       <AnimatePresence>
         {showAddClassModal && (
@@ -1839,13 +2289,25 @@ function TimetableTables({
 
   // Build unique sets
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  
+  // Use editDetails in edit mode, otherwise use details
+  const sourceData = isEditMode && editDetails.length > 0 ? editDetails : details;
+  
+  console.log('TimetableTables rendering:', {
+    isEditMode,
+    detailsLength: details.length,
+    editDetailsLength: editDetails.length,
+    sourceDataLength: sourceData.length,
+    firstSourceBreak: sourceData[0] ? { breakStart: sourceData[0].breakStart, breakEnd: sourceData[0].breakEnd } : null
+  });
+  
   const baseTimes = Array.from(
-    new Set(details.map(d => String(d.time || '')).filter(Boolean))
+    new Set(sourceData.map(d => String(d.time || '')).filter(Boolean))
   ).sort((a, b) => parseStartMinutes(a) - parseStartMinutes(b));
 
-  // Derive a common break window from details if present
+  // Derive a common break window from sourceData if present
   const breakPairs = {};
-  for (const d of details) {
+  for (const d of sourceData) {
     const bs = d.breakStart ? String(d.breakStart) : null;
     const be = d.breakEnd ? String(d.breakEnd) : null;
     if (bs && be) {
@@ -1853,14 +2315,21 @@ function TimetableTables({
       breakPairs[k] = (breakPairs[k] || 0) + 1;
     }
   }
+  
+  console.log('Break pairs found:', breakPairs);
+  
   let breakStart = null, breakEnd = null;
   if (header?.breakStart && header?.breakEnd) {
     breakStart = String(header.breakStart);
     breakEnd = String(header.breakEnd);
+    console.log('Using header break:', { breakStart, breakEnd });
   } else if (Object.keys(breakPairs).length) {
     const top = Object.entries(breakPairs).sort((a, b) => b[1] - a[1])[0][0];
     [breakStart, breakEnd] = top.split('-');
+    console.log('Using calculated break from pairs:', { breakStart, breakEnd });
   }
+  
+  console.log('Final break times to display:', { breakStart, breakEnd });
 
   // Build final column set with an inserted Break column (if detected)
   let allTimes = [...baseTimes];
@@ -1877,7 +2346,7 @@ function TimetableTables({
   // Deduplicate by unique key: class+day+time+course+room+instructor
   const seen = new Set();
   const dedupedDetails = [];
-  for (const d of details) {
+  for (const d of sourceData) {
     const key = `${d.class}|${d.day}|${d.time}|${d.course}|${d.roomNumber}|${d.instructorName}`;
     if (!seen.has(key)) {
       seen.add(key);
