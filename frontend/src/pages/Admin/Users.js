@@ -543,7 +543,7 @@ const Users = () => {
                             <Form.Select
                               size="sm"
                               value={filterDesignation}
-                              onChange={(e) => setFilterDesignation(e.target.value)}
+                              onChange={(e) => {setFilterDesignation({type:e.target.value});e.target.blur();}}
                               style={{
                                 borderRadius: '8px',
                                 border: '1px solid rgba(139, 92, 246, 0.2)',
@@ -1081,7 +1081,7 @@ const Users = () => {
                   <Form.Label style={{ fontWeight: '600', color: '#7e22ce', fontSize: '0.875rem' }}>Designation</Form.Label>
                   <Form.Select
                     value={current.designation}
-                    onChange={(e) => setCurrent({ ...current, designation: e.target.value })}
+                    onChange={e => { setCurrent({ ...current, designation: e.target.value }); e.target.blur(); }}
                     required
                     disabled={submitting}
                     className="gradient-border-input"

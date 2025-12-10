@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Card, Table, Button, Modal, Alert, Badge, Row, Col } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
-import { FaBuilding, FaEye, FaUsers, FaChalkboardTeacher, FaGraduationCap, FaEnvelope, FaPhone, FaMapMarkerAlt, FaIdCard, FaCrown, FaCalendarAlt } from 'react-icons/fa';
+import { FaBuilding, FaEye, FaUsers, FaChalkboardTeacher, FaGraduationCap, FaEnvelope } from 'react-icons/fa';
 import Sidebar from '../../components/Sidebar';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
@@ -235,271 +235,237 @@ const Institutes = () => {
           </motion.div>
 
           <Modal show={showDetail} onHide={handleCloseDetail} centered size="lg" style={{ zIndex: 1050 }}>
-            <Modal.Header closeButton style={{
-              background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
-              color: '#fff',
-              borderBottom: 'none',
-              padding: '20px 24px'
-            }}>
-              <Modal.Title style={{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FaBuilding style={{ fontSize: '1.1rem' }} />
-                Institute Details
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body style={{
-              background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
-              padding: '24px'
-            }}>
-              {selected ? (
-                <div>
-                  {selected.logoUrl && (
-                    <div className="text-center mb-4">
-                      <img
-                        src={selected.logoUrl}
-                        alt="Institute Logo"
-                        style={{
-                          maxWidth: '140px',
-                          maxHeight: '140px',
-                          borderRadius: '16px',
-                          border: '4px solid rgba(255, 255, 255, 0.9)',
-                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-                          background: '#fff'
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: '12px',
-                    padding: '12px 16px',
-                    marginBottom: '16px',
-                    backdropFilter: 'blur(10px)'
+            <AnimatePresence>
+              {showDetail && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 40 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 40 }}
+                  transition={{ duration: 0.5, type: 'spring' }}
+                  style={{
+                    borderRadius: '24px',
+                    boxShadow: '0 8px 32px rgba(126,34,206,0.18)',
+                    border: '4px solid #a855f7',
+                    background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <Modal.Header closeButton style={{
+                    background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                    color: '#fff',
+                    borderBottom: 'none',
+                    padding: '28px 32px',
+                    boxShadow: '0 2px 12px rgba(126,34,206,0.10)'
                   }}>
-                    <h5 style={{
-                      color: '#fff',
-                      fontWeight: 700,
-                      fontSize: '1rem',
-                      marginBottom: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
-                      <FaBuilding /> Institute Information
-                    </h5>
-                  </div>
-                  <Row className="g-3 mb-4">
-                    <Col md={6}>
-                      <div style={{
-                        background: '#fff',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Institute Name</p>
-                        <p style={{ fontSize: '0.95rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.instituteName}</p>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div style={{
-                        background: '#fff',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FaIdCard />Institute ID
-                        </p>
-                        <p style={{ fontSize: '0.95rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.instituteID}</p>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div style={{
-                        background: '#fff',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Type</p>
-                        <p style={{ fontSize: '0.95rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.instituteType}</p>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div style={{
-                        background: '#fff',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FaCrown />Subscription
-                        </p>
-                        <Badge style={{ background: '#fbbf24', color: '#78350f', fontSize: '0.85rem', padding: '6px 12px', fontWeight: 700 }}>
-                          {selected.subscription}
-                        </Badge>
-                      </div>
-                    </Col>
-                    <Col md={12}>
-                      <div style={{
-                        background: '#fff',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FaMapMarkerAlt />Address
-                        </p>
-                        <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.address}</p>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div style={{
-                        background: '#fff',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FaPhone />Contact
-                        </p>
-                        <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.contactNumber}</p>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div style={{
-                        background: '#fff',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FaCalendarAlt />Created At
-                        </p>
-                        <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>
-                          {selected.created_at ? new Date(selected.created_at).toLocaleDateString() : 'N/A'}
-                        </p>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div style={{
-                        background: '#fff',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FaChalkboardTeacher />Total Teachers
-                        </p>
-                        <p style={{ fontSize: '1.35rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.totalTeachers ?? 0}</p>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div style={{
-                        background: '#fff',
-                        padding: '14px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FaGraduationCap />Total Students
-                        </p>
-                        <p style={{ fontSize: '1.35rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.totalStudents ?? 0}</p>
-                      </div>
-                    </Col>
-                  </Row>
-
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: '12px',
-                    padding: '12px 16px',
-                    marginTop: '20px',
-                    marginBottom: '16px',
-                    backdropFilter: 'blur(10px)'
+                    <Modal.Title style={{ fontSize: '1.5rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '14px', letterSpacing: '0.02em' }}>
+                      <motion.span
+                        initial={{ scale: 0.8, rotate: -10 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                        style={{ display: 'inline-flex', alignItems: 'center' }}
+                      >
+                        <FaBuilding style={{ fontSize: '1.5rem', filter: 'drop-shadow(0 0 8px #a855f7)' }} />
+                      </motion.span>
+                      Institute Details
+                    </Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body style={{
+                    background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+                    padding: '32px',
+                    minHeight: '480px',
+                    position: 'relative'
                   }}>
-                    <h5 style={{
-                      color: '#fff',
-                      fontWeight: 700,
-                      fontSize: '1rem',
-                      marginBottom: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
-                      <FaUsers /> Admin Details
-                    </h5>
-                  </div>
-                  {selected.admin ? (
-                    <Row className="g-3">
-                      <Col md={6}>
-                        <div style={{
-                          background: '#fff',
-                          padding: '14px',
-                          borderRadius: '12px',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                        }}>
-                          <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Admin Name</p>
-                          <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.admin.userName}</p>
-                        </div>
-                      </Col>
-                      <Col md={6}>
-                        <div style={{
-                          background: '#fff',
-                          padding: '14px',
-                          borderRadius: '12px',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                        }}>
-                          <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <FaEnvelope />Email
-                          </p>
-                          <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.admin.email}</p>
-                        </div>
-                      </Col>
-                      <Col md={6}>
-                        <div style={{
-                          background: '#fff',
-                          padding: '14px',
-                          borderRadius: '12px',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                        }}>
-                          <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <FaPhone />Phone
-                          </p>
-                          <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.admin.phoneNumber}</p>
-                        </div>
-                      </Col>
-                      <Col md={6}>
-                        <div style={{
-                          background: '#fff',
-                          padding: '14px',
-                          borderRadius: '12px',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                        }}>
-                          <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <FaIdCard />CNIC
-                          </p>
-                          <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.admin.cnic}</p>
-                        </div>
-                      </Col>
-                    </Row>
-                  ) : (
-                    <div style={{
-                      background: 'rgba(255, 255, 255, 0.9)',
-                      padding: '20px',
-                      borderRadius: '12px',
-                      border: '2px solid #fbbf24',
-                      textAlign: 'center',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                    }}>
-                      <p style={{ color: '#78350f', marginBottom: 0, fontWeight: 600, fontSize: '0.95rem' }}>
-                        ⚠️ No admin assigned to this institute
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-center text-muted">No details available.</p>
+                    {selected ? (
+                      <>
+                        <motion.div
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2, duration: 0.6 }}
+                        >
+                          {selected.logoUrl && (
+                            <motion.div className="text-center mb-4"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.3, duration: 0.5 }}
+                            >
+                              <img
+                                src={selected.logoUrl}
+                                alt="Institute Logo"
+                                style={{
+                                  maxWidth: '140px',
+                                  maxHeight: '140px',
+                                  borderRadius: '16px',
+                                  border: '4px solid #fff',
+                                  boxShadow: '0 8px 32px #a855f7',
+                                  background: '#fff',
+                                  filter: 'drop-shadow(0 0 16px #a855f7)'
+                                }}
+                              />
+                            </motion.div>
+                          )}
+                          <div style={{
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            borderRadius: '16px',
+                            padding: '16px 20px',
+                            marginBottom: '20px',
+                            backdropFilter: 'blur(12px)',
+                            boxShadow: '0 2px 12px #a855f7'
+                          }}>
+                            <motion.h5
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.4, duration: 0.5 }}
+                              style={{
+                                color: '#fff',
+                                fontWeight: 800,
+                                fontSize: '1.15rem',
+                                marginBottom: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                letterSpacing: '0.01em',
+                                 padding: '10px 0'
+                              }}
+                            >
+                              <FaBuilding style={{ filter: 'drop-shadow(0 0 6px #a855f7)' }} /> Institute Information
+                            </motion.h5>
+                            <Row className="g-3 mb-4">
+                              <Col md={6}>
+                                <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Institute Name</p>
+                                  <p style={{ fontSize: '0.95rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.instituteName}</p>
+                                </div>
+                              </Col>
+                              <Col md={6}>
+                                <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Institute ID</p>
+                                  <p style={{ fontSize: '0.95rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.instituteID}</p>
+                                </div>
+                              </Col>
+                              <Col md={6}>
+                                <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Type</p>
+                                  <p style={{ fontSize: '0.95rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.instituteType}</p>
+                                </div>
+                              </Col>
+                              <Col md={6}>
+                                <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Subscription</p>
+                                  <Badge style={{ background: '#7e22ce', color: 'white', fontSize: '0.85rem', padding: '6px 12px', fontWeight: 700 }}>
+                                    {selected.subscription}
+                                  </Badge>
+                                </div>
+                              </Col>
+                              <Col md={12}>
+                                <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Address</p>
+                                  <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.address}</p>
+                                </div>
+                              </Col>
+                              <Col md={6}>
+                                <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Contact</p>
+                                  <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.contactNumber}</p>
+                                </div>
+                              </Col>
+                              <Col md={6}>
+                                <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Created At</p>
+                                  <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>
+                                    {selected.created_at ? new Date(selected.created_at).toLocaleDateString() : 'N/A'}
+                                  </p>
+                                </div>
+                              </Col>
+                              <Col md={6}>
+                                <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Total Teachers</p>
+                                  <p style={{ fontSize: '1.35rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.totalTeachers ?? 0}</p>
+                                </div>
+                              </Col>
+                              <Col md={6}>
+                                <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                  <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Total Students</p>
+                                  <p style={{ fontSize: '1.35rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.totalStudents ?? 0}</p>
+                                </div>
+                              </Col>
+                            </Row>
+                          </div>
+                          <div style={{
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            borderRadius: '16px',
+                            padding: '16px 20px',
+                            marginTop: '24px',
+                            marginBottom: '20px',
+                            backdropFilter: 'blur(12px)',
+                            boxShadow: '0 2px 12px #a855f7'
+                          }}>
+                            <motion.h5
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.5, duration: 0.5 }}
+                              style={{
+                                color: '#fff',
+                                fontWeight: 800,
+                                fontSize: '1.15rem',
+                                marginBottom: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                letterSpacing: '0.01em',
+                                padding: '10px 0'
+                              }}
+                            >
+                              <FaUsers style={{ filter: 'drop-shadow(0 0 6px #a855f7)' }} /> Admin Details
+                            </motion.h5>
+                            {selected.admin ? (
+                              <Row className="g-3">
+                                <Col md={6}>
+                                  <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                    <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Admin Name</p>
+                                    <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 700, marginBottom: 0 }}>{selected.admin.userName}</p>
+                                  </div>
+                                </Col>
+                                <Col md={6}>
+                                  <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                    <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Email</p>
+                                    <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.admin.email}</p>
+                                  </div>
+                                </Col>
+                                <Col md={6}>
+                                  <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                    <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>Phone</p>
+                                    <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.admin.phoneNumber}</p>
+                                  </div>
+                                </Col>
+                                <Col md={6}>
+                                  <div style={{ background: '#fff', padding: '14px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                    <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: '6px', fontWeight: 600 }}>CNIC</p>
+                                    <p style={{ fontSize: '0.9rem', color: '#111827', fontWeight: 600, marginBottom: 0 }}>{selected.admin.cnic}</p>
+                                  </div>
+                                </Col>
+                              </Row>
+                            ) : (
+                              <div style={{ background: 'rgba(255, 255, 255, 0.9)', padding: '20px', borderRadius: '12px', border: '2px solid #fbbf24', textAlign: 'center', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+                                <p style={{ color: '#78350f', marginBottom: 0, fontWeight: 600, fontSize: '0.95rem' }}>
+                                  No admin assigned to this institute
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      </>
+                    ) : (
+                      <motion.p className="text-center text-muted"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        style={{ fontSize: '1.1rem', fontWeight: 600 }}
+                      >No details available.</motion.p>
+                    )}
+                  </Modal.Body>
+                </motion.div>
               )}
-            </Modal.Body>
+            </AnimatePresence>
           </Modal>
         </Container>
       </div>
