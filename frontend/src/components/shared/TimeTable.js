@@ -2548,7 +2548,6 @@ function TimetableTables({
                       
                       const isSelected = isEditMode && selectedCells.some(s => s.index === cellIndex);
                       const isSwapping = swappingCells && (swappingCells.cell1 === cellIndex || swappingCells.cell2 === cellIndex);
-                      const isFirstSwapCell = swappingCells && swappingCells.cell1 === cellIndex;
                       
                       return (
                         <motion.div

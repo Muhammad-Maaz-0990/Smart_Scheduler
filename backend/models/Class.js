@@ -17,7 +17,8 @@ const classSchema = new mongoose.Schema({
   },
   section: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   year: {
     type: String,

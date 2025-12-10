@@ -20,7 +20,7 @@ const Classes = () => {
   const [currentClass, setCurrentClass] = useState({
     degree: '',
     session: 'Fall',
-    section: 'A',
+    section: '',
     year: '',
     rank: 1
   });
@@ -65,7 +65,7 @@ const Classes = () => {
     if (mode === 'edit' && classData) {
       setCurrentClass(classData);
     } else {
-      setCurrentClass({ degree: '', session: 'Fall', section: 'A', year: '', rank: 1 });
+      setCurrentClass({ degree: '', session: 'Fall', section: '', year: '', rank: 1 });
     }
     setShowModal(true);
     setError('');
@@ -74,7 +74,7 @@ const Classes = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setCurrentClass({ degree: '', session: 'Fall', section: 'A', year: '', rank: 1 });
+    setCurrentClass({ degree: '', session: 'Fall', section: '', year: '', rank: 1 });
     setError('');
   };
 
@@ -140,7 +140,7 @@ const Classes = () => {
     try {
       const text = await file.text();
       const { headers, items } = parseCSV(text);
-      const required = ['degree', 'session', 'section', 'year', 'rank'];
+      const required = ['degree', 'session', 'year', 'rank'];
       if (!required.every(h => headers.includes(h))) { setImportError('CSV must include headers: ' + required.join(', ')); setImportPreview([]); return; }
       setImportPreview(items);
     } catch { setImportError('Failed to parse CSV'); setImportPreview([]); }
@@ -153,7 +153,7 @@ const Classes = () => {
       for (const c of importPreview) {
         const res = await fetch('http://localhost:5000/api/classes', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ degree: c.degree, session: c.session, section: c.section, year: c.year, rank: Number(c.rank) || 1, instituteID: instituteObjectId })
+          body: JSON.stringify({ degree: c.degree, session: c.session, section: c.section || '', year: c.year, rank: Number(c.rank) || 1, instituteID: instituteObjectId })
         });
         if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.message || 'Failed to add some rows'); }
       }
@@ -162,7 +162,7 @@ const Classes = () => {
   };
   const exportCSV = () => {
     const headers = ['degree', 'session', 'section', 'year', 'rank'];
-    const rows = classes.map(c => ({ degree: c.degree, session: c.session, section: c.section, year: c.year, rank: c.rank }));
+    const rows = classes.map(c => ({ degree: c.degree, session: c.session, section: c.section || '', year: c.year, rank: c.rank }));
     downloadCSV('classes.csv', toCSV(headers, rows));
   };
 
@@ -416,6 +416,7 @@ const Classes = () => {
                               }}
                             >
                               <option value="All">All Sections</option>
+                              <option value="">None</option>
                               <option value="A">A</option>
                               <option value="B">B</option>
                             </Form.Select>
@@ -656,10 +657,10 @@ const Classes = () => {
                                   fontWeight: '600',
                                   padding: '0.4rem 0.8rem',
                                   borderRadius: '8px',
-                                  background: '#6b7280',
+                                  background: r.section ? '#6b7280' : '#94a3b8',
                                   color: 'white'
                                 }}>
-                                  {r.section}
+                                  {r.section || 'None'}
                                 </Badge>
                               </td>
                               <td style={{ padding: '0.75rem' }}>{r.year}</td>
@@ -798,11 +799,11 @@ const Classes = () => {
                                   fontWeight: '600',
                                   padding: '0.4rem 0.8rem',
                                   borderRadius: '8px',
-                                  background: '#6b7280',
+                                  background: classItem.section ? '#6b7280' : '#94a3b8',
                                   color: 'white'
                                 }}
                               >
-                                {classItem.section}
+                                {classItem.section || 'None'}
                               </Badge>
                             </td>
                             <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>{classItem.year}</td>
@@ -1007,7 +1008,6 @@ const Classes = () => {
                   <Form.Select
                     value={currentClass.section}
                     onChange={(e) => setCurrentClass({ ...currentClass, section: e.target.value })}
-                    required
                     style={{
                       borderRadius: '10px',
                       border: '2px solid rgba(139, 92, 246, 0.2)',
@@ -1019,6 +1019,7 @@ const Classes = () => {
                     onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
                     onBlur={(e) => e.target.style.borderColor = 'rgba(139, 92, 246, 0.2)'}
                   >
+                    <option value="">None (Single Section)</option>
                     <option value="A">A</option>
                     <option value="B">B</option>
                   </Form.Select>

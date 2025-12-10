@@ -1,0 +1,65 @@
+courseCode,courseTitle,courseType,creditHours
+CS426,Parallel and Distributed Computing,Theory,3
+CS415,Information Security,Theory,1
+CS402,Data Science,Theory,2
+MA478,Graph Theory,Theory,2
+CS402L,Data Science Lab,Lab,1
+CS426L,Parallel and Distributed Computing Lab,Lab,1
+EL300,Interpersonal Skills/ Public Relations,Theory,3
+BA152,Introduction to Management,Theory,3
+CS325,Operating Systems,Theory,3
+CS344,Artificial Intelligence,Theory,3
+CS332,Design & Analysis of Algorithms,Theory,3
+MA201,Linear Algebra,Theory,2
+CS301L,Web Development Lab,Lab,1
+CS344L,Artificial Intelligence Lab,Lab,1
+CS325 L,Operating Systems Lab,Lab,1
+CS301,Full Stack Web Development,Theory,2
+CS215,Information Security,Theory,2
+CS284L,Visual Programming Lab,Lab,1
+MA301,Probability and Statistics,Theory,2
+CS284,Visual Programming,Theory,2
+CS216,Data Structures,Theory,2
+CS216L,Data Structures Lab,Lab,1
+MA110,Calculus and Analytical Geometry,Theory,3
+CS215L,Information Security Lab,Lab,1
+SE420,Business Process Engineering,Theory,3
+SE301,Software Re-Engineering,Theory,3
+SE334,Game Application Development,Theory,3
+SE498,Final Year Project II,Theory,3
+SE302,Software Engineering Economics,Theory,3
+SE421,Software Project Management,Theory,3
+SE215,UI/UX Design,Theory,3
+SE343,Software Quality Engineering,Theory,2
+SE321 L,Software Construction and Development Lab,Lab,1
+EL271,Expository Writing,Theory,2
+AI232L,Introduction to Artificial Intelligence Lab,Lab,1
+CS260L,Computer Networks Lab,Lab,1
+AI232,Introduction to Artificial Intelligence,Theory,2
+CS260,Computer Networks,Theory,2
+CY256,Secure Software Design and Development,Theory,2
+BA356,Entrepreneurship,Theory,3
+CY498,Final Project II,Theory,3
+BA241,Principles of Marketing,Theory,3
+CY256L,Secure Software Design and Development Lab,Lab,1
+HU400,Technical and Business Writing,Theory,3
+CY355L,Vulnerability Assessment & Reverse Engineering Lab,Lab,1
+CY334,Digital Forensics,Theory,3
+HU411,Civics and Community Engagement,Theory,3
+CY334L,Digital Forensics Lab,Lab,1
+CS226,Computer Organization & Assembly Language,Theory,2
+CY103,Information Assurance,Theory,2
+CS226L,Computer Organization & Assembly Language Lab,Lab,1
+CS112L,Object Oriented Programming Lab,Lab,1
+CS112,Object Oriented Programming,Theory,2
+CS181L,Applications of Information and Communication Technologies Lab,Lab,1
+CS111,Programming Fundamentals,Theory,2
+PH111,Applied Physics,Theory,2
+MA114,Foundational Mathematics,Theory,2
+HU115,Pakistan Studies,Theory,2
+EL170,Functional English,Theory,2
+FQ100,Fehm-e-Quran,Theory,2
+HU124,Islamic Studies & Ethics,Theory,2
+MA216,Discrete Structures,Theory,2
+CY104L,Introduction to Cyber security Lab,Lab,1
+CY104,Introduction to Cyber security,Theory,2

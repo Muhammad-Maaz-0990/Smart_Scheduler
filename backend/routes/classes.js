@@ -17,7 +17,13 @@ router.get('/:instituteID', async (req, res) => {
 router.post('/', [
   body('degree').notEmpty().withMessage('Degree is required'),
   body('session').isIn(['Fall', 'Spring']).withMessage('Session must be Fall or Spring'),
-  body('section').isIn(['A', 'B']).withMessage('Section must be A or B'),
+  body('section').optional().custom(value => {
+    if (value === undefined || value === null || value === '' || value === 'A' || value === 'B' || 
+        value === 'None' || value === 'none') {
+      return true;
+    }
+    throw new Error('Section must be A, B, None, or empty');
+  }),
   body('year').notEmpty().withMessage('Year is required'),
   body('rank').isInt({ min: 1 }).withMessage('Rank must be a positive integer'),
   body('instituteID').notEmpty().withMessage('Institute ID is required')
@@ -32,11 +38,17 @@ router.post('/', [
     const lastClass = await Class.findOne().sort({ classID: -1 });
     const newClassID = lastClass ? lastClass.classID + 1 : 1;
 
+    // Normalize section: convert "None" string to empty string
+    let section = req.body.section;
+    if (section === 'None' || section === 'none' || !section) {
+      section = '';
+    }
+
     const newClass = new Class({
       classID: newClassID,
       degree: req.body.degree,
       session: req.body.session,
-      section: req.body.section,
+      section: section,
       year: req.body.year,
       rank: req.body.rank,
       instituteID: req.body.instituteID
@@ -56,7 +68,13 @@ router.post('/', [
 router.put('/:id', [
   body('degree').optional().notEmpty().withMessage('Degree cannot be empty'),
   body('session').optional().isIn(['Fall', 'Spring']).withMessage('Session must be Fall or Spring'),
-  body('section').optional().isIn(['A', 'B']).withMessage('Section must be A or B'),
+  body('section').optional().custom(value => {
+    if (value === undefined || value === null || value === '' || value === 'A' || value === 'B' || 
+        value === 'None' || value === 'none') {
+      return true;
+    }
+    throw new Error('Section must be A, B, None, or empty');
+  }),
   body('year').optional().notEmpty().withMessage('Year cannot be empty'),
   body('rank').optional().isInt({ min: 1 }).withMessage('Rank must be a positive integer')
 ], async (req, res) => {
@@ -66,6 +84,11 @@ router.put('/:id', [
   }
 
   try {
+    // Normalize section: convert "None" string to empty string
+    if (req.body.section === 'None' || req.body.section === 'none') {
+      req.body.section = '';
+    }
+    
     const updatedClass = await Class.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },

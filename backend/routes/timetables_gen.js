@@ -87,7 +87,7 @@ router.post('/generate', protect, async (req, res) => {
       timeslots,
       breaks,
       slotMinutes: Number(slotMinutes) || 60,
-      algorithms: ['GA_A', 'GA_B', 'GA_C']
+      algorithms: ['CSP']
     };
 
     const PY_API_URL = process.env.PY_API_URL || 'http://localhost:8000';

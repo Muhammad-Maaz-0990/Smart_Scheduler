@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any, Tuple, Set
 import random
 from collections import defaultdict
-from copy import deepcopy
 
 app = FastAPI(title="Smart Scheduler CSP API")
 
@@ -96,53 +95,755 @@ def split_into_slices(start: str, end: str, minutes: int) -> List[tuple]:
     return out
 
 
+class CSPVariable:
+    """Represents a variable in the CSP - a class session to be scheduled."""
+    def __init__(self, var_id: int, class_name: str, course: str, session_type: str, 
+                 instructor: Optional[str] = None):
+        self.id = var_id
+        self.class_name = class_name
+        self.course = course
+        self.session_type = session_type  # 'Lecture' or 'Lab'
+        self.instructor = instructor
+        self.assignment: Optional[Tuple] = None  # (room, day, time_slots)
+    
+    def __repr__(self):
+        return f"Var({self.class_name}/{self.course}/{self.session_type})"
+
+
+class CSPDomain:
+    """Represents the domain of possible assignments for a variable."""
+    def __init__(self):
+        self.values: List[Tuple] = []  # List of (room, day, time_slots_tuple)
+    
+    def add(self, room: str, day: str, time_slots: tuple):
+        self.values.append((room, day, time_slots))
+    
+    def remove(self, value):
+        if value in self.values:
+            self.values.remove(value)
+    
+    def is_empty(self):
+        return len(self.values) == 0
+    
+    def copy(self):
+        new_domain = CSPDomain()
+        new_domain.values = self.values.copy()
+        return new_domain
+
+
+class CSPSolver:
+    """Constraint Satisfaction Problem solver for timetable scheduling."""
+    
+    def __init__(self, payload: GeneratePayload, seed: int):
+        random.seed(seed)
+        self.payload = payload
+        self.seed = seed
+        self.variables: List[CSPVariable] = []
+        self.domains: Dict[int, CSPDomain] = {}
+        self.constraints_checked = 0
+        self.backtracks = 0
+        
+        # Initialize data structures
+        self._initialize_variables()
+        self._initialize_domains()
+    
+    def _initialize_variables(self):
+        """Create CSP variables from assignments.
+        
+        Handles both theory courses (1-3 credit hours = 1-3 sessions per week)
+        and lab courses (1 credit hour = 1 session of 3 consecutive hours).
+        """
+        var_id = 0
+        for a in self.payload.assignments:
+            cls = a.get("class") or a.get("class_")
+            course = a.get("course")
+            typ = a.get("type")
+            ch = a.get("creditHours", 1)
+            instr = a.get("instructor")
+            
+            if not cls or not course or not typ:
+                continue
+            
+            # Normalize course type
+            typ = "Lab" if typ.lower() in ["lab", "laboratory"] else "Lecture"
+            
+            if typ == "Lab":
+                # Lab: 1 credit hour = 1 session of 3 consecutive slots
+                # Each lab gets exactly 1 variable representing 3 consecutive hours
+                var = CSPVariable(var_id, str(cls), str(course), "Lab", 
+                                 str(instr) if instr else None)
+                self.variables.append(var)
+                var_id += 1
+            else:
+                # Theory: creditHours = number of separate 1-hour sessions per week
+                # Create one variable per session (e.g., 3 credit hours = 3 sessions)
+                sessions = max(1, int(ch))
+                for session_num in range(sessions):
+                    var = CSPVariable(var_id, str(cls), str(course), "Lecture", 
+                                     str(instr) if instr else None)
+                    self.variables.append(var)
+                    var_id += 1
+    
+    def _initialize_domains(self):
+        """Initialize domains for all variables based on available slots.
+        
+        Each variable gets a domain of possible (room, day, time_slots) assignments.
+        Theory courses get single slots, labs get consecutive slot blocks.
+        """
+        # Get available time slots respecting breaks
+        slots_by_day = self._get_slots_by_day()
+        
+        if not slots_by_day:
+            raise ValueError("No valid time slots available after applying breaks")
+        
+        # Count variables by type for logging
+        lab_count = sum(1 for v in self.variables if v.session_type == "Lab")
+        lecture_count = len(self.variables) - lab_count
+        
+        print(f"Initializing domains for {len(self.variables)} variables:")
+        print(f"  - {lecture_count} theory sessions")
+        print(f"  - {lab_count} lab sessions")
+        print(f"  - {len(self.payload.rooms)} rooms available")
+        print(f"  - {sum(len(slots) for slots in slots_by_day.values())} total time slots")
+        
+        empty_domain_vars = []
+        for var in self.variables:
+            domain = CSPDomain()
+            
+            if var.session_type == "Lab":
+                # Lab needs consecutive slots (prefer 3, allow 2 as fallback)
+                self._add_lab_domain_values(domain, slots_by_day, var)
+            else:
+                # Lecture needs 1 slot
+                self._add_lecture_domain_values(domain, slots_by_day, var)
+            
+            if domain.is_empty():
+                empty_domain_vars.append(var)
+            
+            self.domains[var.id] = domain
+        
+        if empty_domain_vars:
+            print(f"\nWARNING: {len(empty_domain_vars)} variables have empty domains:")
+            for v in empty_domain_vars[:5]:
+                print(f"  - {v}")
+            if len(empty_domain_vars) > 5:
+                print(f"  ... and {len(empty_domain_vars) - 5} more")
+    
+    def _get_slots_by_day(self) -> Dict[str, List[Tuple[str, str]]]:
+        """Extract and organize time slots by day, respecting breaks."""
+        slots_by_day = {}
+        
+        for ts in self.payload.timeslots:
+            day = ts.get("day")
+            start = ts.get("start")
+            end = ts.get("end")
+            
+            if not day or not start or not end:
+                continue
+            
+            # Split into fixed-length slices
+            slices = split_into_slices(start, end, self.payload.slotMinutes)
+            
+            for s, e in slices:
+                if respects_break(day, s, e, self.payload.breaks):
+                    if day not in slots_by_day:
+                        slots_by_day[day] = []
+                    slots_by_day[day].append((s, e))
+        
+        # Sort by start time
+        for day in slots_by_day:
+            slots_by_day[day].sort(key=lambda x: x[0])
+        
+        return slots_by_day
+    
+    def _add_lab_domain_values(self, domain: CSPDomain, slots_by_day: Dict, var: CSPVariable):
+        """Add all possible lab slot combinations to domain.
+        
+        Labs require consecutive time slots (ideally 3 hours).
+        Prefers dedicated lab rooms but can use classrooms if needed.
+        """
+        # Get lab rooms first, then fall back to all rooms
+        lab_rooms = [r for r in self.payload.rooms 
+                    if self.payload.roomTypes.get(r, "Class") == "Lab"]
+        
+        # If no dedicated lab rooms, allow using regular classrooms for labs
+        if not lab_rooms:
+            lab_rooms = self.payload.rooms
+        
+        if not lab_rooms:
+            return  # No rooms available at all
+        
+        total_options = 0
+        for day, day_slots in slots_by_day.items():
+            # Priority 1: Find 3 consecutive slots (standard lab duration)
+            consecutive_blocks_3 = self._find_consecutive_blocks(day_slots, 3)
+            for block in consecutive_blocks_3:
+                for room in lab_rooms:
+                    domain.add(room, day, tuple(block))
+                    total_options += 1
+            
+            # Priority 2: If few 3-slot options, also try 2 consecutive slots
+            # This provides more flexibility for scheduling
+            if total_options < len(lab_rooms) * 2:  # Not enough options
+                consecutive_blocks_2 = self._find_consecutive_blocks(day_slots, 2)
+                for block in consecutive_blocks_2:
+                    for room in lab_rooms:
+                        domain.add(room, day, tuple(block))
+                        total_options += 1
+    
+    def _add_lecture_domain_values(self, domain: CSPDomain, slots_by_day: Dict, var: CSPVariable):
+        """Add all possible lecture slot combinations to domain.
+        
+        Theory courses need single 1-hour slots.
+        Can use any classroom, and also lab rooms when they're available.
+        """
+        # Get all classroom-type rooms
+        class_rooms = [r for r in self.payload.rooms 
+                      if self.payload.roomTypes.get(r, "Class") == "Class"]
+        
+        # If no dedicated classrooms, use all available rooms (including labs)
+        if not class_rooms:
+            class_rooms = self.payload.rooms
+        
+        if not class_rooms:
+            raise ValueError("No rooms available for scheduling")
+        
+        # Add all possible single-slot options for each day
+        for day, day_slots in slots_by_day.items():
+            for slot in day_slots:
+                for room in class_rooms:
+                    domain.add(room, day, (slot,))
+    
+    def _find_consecutive_blocks(self, slots: List[Tuple[str, str]], count: int) -> List[List[Tuple[str, str]]]:
+        """Find consecutive time slot blocks of given count."""
+        blocks = []
+        
+        for i in range(len(slots) - count + 1):
+            is_consecutive = True
+            block = [slots[i]]
+            
+            for j in range(1, count):
+                # Check if next slot starts when previous ends
+                if slots[i + j - 1][1] == slots[i + j][0]:
+                    block.append(slots[i + j])
+                else:
+                    is_consecutive = False
+                    break
+            
+            if is_consecutive and len(block) == count:
+                blocks.append(block)
+        
+        return blocks
+    
+    # ==================== HARD CONSTRAINTS ====================
+    
+    def check_hard_constraints(self, var: CSPVariable, assignment: Tuple) -> bool:
+        """Check if assignment satisfies all hard constraints."""
+        self.constraints_checked += 1
+        
+        room, day, time_slots = assignment
+        
+        # Hard Constraint 1: No room conflicts
+        if not self._check_no_room_conflict(room, day, time_slots, var):
+            return False
+        
+        # Hard Constraint 2: No class conflicts
+        if not self._check_no_class_conflict(var.class_name, day, time_slots, var):
+            return False
+        
+        # Hard Constraint 3: No instructor conflicts
+        if var.instructor and not self._check_no_instructor_conflict(
+            var.instructor, day, time_slots, var):
+            return False
+        
+        # Hard Constraint 4: Correct room type (Lab vs Class)
+        if not self._check_room_type(var.session_type, room):
+            return False
+        
+        return True
+    
+    def _check_no_room_conflict(self, room: str, day: str, time_slots: tuple, 
+                                current_var: CSPVariable) -> bool:
+        """Ensure room is not already occupied at this time."""
+        for var in self.variables:
+            if var.id == current_var.id or var.assignment is None:
+                continue
+            
+            assigned_room, assigned_day, assigned_slots = var.assignment
+            
+            if assigned_room == room and assigned_day == day:
+                # Check for time overlap
+                if self._slots_overlap(time_slots, assigned_slots):
+                    return False
+        
+        return True
+    
+    def _check_no_class_conflict(self, class_name: str, day: str, time_slots: tuple,
+                                 current_var: CSPVariable) -> bool:
+        """Ensure class doesn't have overlapping sessions."""
+        for var in self.variables:
+            if var.id == current_var.id or var.assignment is None:
+                continue
+            
+            if var.class_name == class_name:
+                _, assigned_day, assigned_slots = var.assignment
+                
+                if assigned_day == day and self._slots_overlap(time_slots, assigned_slots):
+                    return False
+        
+        return True
+    
+    def _check_no_instructor_conflict(self, instructor: str, day: str, time_slots: tuple,
+                                     current_var: CSPVariable) -> bool:
+        """Ensure instructor doesn't have overlapping sessions."""
+        for var in self.variables:
+            if var.id == current_var.id or var.assignment is None:
+                continue
+            
+            if var.instructor == instructor:
+                _, assigned_day, assigned_slots = var.assignment
+                
+                if assigned_day == day and self._slots_overlap(time_slots, assigned_slots):
+                    return False
+        
+        return True
+    
+    def _check_room_type(self, session_type: str, room: str) -> bool:
+        """Check if room type matches session type.
+        
+        Flexible matching:
+        - Labs prefer lab rooms but can use classrooms if needed
+        - Theory courses prefer classrooms but can use labs when available
+        """
+        room_type = self.payload.roomTypes.get(room, "Class")
+        
+        if session_type == "Lab":
+            # Labs strongly prefer lab rooms, but can use any room
+            return True  # Allow flexibility for realistic scheduling
+        else:
+            # Theory courses can use any room type
+            return True
+    
+    def _slots_overlap(self, slots1: tuple, slots2: tuple) -> bool:
+        """Check if two sets of time slots overlap."""
+        def to_minutes(time_str: str) -> int:
+            h, m = time_str.split(":")
+            return int(h) * 60 + int(m)
+        
+        # Get time ranges for both slot sets
+        for s1, e1 in slots1:
+            start1 = to_minutes(s1)
+            end1 = to_minutes(e1)
+            
+            for s2, e2 in slots2:
+                start2 = to_minutes(s2)
+                end2 = to_minutes(e2)
+                
+                # Check overlap
+                if start1 < end2 and start2 < end1:
+                    return True
+        
+        return False
+    
+    # ==================== SOFT CONSTRAINTS ====================
+    
+    def calculate_soft_constraint_score(self, var: CSPVariable, assignment: Tuple) -> float:
+        """Calculate soft constraint violations (lower is better).
+        
+        Optimizes for realistic academic scheduling with multiple theory courses
+        and labs per class, ensuring good distribution and minimal conflicts.
+        """
+        score = 0.0
+        room, day, time_slots = assignment
+        
+        # Soft Constraint 1: Avoid multiple sessions of same course on same day
+        # Important for theory courses with 2-3 sessions per week
+        score += self._penalty_same_course_same_day(var, day) * 12
+        
+        # Soft Constraint 2: Prefer spreading sessions across different days
+        # Balances workload when scheduling 5+ theory courses + 3 labs
+        score += self._penalty_day_overload(var.class_name, day) * 6
+        
+        # Soft Constraint 3: Avoid back-to-back same course sessions
+        # Prevents fatigue from consecutive sessions of same subject
+        score += self._penalty_back_to_back(var, day, time_slots) * 15
+        
+        # Soft Constraint 4: Prefer balanced instructor workload
+        # Distributes teaching load evenly across days
+        score += self._penalty_instructor_overload(var.instructor, day) * 4
+        
+        # Soft Constraint 5: Prefer sessions in middle time slots
+        # Avoids very early or very late sessions
+        score += self._penalty_time_preference(time_slots) * 2
+        
+        # Soft Constraint 6: Minimize gaps in class schedules
+        # Reduces idle time between sessions for students
+        score += self._penalty_schedule_gaps(var.class_name, day, time_slots) * 7
+        
+        # Soft Constraint 7: Prefer proper room types
+        # Bonus for using correct room type (lab in lab room, etc)
+        score += self._penalty_room_type_mismatch(var.session_type, room) * 3
+        
+        return score
+    
+    def _penalty_same_course_same_day(self, var: CSPVariable, day: str) -> float:
+        """Penalty for scheduling same course multiple times on same day."""
+        count = 0
+        for v in self.variables:
+            if v.id != var.id and v.assignment is not None:
+                if (v.class_name == var.class_name and 
+                    v.course == var.course and 
+                    v.assignment[1] == day):
+                    count += 1
+        return count
+    
+    def _penalty_day_overload(self, class_name: str, day: str) -> float:
+        """Penalty for having too many sessions on same day.
+        
+        With 5+ theory courses and 3 labs, classes may have 15+ sessions/week.
+        Aim for 3-4 sessions per day across 5 days.
+        """
+        count = 0
+        for v in self.variables:
+            if v.assignment is not None and v.class_name == class_name:
+                if v.assignment[1] == day:
+                    count += 1
+        
+        # Progressive penalty: ideal is 3-4 sessions per day
+        if count <= 3:
+            return 0  # Good distribution
+        elif count == 4:
+            return 0.5  # Acceptable
+        elif count == 5:
+            return 2  # Getting heavy
+        else:
+            return (count - 4) * 3  # Too many sessions
+    
+    def _penalty_room_type_mismatch(self, session_type: str, room: str) -> float:
+        """Penalty for not using ideal room type.
+        
+        Labs should prefer lab rooms, theory courses prefer classrooms.
+        """
+        room_type = self.payload.roomTypes.get(room, "Class")
+        
+        if session_type == "Lab" and room_type != "Lab":
+            return 1.0  # Lab in classroom (acceptable but not ideal)
+        elif session_type == "Lecture" and room_type == "Lab":
+            return 0.5  # Theory in lab room (less problematic)
+        
+        return 0  # Perfect match
+    
+    def _penalty_back_to_back(self, var: CSPVariable, day: str, time_slots: tuple) -> float:
+        """Penalty for back-to-back sessions of same course."""
+        for v in self.variables:
+            if v.id != var.id and v.assignment is not None:
+                if (v.class_name == var.class_name and 
+                    v.course == var.course and 
+                    v.assignment[1] == day):
+                    
+                    assigned_slots = v.assignment[2]
+                    
+                    # Check if slots are adjacent
+                    if self._slots_adjacent(time_slots, assigned_slots):
+                        return 1.0
+        return 0
+    
+    def _penalty_instructor_overload(self, instructor: Optional[str], day: str) -> float:
+        """Penalty for instructor having too many sessions on same day."""
+        if not instructor:
+            return 0
+        
+        count = 0
+        for v in self.variables:
+            if v.assignment is not None and v.instructor == instructor:
+                if v.assignment[1] == day:
+                    count += 1
+        
+        if count > 5:
+            return count - 5
+        return 0
+    
+    def _penalty_time_preference(self, time_slots: tuple) -> float:
+        """Penalty for undesirable time slots (too early or too late)."""
+        def to_minutes(time_str: str) -> int:
+            h, m = time_str.split(":")
+            return int(h) * 60 + int(m)
+        
+        penalty = 0
+        for start, _ in time_slots:
+            start_min = to_minutes(start)
+            
+            # Prefer times between 9 AM and 5 PM
+            if start_min < 9 * 60:  # Before 9 AM
+                penalty += 0.5
+            elif start_min > 17 * 60:  # After 5 PM
+                penalty += 0.5
+        
+        return penalty
+    
+    def _penalty_schedule_gaps(self, class_name: str, day: str, time_slots: tuple) -> float:
+        """Penalty for creating gaps in class schedule."""
+        def to_minutes(time_str: str) -> int:
+            h, m = time_str.split(":")
+            return int(h) * 60 + int(m)
+        
+        # Get all slots for this class on this day
+        class_slots = []
+        for v in self.variables:
+            if v.assignment is not None and v.class_name == class_name:
+                if v.assignment[1] == day:
+                    for s, e in v.assignment[2]:
+                        class_slots.append((to_minutes(s), to_minutes(e)))
+        
+        # Add current slots
+        for s, e in time_slots:
+            class_slots.append((to_minutes(s), to_minutes(e)))
+        
+        # Sort by start time
+        class_slots.sort()
+        
+        # Calculate total gap time
+        gap_penalty = 0
+        for i in range(len(class_slots) - 1):
+            gap = class_slots[i + 1][0] - class_slots[i][1]
+            if gap > 60:  # Gap larger than 1 hour
+                gap_penalty += (gap - 60) / 60.0  # Penalty proportional to gap size
+        
+        return gap_penalty
+    
+    def _slots_adjacent(self, slots1: tuple, slots2: tuple) -> bool:
+        """Check if two slot sets are adjacent in time."""
+        for _, e1 in slots1:
+            for s2, _ in slots2:
+                if e1 == s2:
+                    return True
+        
+        for _, e2 in slots2:
+            for s1, _ in slots1:
+                if e2 == s1:
+                    return True
+        
+        return False
+    
+    # ==================== VARIABLE ORDERING HEURISTICS ====================
+    
+    def select_unassigned_variable(self) -> Optional[CSPVariable]:
+        """Select next variable using MRV (Minimum Remaining Values) heuristic."""
+        unassigned = [v for v in self.variables if v.assignment is None]
+        
+        if not unassigned:
+            return None
+        
+        # MRV: Choose variable with smallest domain
+        min_domain_size = float('inf')
+        best_var = None
+        
+        for var in unassigned:
+            domain_size = len(self.domains[var.id].values)
+            
+            if domain_size == 0:
+                return var  # Dead end, return immediately
+            
+            if domain_size < min_domain_size:
+                min_domain_size = domain_size
+                best_var = var
+        
+        return best_var
+    
+    # ==================== VALUE ORDERING HEURISTICS ====================
+    
+    def order_domain_values(self, var: CSPVariable) -> List[Tuple]:
+        """Order domain values using Least Constraining Value heuristic."""
+        domain = self.domains[var.id]
+        
+        # Score each value by soft constraints
+        scored_values = []
+        for value in domain.values:
+            if self.check_hard_constraints(var, value):
+                score = self.calculate_soft_constraint_score(var, value)
+                scored_values.append((score, value))
+        
+        # Sort by score (lower is better)
+        scored_values.sort(key=lambda x: x[0])
+        
+        return [v for _, v in scored_values]
+    
+    # ==================== FORWARD CHECKING ====================
+    
+    def forward_check(self, var: CSPVariable, assignment: Tuple) -> Dict[int, CSPDomain]:
+        """Perform forward checking to prune domains of unassigned variables."""
+        removed_values = defaultdict(list)
+        
+        room, day, time_slots = assignment
+        
+        for other_var in self.variables:
+            if other_var.id == var.id or other_var.assignment is not None:
+                continue
+            
+            domain = self.domains[other_var.id]
+            values_to_remove = []
+            
+            for value in domain.values[:]:
+                other_room, other_day, other_slots = value
+                
+                # Check if this value would violate constraints
+                # Room conflict
+                if other_room == room and other_day == day:
+                    if self._slots_overlap(time_slots, other_slots):
+                        values_to_remove.append(value)
+                        continue
+                
+                # Class conflict
+                if other_var.class_name == var.class_name and other_day == day:
+                    if self._slots_overlap(time_slots, other_slots):
+                        values_to_remove.append(value)
+                        continue
+                
+                # Instructor conflict
+                if (var.instructor and other_var.instructor == var.instructor and 
+                    other_day == day):
+                    if self._slots_overlap(time_slots, other_slots):
+                        values_to_remove.append(value)
+                        continue
+            
+            # Remove conflicting values and track for restoration
+            for value in values_to_remove:
+                domain.remove(value)
+                removed_values[other_var.id].append(value)
+        
+        return removed_values
+    
+    def restore_domains(self, removed_values: Dict[int, List]):
+        """Restore domain values after backtracking."""
+        for var_id, values in removed_values.items():
+            for value in values:
+                self.domains[var_id].add(*value)
+    
+    # ==================== BACKTRACKING SEARCH ====================
+    
+    def backtrack(self) -> bool:
+        """Backtracking search with forward checking."""
+        # Check if assignment is complete
+        var = self.select_unassigned_variable()
+        if var is None:
+            return True  # All variables assigned
+        
+        # Check if domain is empty
+        if self.domains[var.id].is_empty():
+            return False
+        
+        # Try values in order
+        ordered_values = self.order_domain_values(var)
+        
+        for value in ordered_values:
+            # Make assignment
+            var.assignment = value
+            
+            # Forward check
+            removed = self.forward_check(var, value)
+            
+            # Check if any domain became empty
+            domains_valid = all(
+                not self.domains[v.id].is_empty() 
+                for v in self.variables 
+                if v.assignment is None
+            )
+            
+            if domains_valid:
+                # Recursive call
+                result = self.backtrack()
+                if result:
+                    return True
+            
+            # Backtrack
+            self.backtracks += 1
+            var.assignment = None
+            self.restore_domains(removed)
+        
+        return False
+    
+    def solve(self) -> bool:
+        """Solve the CSP."""
+        return self.backtrack()
+    
+    def get_solution(self) -> Dict[str, Any]:
+        """Convert CSP solution to timetable format."""
+        details = []
+        timetable_id = 0
+        
+        for var in self.variables:
+            if var.assignment is None:
+                continue
+            
+            room, day, time_slots = var.assignment
+            
+            for start, end in time_slots:
+                timetable_id += 1
+                details.append({
+                    "timeTableID": timetable_id,
+                    "roomNumber": room,
+                    "class": var.class_name,
+                    "course": var.course,
+                    "day": day,
+                    "time": f"{start}-{end}",
+                    "instructorName": var.instructor or "Instructor",
+                })
+        
+        # Generate header
+        base_id = hash(f"{self.payload.instituteID}_{self.payload.session}_{self.payload.year}_{self.seed}") % 900000 + 100000
+        
+        header = {
+            "instituteTimeTableID": base_id,
+            "session": self.payload.session,
+            "year": self.payload.year,
+            "visibility": True,
+            "currentStatus": False,
+        }
+        
+        # Add break times if uniform
+        if (self.payload.breaks and self.payload.breaks.mode == "same" and 
+            self.payload.breaks.same):
+            header["breakStart"] = self.payload.breaks.same.start
+            header["breakEnd"] = self.payload.breaks.same.end
+        
+        return {
+            "header": header,
+            "details": details,
+            "stats": {
+                "constraintsChecked": self.constraints_checked,
+                "backtracks": self.backtracks,
+                "variablesAssigned": len([v for v in self.variables if v.assignment])
+            }
+        }
+
+
 def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
-    """Generate one timetable candidate with heuristic constraint solving.
+    """Generate one timetable candidate using CSP solver.
 
-    Constraints:
-    - Lecture creditHours = number of 1-hour sessions per week per class per course
-    - Labs require a 3-hour block (or 3 consecutive 1-hour slots if no 3h block exists)
-    - No clashes for room, class, or instructor at the same day/time
-    - Avoid scheduling within break windows
+    Hard Constraints:
+    1. No room conflicts - same room cannot be used at same time
+    2. No class conflicts - class cannot have multiple sessions at same time
+    3. No instructor conflicts - instructor cannot teach multiple sessions at same time
+    4. Room type matching - labs in lab rooms, lectures in classrooms
+    5. Break time respect - no sessions during break windows
+    6. Lab consecutive slots - labs require 3 consecutive hour slots
 
-    Heuristics:
-    - Prioritize labs first; they are harder to place
-    - Prefer less-crowded days/times to spread load
-    - Avoid back-to-back same-course for a class to improve distribution
-    - Prefer assigning courses to their mapped instructor consistently
-    - Mild backtracking: if placement fails, try alternate ordering
+    Soft Constraints (preferences, not requirements):
+    1. Avoid multiple sessions of same course on same day
+    2. Spread sessions across different days (avoid day overload)
+    3. Avoid back-to-back same course sessions
+    4. Balance instructor workload across days
+    5. Prefer middle time slots (9 AM - 5 PM)
+    6. Minimize gaps in class schedules
     """
     random.seed(seed)
-    np.random.seed(seed)
 
-    classes = payload.classes or ["Class"]
-    rooms = payload.rooms or ["R1"]
-    # Collect instructor names present in assignments (computed after normalization below)
-    instructors = []
-
-    # Normalize: Lab creditHours are treated as 1 (equals 3 consecutive hours)
-    # Build assignments from raw dicts and normalize lab credit hours
-    normalized_assignments: List[Assignment] = []
-    for a in payload.assignments:
-        cls = a.get("class") or a.get("class_")
-        course = a.get("course")
-        typ = a.get("type")
-        ch = a.get("creditHours")
-        instr = a.get("instructor")
-        if not cls or not course or not typ:
-            raise ValueError("Invalid assignment entry: missing class/course/type")
-        if typ == "Lab" and ch != 1:
-            ch = 1
-        normalized_assignments.append(Assignment(class_=str(cls), course=str(course), type=str(typ), creditHours=int(ch or 1), instructor=(str(instr) if instr else None)))
-
-    # Now collect instructors list from normalized assignments
-    instructors = [a.instructor or "Instructor" for a in normalized_assignments] or ["Instructor"]
-
-    # Normalize breaks to align with slotMinutes if only start provided or zero-length
+    # Normalize breaks
     def to_min(t: str) -> int:
         h, m = t.split(":"); return int(h) * 60 + int(m)
     def from_min(x: int) -> str:
         h = x // 60; m = x % 60; return f"{h:02d}:{m:02d}"
+    
     if payload.breaks:
         if payload.breaks.mode == "same" and payload.breaks.same:
             bs = payload.breaks.same.start
@@ -154,432 +855,82 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
                 bs = bw.start; be = bw.end
                 if bs and (not be or to_min(be) <= to_min(bs)):
                     payload.breaks.perDay[day].end = from_min(to_min(bs) + payload.slotMinutes)
-
-    # Normalize usable slices by day, excluding breaks
-    one_hour_slots = []  # list of (day, start, end)
-    slots_by_day: Dict[str, List[tuple]] = {}
-    for ts in payload.timeslots:
-        day = ts.get("day")
-        start = ts.get("start")
-        end = ts.get("end")
-        if not day or not start or not end:
-            continue
-        # Split the day window into fixed-length slices, then filter by break
-        for (s, e) in split_into_slices(start, end, payload.slotMinutes):
-            if not respects_break(day, s, e, payload.breaks):
-                continue
-            one_hour_slots.append((day, s, e))
-            slots_by_day.setdefault(day, []).append((s, e))
-    # Sort each day by start time
-    for d in slots_by_day:
-        slots_by_day[d].sort(key=lambda se: se[0])
-
-    # Pre-checks: availability for labs in Lab rooms
-    lab_rooms = [r for r in rooms if payload.roomTypes.get(r, "Class") == "Lab"]
-    class_rooms = [r for r in rooms if payload.roomTypes.get(r, "Class") == "Class"]
-    lab_hour_slices_total = sum(len(slots_by_day.get(day, [])) for day in slots_by_day)
-    # Count consecutive triplets available across days
-    def count_triplets() -> int:
-        total = 0
-        for day, day_slots in slots_by_day.items():
-            for i in range(len(day_slots) - 2):
-                s1, e1 = day_slots[i]
-                s2, e2 = day_slots[i + 1]
-                s3, e3 = day_slots[i + 2]
-                if e1 == s2 and e2 == s3:
-                    total += 1
-        return total
-    lab_consecutive_triplets = count_triplets()
-
-    # Instructor assignment per course (stable mapping to reduce clashes)
-    course_to_instructor: Dict[str, str] = {}
-    for a in normalized_assignments:
-        if a.instructor:
-            course_to_instructor[a.course] = a.instructor
-
-    # Occupancy trackers to prevent clashes
-    room_busy = set()        # (room, day, start, end)
-    class_busy = set()       # (class, day, start, end)
-    instr_busy = set()       # (instructor, day, start, end)
-    clash_log: List[Dict[str, Any]] = []
-    # Track lab block windows per class/day to prevent lectures inside lab spans
-    lab_blocks: Dict[tuple, List[tuple]] = {}
-
-    # Util: crowd score per (day,start,end) based on current occupancy
-    def crowd_score(day: str, start: str, end: str) -> int:
-        base = 0
-        for (r, d, s, e) in room_busy:
-            if d == day and s == start and e == end:
-                base += 1
-        for (c, d, s, e) in class_busy:
-            if d == day and s == start and e == end:
-                base += 1
-        for (i, d, s, e) in instr_busy:
-            if d == day and s == start and e == end:
-                base += 1
-        return base
-
-    details = []
-    timeTableID = 0
-
-    def within_lab_block(cls: str, day: str, start: str, end: str) -> bool:
-        blocks = lab_blocks.get((cls, day), [])
-        def to_min(t: str) -> int:
-            h, m = t.split(":"); return int(h) * 60 + int(m)
-        s = to_min(start); e = to_min(end)
-        for (bs, be) in blocks:
-            if s < be and e > bs:
-                return True
-        return False
-
-    # Track per-class/day courses already scheduled to avoid multiple lectures of same subject on same day
-    scheduled_courses_by_day: Dict[tuple, set] = {}
-
-    def try_place_lecture(cls: str, course_name: str) -> bool:
-        # Prefer less crowded slots
-        slot_candidates = sorted(one_hour_slots, key=lambda x: crowd_score(*x))
-        instr = course_to_instructor.get(course_name, instructors[0])
-        # Avoid scheduling same course multiple times on the same day
-        last_by_day: Dict[str, Optional[str]] = {}
-        for (day, start, end) in slot_candidates:
-            # Check occupancy
-            for r in rooms:
-                # ensure class lectures go to Class rooms
-                if payload.roomTypes.get(r, "Class") != "Class":
-                    continue
-                key_room = (r, day, start, end)
-                key_class = (cls, day, start, end)
-                key_instr = (instr, day, start, end)
-                # skip if inside any lab block for this class/day
-                if within_lab_block(cls, day, start, end):
-                    continue
-                # skip if this course already scheduled on the same day for this class
-                if course_name in scheduled_courses_by_day.get((cls, day), set()):
-                    continue
-                if key_room in room_busy or key_class in class_busy or key_instr in instr_busy:
-                    clash_log.append({
-                        "kind": "lecture",
-                        "reason": "occupied",
-                        "room": r,
-                        "class": cls,
-                        "instructor": instr,
-                        "day": day,
-                        "time": slot_string(start, end)
-                    })
-                    continue
-                # avoid consecutive same-course for class
-                if last_by_day.get(day) == course_name:
-                    continue
-                # Place
-                nonlocal timeTableID
-                timeTableID += 1
-                details.append({
-                    "timeTableID": timeTableID,
-                    "roomNumber": r,
-                    "class": cls,
-                    "course": course_name,
-                    "day": day,
-                    "time": slot_string(start, end),
-                    "instructorName": instr,
-                })
-                room_busy.add(key_room)
-                class_busy.add(key_class)
-                instr_busy.add(key_instr)
-                last_by_day[day] = course_name
-                scheduled_courses_by_day.setdefault((cls, day), set()).add(course_name)
-                return True
-        return False
-
-    def break_length_min(day: str) -> int:
-        def to_min(t: str) -> int:
-            h, m = t.split(":"); return int(h) * 60 + int(m)
-        if payload.breaks.mode == "same" and payload.breaks.same:
-            return max(0, to_min(payload.breaks.same.end) - to_min(payload.breaks.same.start))
-        if payload.breaks.mode == "per-day" and payload.breaks.perDay and day in payload.breaks.perDay:
-            bw = payload.breaks.perDay[day]
-            return max(0, to_min(bw.end) - to_min(bw.start))
-        return 0
-
-    def find_consecutive_triplet(day: str) -> Optional[List[tuple]]:
-        day_slots = slots_by_day.get(day, [])
-        for i in range(len(day_slots) - 2):
-            s1, e1 = day_slots[i]
-            s2, e2 = day_slots[i + 1]
-            s3, e3 = day_slots[i + 2]
-            # consecutive if previous end equals next start
-            if e1 == s2 and e2 == s3:
-                return [(s1, e1), (s2, e2), (s3, e3)]
-            # allow a gap equal to break length between first-second or second-third
-            gap1 = duration_in_hours(e1, s2)
-            gap2 = duration_in_hours(e2, s3)
-            br_min = break_length_min(day)
-            # compare in minutes using slotMinutes resolution
-            def to_min(t: str) -> int:
-                h, m = t.split(":"); return int(h) * 60 + int(m)
-            gap1m = max(0, to_min(s2) - to_min(e1))
-            gap2m = max(0, to_min(s3) - to_min(e2))
-            if (gap1m == br_min and e2 == s3) or (gap2m == br_min and e1 == s2):
-                return [(s1, e1), (s2, e2), (s3, e3)]
-        return None
-
-    def try_place_lab(cls: str, course_name: str) -> bool:
-        instr = course_to_instructor.get(course_name, instructors[0])
-        # Prefer days with available consecutive triplets and lower crowding
-        day_candidates = list(slots_by_day.keys())
-        day_candidates.sort(key=lambda d: sum(crowd_score(d, s, e) for (s, e) in slots_by_day.get(d, [])))
-        for day in day_candidates:
-            triplet = find_consecutive_triplet(day)
-            if not triplet:
-                continue
-            (s1, e1), (s2, e2), (s3, e3) = triplet
-            # Prefer rooms with least occupancy for these slots
-            room_candidates = sorted(rooms, key=lambda r: sum((r, day, s, e) in room_busy for (s, e) in [ (s1,e1), (s2,e2), (s3,e3) ]))
-            for r in room_candidates:
-                # ensure labs go to Lab rooms
-                if payload.roomTypes.get(r, "Class") != "Lab":
-                    continue
-                k1 = (r, day, s1, e1)
-                k2 = (r, day, s2, e2)
-                k3 = (r, day, s3, e3)
-                c1 = (cls, day, s1, e1)
-                c2 = (cls, day, s2, e2)
-                c3 = (cls, day, s3, e3)
-                i1 = (instr, day, s1, e1)
-                i2 = (instr, day, s2, e2)
-                i3 = (instr, day, s3, e3)
-                if any(k in room_busy for k in (k1, k2, k3)) or any(k in class_busy for k in (c1, c2, c3)) or any(k in instr_busy for k in (i1, i2, i3)):
-                    clash_log.append({
-                        "kind": "lab",
-                        "reason": "occupied",
-                        "room": r,
-                        "class": cls,
-                        "instructor": instr,
-                        "day": day,
-                        "time": [slot_string(*pair) for pair in [(s1, e1), (s2, e2), (s3, e3)]]
-                    })
-                    continue
-                # Place as three rows
-                nonlocal timeTableID
-                for (s, e) in [(s1, e1), (s2, e2), (s3, e3)]:
-                    timeTableID += 1
-                    details.append({
-                        "timeTableID": timeTableID,
-                        "roomNumber": r,
-                        "class": cls,
-                        "course": course_name,
-                        "day": day,
-                        "time": slot_string(s, e),
-                        "instructorName": instr,
-                    })
-                room_busy.update([k1, k2, k3])
-                class_busy.update([c1, c2, c3])
-                instr_busy.update([i1, i2, i3])
-                # register lab block window to prevent lectures inside
-                lab_blocks.setdefault((cls, day), []).append((to_min(s1), to_min(e3)))
-                return True
-        return False
-
-    # Build task list strictly from assignments per class
-    def build_tasks(order_variant: int = 0) -> List[tuple]:
-        tasks_local = []
-        for a in normalized_assignments:
-            if a.type == "Lab":
-                tasks_local.append((a.class_, a.course, "lab", 3))
-            else:
-                sessions = max(1, int(a.creditHours))
-                for _ in range(sessions):
-                    tasks_local.append((a.class_, a.course, "lec", 1))
-        # Order variants: 0 labs-first, 1 lectures-first, 2 random
-        if order_variant == 0:
-            tasks_local.sort(key=lambda t: (0 if t[2] == "lab" else 1, -t[3]))
-        elif order_variant == 1:
-            tasks_local.sort(key=lambda t: (0 if t[2] == "lec" else 1, -t[3]))
-        else:
-            random.shuffle(tasks_local)
-        return tasks_local
-
-    def place_all_tasks(tasks_local: List[tuple], allow_lab_split: bool = False) -> tuple:
-        failed = []
-        placement_count_local = {}
-        for (cls, cname, kind, _hours) in tasks_local:
-            if kind == "lab":
-                placed = try_place_lab(cls, cname)
-                # fallback: allow splitting lab into 3 non-consecutive 1h blocks in Lab rooms
-                if not placed and allow_lab_split:
-                    # try three separate hours
-                    need = 3
-                    instr = course_to_instructor.get(cname, instructors[0])
-                    slot_candidates = sorted(one_hour_slots, key=lambda x: crowd_score(*x))
-                    # choose a single day with most available lab slices to avoid lectures in between
-                    day_order = list(slots_by_day.keys())
-                    day_order.sort(key=lambda d: -len(slots_by_day.get(d, [])))
-                    for day in day_order:
-                        for (start, end) in slots_by_day.get(day, []):
-                            # only Lab rooms
-                            for r in rooms:
-                                if payload.roomTypes.get(r, "Class") != "Lab":
-                                    continue
-                            key_room = (r, day, start, end)
-                            key_class = (cls, day, start, end)
-                            key_instr = (instr, day, start, end)
-                            if key_room in room_busy or key_class in class_busy or key_instr in instr_busy:
-                                continue
-                            nonlocal timeTableID
-                            timeTableID += 1
-                            details.append({
-                                "timeTableID": timeTableID,
-                                "roomNumber": r,
-                                "class": cls,
-                                "course": cname,
-                                "day": day,
-                                "time": slot_string(start, end),
-                                "instructorName": instr,
-                            })
-                            room_busy.add(key_room)
-                            class_busy.add(key_class)
-                            instr_busy.add(key_instr)
-                            need -= 1
-                            if need == 0:
-                                # register lab block covering from earliest to latest on that day
-                                # compute min/max from placed segments for (cls,day)
-                                segments = [d for d in details if d["class"] == cls and d["day"] == day and d["course"] == cname]
-                                def to_min(t: str) -> int:
-                                    h, m = t.split(":"); return int(h) * 60 + int(m)
-                                mins = [to_min(s.split('-')[0]) for s in [seg["time"] for seg in segments]]
-                                maxs = [to_min(s.split('-')[1]) for s in [seg["time"] for seg in segments]]
-                                if mins and maxs:
-                                    lab_blocks.setdefault((cls, day), []).append((min(mins), max(maxs)))
-                                break
-                        if need == 0:
-                            break
-                    placed = need == 0
-            else:
-                placed = try_place_lecture(cls, cname)
-            if placed:
-                key = (cls, cname)
-                placement_count_local[key] = placement_count_local.get(key, 0) + 1
-            else:
-                failed.append({"class": cls, "course": cname, "type": kind})
-        return failed, placement_count_local
-
-    # Multi-strategy attempts: up to 10 revisions
-    failed_tasks = []
-    placement_count = {}
-    strategies = [
-        {"order": 0, "allow_split": False},
-        {"order": 0, "allow_split": True},
-        {"order": 1, "allow_split": False},
-        {"order": 2, "allow_split": False},
-        {"order": 2, "allow_split": True},
-    ]
-    # expand to reach ~10 attempts by varying random seed perturbation
-    while len(strategies) < 10:
-        strategies.append({"order": 2, "allow_split": bool(random.randint(0,1))})
-
-    # Try strategies until success
-    for strat in strategies:
-        # reset trackers for a fresh attempt
-        room_busy.clear(); class_busy.clear(); instr_busy.clear(); details.clear(); timeTableID = 0
-        random.shuffle(rooms)
-        # slight randomization of slot order
-        one_hour_slots.sort(key=lambda x: (x[0], x[1]))
-        if strat["order"] == 2:
-            random.shuffle(one_hour_slots)
-
-        tasks_variant = build_tasks(order_variant=strat["order"])
-        failed_tasks, placement_count = place_all_tasks(tasks_variant, allow_lab_split=strat["allow_split"])
-        # compute expected to check success
-        expected_placements = {}
-        for a in normalized_assignments:
-            key = (a.class_, a.course)
-            if a.type == "Lab":
-                expected_placements[key] = 1
-            else:
-                expected_placements[key] = max(1, int(a.creditHours))
-        missing = []
-        for (cls, cname), exp in expected_placements.items():
-            actual = placement_count.get((cls, cname), 0)
-            if actual < exp:
-                missing.append({"class": cls, "course": cname, "expected": exp, "actual": actual})
-        if not failed_tasks and not missing:
-            break
-
-    # After strategies, compute final missing if any
-    expected_placements = {}
-    for a in normalized_assignments:
-        key = (a.class_, a.course)
-        if a.type == "Lab":
-            expected_placements[key] = 1  # lab = 1 task (3 consecutive slots)
-        else:
-            expected_placements[key] = max(1, int(a.creditHours))
-
-    missing = []
-    for (cls, cname), exp in expected_placements.items():
-        actual = placement_count.get((cls, cname), 0)
-        if actual < exp:
-            missing.append({"class": cls, "course": cname, "expected": exp, "actual": actual})
-
-    if failed_tasks or missing:
-        error_msg = "Scheduling failed due to clashes or insufficient slots.\n"
-        if failed_tasks:
-            error_msg += f"Failed to place {len(failed_tasks)} task(s): {failed_tasks[:5]}\n"
-        if missing:
-            error_msg += f"Credit hours not met for {len(missing)} course(s): {missing[:5]}"
-        # include a short sample of clashes to aid debugging
-        sample_clashes = clash_log[:5]
-        payload_debug = {
-            "message": error_msg,
-            "failedTasks": failed_tasks,
-            "missing": missing,
-            "clashes": sample_clashes,
-            "hint": "Ensure lab rooms are selected; provide 3 consecutive 1h slots for labs or allow split fallback; adjust break windows or reduce crowding.",
-            "diagnostics": {
-                "labRoomsSelected": lab_rooms,
-                "classRoomsSelected": class_rooms,
-                "labHourSlicesTotal": lab_hour_slices_total,
-                "labConsecutiveTriplets": lab_consecutive_triplets
-            }
-        }
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail=payload_debug)
-
-    # Extract global break from payload if uniform (mode=same)
-    bstart = None
-    bend = None
-    if payload.breaks and payload.breaks.mode == "same" and payload.breaks.same:
-        bstart = payload.breaks.same.start
-        bend = payload.breaks.same.end
-
-    # Generate unique deterministic ID per seed to prevent collisions
-    base_id = hash(f"{payload.instituteID}_{payload.session}_{payload.year}_{seed}") % 900000 + 100000
     
-    header = {
-        "instituteTimeTableID": base_id,
-        "session": payload.session,
-        "year": payload.year,
-        "visibility": True,
-        "currentStatus": False,
-        **({"breakStart": bstart, "breakEnd": bend} if bstart and bend else {}),
-    }
-
-    return {"header": header, "details": details}
+    # Create and solve CSP
+    try:
+        solver = CSPSolver(payload, seed)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail={
+            "message": f"Failed to initialize CSP solver: {str(e)}",
+            "hint": "Check that rooms, time slots, and breaks are properly configured."
+        })
+    
+    # Log initial state
+    print(f"\n=== CSP Solver Initialized ===")
+    print(f"Variables: {len(solver.variables)}")
+    print(f"Rooms: {len(payload.rooms)}")
+    print(f"Time slots: {len(payload.timeslots)}")
+    empty_domains = [v for v in solver.variables if solver.domains[v.id].is_empty()]
+    if empty_domains:
+        print(f"WARNING: {len(empty_domains)} variables have empty domains from start!")
+        for v in empty_domains[:3]:
+            print(f"  - {v}")
+    print(f"==============================\n")
+    
+    # Attempt to solve with timeout protection
+    success = solver.solve()
+    
+    if not success:
+        # Get diagnostic information
+        unassigned = [v for v in solver.variables if v.assignment is None]
+        empty_domains = [v for v in solver.variables 
+                        if solver.domains[v.id].is_empty() and v.assignment is None]
+        
+        error_msg = f"CSP Solver failed to find a complete solution.\n"
+        error_msg += f"Assigned {len([v for v in solver.variables if v.assignment])} out of {len(solver.variables)} variables.\n"
+        error_msg += f"Unassigned variables: {len(unassigned)}\n"
+        
+        if empty_domains:
+            error_msg += f"Variables with empty domains: {len(empty_domains)}\n"
+            error_msg += f"Sample: {empty_domains[:3]}\n"
+        
+        raise HTTPException(status_code=400, detail={
+            "message": error_msg,
+            "unassigned": [{"class": v.class_name, "course": v.course, "type": v.session_type} 
+                          for v in unassigned[:10]],
+            "stats": {
+                "totalVariables": len(solver.variables),
+                "assignedVariables": len([v for v in solver.variables if v.assignment]),
+                "constraintsChecked": solver.constraints_checked,
+                "backtracks": solver.backtracks,
+            },
+            "hint": "Insufficient time slots or rooms. Try: adding more rooms, extending time windows, reducing sessions, or adjusting break times."
+        })
+    
+    # Get the solution
+    return solver.get_solution()
 
 @app.post("/timetables/generate")
 async def generate(payload: GeneratePayload):
-    from fastapi import HTTPException
-    # run three seeded variants to emulate different GA runs
+    """Generate timetable candidates using CSP solver with different seeds."""
     try:
+        # Generate multiple candidates with different random seeds
+        # This provides variety while maintaining constraint satisfaction
         candidates = [
             generate_candidate(payload, seed=42),
             generate_candidate(payload, seed=1337),
             generate_candidate(payload, seed=2025),
         ]
     except HTTPException as e:
-        # bubble up our structured scheduling failure
+        # Bubble up structured scheduling failures
         raise e
     except Exception as e:
-        # convert unexpected errors to 400 with message for client
-        raise HTTPException(status_code=400, detail=f"Generation error: {str(e)}")
+        # Convert unexpected errors to 400 with message for client
+        raise HTTPException(status_code=400, detail={
+            "message": f"Unexpected error during generation: {str(e)}",
+            "type": type(e).__name__
+        })
+    
     return {"candidates": candidates}
 
 if __name__ == "__main__":

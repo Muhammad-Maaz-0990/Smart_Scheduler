@@ -1,0 +1,20 @@
+degree,session,section,year,rank
+BS Computer Science,Fall,A,2023,5
+BS Computer Science,Fall,B,2023,5
+BS Computer Science,Fall,A,2024,3
+BS Computer Science,Fall,B,2024,3
+BS Computer Science,Fall,None,2022,7
+BS Software Engineering,Fall,None,2022,7
+BS Software Engineering,Fall,None,2023,5
+BS Software Engineering,Fall,None,2024,3
+BS Cyber Security,Fall,None,2022,7
+BS Cyber Security,Fall,None,2023,5
+BS Cyber Security,Fall,A,2024,3
+BS Cyber Security,Fall,B,2024,3
+BS Computer Science,Fall,A,2025,1
+BS Computer Science,Fall,B,2025,1
+BS Software Engineering,Fall,None,2025,1
+BS Cyber Security,Fall,A,2025,1
+BS Cyber Security,Fall,B,2025,1
+BS Artificial Intelligence,Fall,None,2025,1
+BS Data Science,Fall,None,2025,1
