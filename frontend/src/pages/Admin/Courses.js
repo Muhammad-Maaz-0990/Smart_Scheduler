@@ -393,8 +393,8 @@ const Courses = () => {
                             <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Type</Form.Label>
                             <Form.Select
                               size="sm"
-                              value={filters.type}
-                              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                              value={filters.type || ''}
+                              onChange={e => { setFilters({ ...filters, type: e.target.value }); e.target.blur(); }}
                               style={{
                                 borderRadius: '8px',
                                 border: '1px solid rgba(139, 92, 246, 0.2)',
@@ -753,44 +753,52 @@ const Courses = () => {
                             <td style={{ padding: '1rem' }}>
                               <div className="d-flex gap-2 justify-content-center">
                                 <MotionButton
-                                  whileHover={{ scale: 1.05 }}
+                                  whileHover={{ background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                                        color: 'white',
+                                        borderColor: '#7e22ce',
+                                        scale: 1.1, y: -2
+                                      }}
                                   whileTap={{ scale: 0.95 }}
-                                  size="sm"
                                   onClick={() => handleShowModal('edit', course)}
                                   style={{
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '0.5rem 1rem',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    fontSize: '0.75rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.375rem',
-                                    boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
+                                    background: 'transparent',
+                                        border: '2px solid #7e22ce',
+                                        borderRadius: '10px',
+                                        padding: '0.5rem 1rem',
+                                        color: '#7e22ce',
+                                        fontWeight: 600,
+                                        fontSize: '0.875rem',
+                                        boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        transition: 'all 0.2s'
                                   }}
                                 >
                                   <FaEdit /> Edit
                                 </MotionButton>
                                 
                                 <MotionButton
-                                  whileHover={{ scale: 1.05 }}
+                                  whileHover={{ background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
+                                        color: 'white',
+                                        borderColor: '#942f04',
+                                        scale: 1.1, y: -2
+                                      }}
                                   whileTap={{ scale: 0.95 }}
-                                  size="sm"
                                   onClick={() => handleDelete(course._id)}
                                   style={{
-                                    background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '0.5rem 1rem',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    fontSize: '0.75rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.375rem',
-                                    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)'
+                                    background: 'transparent',
+                                        border: '2px solid #942f04',
+                                        borderRadius: '10px',
+                                        padding: '0.5rem 1rem',
+                                        color: '#942f04',
+                                        fontWeight: 600,
+                                        fontSize: '0.875rem',
+                                        boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        transition: 'all 0.2s'
                                   }}
                                 >
                                   <FaTrash /> Delete
@@ -871,6 +879,16 @@ const Courses = () => {
                 transition={{ delay: 0.1 }}
               >
                 <Form.Group className="mb-4">
+                  <Form.Label style={{
+                    fontWeight: 600,
+                    marginBottom: '0.75rem',
+                    color: '#7e22ce',
+                    fontSize: '0.8rem',
+                    letterSpacing: '0.01em',
+                    lineHeight: 1.2
+                  }}>
+                    Course Code
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="Enter course code (e.g., CS101, MATH201)"
@@ -905,6 +923,16 @@ const Courses = () => {
                 transition={{ delay: 0.15 }}
               >
                 <Form.Group className="mb-4">
+                  <Form.Label style={{
+                    fontWeight: 600,
+                    marginBottom: '0.75rem',
+                    color: '#7e22ce',
+                    fontSize: '0.8rem',
+                    letterSpacing: '0.01em',
+                    lineHeight: 1.2
+                  }}>
+                    Course Title
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="Enter course title"
@@ -941,27 +969,32 @@ const Courses = () => {
                     transition={{ delay: 0.2 }}
                   >
                     <Form.Group className="mb-4">
+                      <Form.Label style={{
+                        fontWeight: 600,
+                        marginBottom: '0.75rem',
+                        color: '#7e22ce',
+                        fontSize: '0.8rem',
+                        letterSpacing: '0.01em',
+                        lineHeight: 1.2
+                      }}>
+                        Course Type
+                      </Form.Label>
                       <Form.Select
-                        value={currentCourse.courseType}
-                        onChange={(e) => {
+                        value={currentCourse.courseType || ''}
+                        onChange={e => {
                           const type = e.target.value;
                           setCurrentCourse({
                             ...currentCourse,
                             courseType: type,
                             creditHours: type === 'Lab' ? 1 : currentCourse.creditHours || 3
                           });
+                          e.target.blur();
                         }}
                         required
                         disabled={submitting}
                         style={{
                           borderRadius: '12px',
                           border: '1px solid #e0e0e0',
-                          padding: '1rem 1.25rem',
-                          fontSize: '1rem',
-                          background: 'white',
-                          transition: 'all 0.3s ease',
-                          boxShadow: 'none',
-                          cursor: 'pointer'
                         }}
                         onFocus={(e) => {
                           e.target.style.borderColor = '#7e22ce';
@@ -978,7 +1011,6 @@ const Courses = () => {
                     </Form.Group>
                   </motion.div>
                 </Col>
-                
                 <Col md={6}>
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -986,6 +1018,16 @@ const Courses = () => {
                     transition={{ delay: 0.25 }}
                   >
                     <Form.Group className="mb-4">
+                      <Form.Label style={{
+                        fontWeight: 600,
+                        marginBottom: '0.75rem',
+                        color: '#7e22ce',
+                        fontSize: '0.8rem',
+                        letterSpacing: '0.01em',
+                        lineHeight: 1.2
+                      }}>
+                        Credit Hours
+                      </Form.Label>
                       <Form.Control
                         type="number"
                         min={currentCourse.courseType === 'Lab' ? '1' : '1'}
@@ -1047,7 +1089,6 @@ const Courses = () => {
                 >
                   Cancel
                 </MotionButton>
-                
                 <MotionButton
                   whileHover={{ scale: submitting ? 1 : 1.02 }}
                   whileTap={{ scale: submitting ? 1 : 0.98 }}
