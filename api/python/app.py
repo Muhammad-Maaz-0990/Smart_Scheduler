@@ -1,12 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, AliasChoices
-from pydantic.config import ConfigDict
-from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any, Tuple, Set
 import random
-import numpy as np
+from collections import defaultdict
+from copy import deepcopy
 
-app = FastAPI(title="Smart Scheduler GA API")
+app = FastAPI(title="Smart Scheduler CSP API")
 
 app.add_middleware(
     CORSMiddleware,
