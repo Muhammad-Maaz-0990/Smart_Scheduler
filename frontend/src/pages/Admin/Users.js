@@ -77,7 +77,7 @@ const Users = () => {
     if (instituteObjectId) {
       fetchUsers();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instituteObjectId]);
 
   const openAdd = () => {
@@ -215,27 +215,27 @@ const Users = () => {
 
     setSubmitting(true);
     try {
-      const url = mode === 'add' 
+      const url = mode === 'add'
         ? 'http://localhost:5000/api/users'
         : `http://localhost:5000/api/users/${current._id}`;
       const method = mode === 'add' ? 'POST' : 'PUT';
 
       const payload = mode === 'add'
         ? {
-            userName: current.userName.trim(),
-            email: current.email.trim(),
-            password: current.password,
-            designation: current.designation,
-            phoneNumber: current.phoneNumber,
-            cnic: current.cnic
-          }
+          userName: current.userName.trim(),
+          email: current.email.trim(),
+          password: current.password,
+          designation: current.designation,
+          phoneNumber: current.phoneNumber,
+          cnic: current.cnic
+        }
         : {
-            userName: current.userName.trim(),
-            email: current.email.trim(),
-            designation: current.designation,
-            phoneNumber: current.phoneNumber,
-            cnic: current.cnic
-          };
+          userName: current.userName.trim(),
+          email: current.email.trim(),
+          designation: current.designation,
+          phoneNumber: current.phoneNumber,
+          cnic: current.cnic
+        };
 
       const res = await fetch(url, {
         method,
@@ -288,7 +288,7 @@ const Users = () => {
     try {
       const text = await file.text();
       const { headers, items } = parseCSV(text);
-      const required = ['userName','email','designation','phoneNumber','cnic'];
+      const required = ['userName', 'email', 'designation', 'phoneNumber', 'cnic'];
       if (!required.every(h => headers.includes(h))) { setImportError('CSV must include headers: ' + required.join(', ')); setImportPreview([]); return; }
       setImportPreview(items);
     } catch { setImportError('Failed to parse CSV'); setImportPreview([]); }
@@ -300,13 +300,13 @@ const Users = () => {
       for (const u of importPreview) {
         const payload = { userName: u.userName, email: u.email, password: 'ChangeMe123', designation: u.designation, phoneNumber: u.phoneNumber, cnic: u.cnic };
         const res = await fetch('http://localhost:5000/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json', ...tokenHeader() }, body: JSON.stringify(payload) });
-        if (!res.ok) { const d = await res.json().catch(()=>({})); throw new Error(d.message || 'Failed to add some rows'); }
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.message || 'Failed to add some rows'); }
       }
       setSuccess('Imported users added successfully'); setImportPreview([]); await fetchUsers();
     } catch (e) { setError(e.message || 'Import add failed'); }
   };
   const exportCSV = () => {
-    const headers = ['userName','email','designation','phoneNumber','cnic'];
+    const headers = ['userName', 'email', 'designation', 'phoneNumber', 'cnic'];
     const rows = users.map(u => ({ userName: u.userName, email: u.email, designation: u.designation, phoneNumber: u.phoneNumber, cnic: u.cnic }));
     downloadCSV('users.csv', toCSV(headers, rows));
   };
@@ -334,7 +334,7 @@ const Users = () => {
                 alignItems: 'center',
                 gap: '0.75rem'
               }}>
-                 Users Management
+                Users Management
               </h2>
               <p style={{
                 fontSize: 'clamp(0.9rem, 2vw, 1rem)',
@@ -347,7 +347,7 @@ const Users = () => {
                 Manage users in your institute
               </p>
             </div>
-            
+
             <div className="d-flex gap-2 flex-wrap">
               <MotionButton
                 whileHover={{ scale: 1.05 }}
@@ -369,7 +369,7 @@ const Users = () => {
               >
                 <FaPlus /> Add User
               </MotionButton>
-              
+
               <MotionButton
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -390,7 +390,7 @@ const Users = () => {
               >
                 <FaFileImport /> Import
               </MotionButton>
-              
+
               <MotionButton
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -411,13 +411,13 @@ const Users = () => {
               >
                 <FaFileExport /> Export
               </MotionButton>
-              
-              <input 
-                type="file" 
-                accept=".csv,text/csv" 
-                ref={fileInputRef} 
-                style={{ display: 'none' }} 
-                onChange={onFileSelected} 
+
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={onFileSelected}
               />
             </div>
           </motion.div>
@@ -438,7 +438,7 @@ const Users = () => {
           >
             <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
               <InputGroup style={{ flex: 1, maxWidth: '100%' }}>
-                <InputGroup.Text 
+                <InputGroup.Text
                   style={{
                     background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
                     border: 'none',
@@ -486,7 +486,7 @@ const Users = () => {
                 >
                   <FaFilter /> Filter
                 </MotionButton>
-                
+
                 <AnimatePresence>
                   {showFilterMenu && (
                     <motion.div
@@ -520,7 +520,7 @@ const Users = () => {
                           }}>
                             Filter Users
                           </h6>
-                          
+
                           <Form.Group className="mb-2">
                             <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>National ID</Form.Label>
                             <Form.Control
@@ -543,7 +543,7 @@ const Users = () => {
                             <Form.Select
                               size="sm"
                               value={filterDesignation}
-                              onChange={(e) => setFilterDesignation(e.target.value)}
+                              onChange={(e) => {setFilterDesignation({type:e.target.value});e.target.blur();}}
                               style={{
                                 borderRadius: '8px',
                                 border: '1px solid rgba(139, 92, 246, 0.2)',
@@ -609,7 +609,7 @@ const Users = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert 
+                <Alert
                   variant="success"
                   onClose={() => setSuccess('')}
                   dismissible
@@ -634,7 +634,7 @@ const Users = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert 
+                <Alert
                   variant="danger"
                   onClose={() => setError('')}
                   dismissible
@@ -659,7 +659,7 @@ const Users = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert 
+                <Alert
                   variant="warning"
                   onClose={() => setImportError('')}
                   dismissible
@@ -711,7 +711,7 @@ const Users = () => {
                   <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
                     <Table hover responsive style={{ marginBottom: 0 }}>
                       <thead>
-                        <tr style={{ 
+                        <tr style={{
                           background: 'rgba(255, 255, 255, 0.5)',
                           borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
                         }}>
@@ -791,7 +791,7 @@ const Users = () => {
             <div style={{ overflowX: 'auto' }}>
               <Table hover responsive style={{ marginBottom: 0 }}>
                 <thead>
-                  <tr style={{ 
+                  <tr style={{
                     background: 'rgba(255, 255, 255, 0.5)',
                     borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
                   }}>
@@ -830,7 +830,7 @@ const Users = () => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ delay: index * 0.05 }}
-                            whileHover={{ 
+                            whileHover={{
                               backgroundColor: 'rgba(139, 92, 246, 0.05)',
                               transition: { duration: 0.2 }
                             }}
@@ -844,8 +844,8 @@ const Users = () => {
                             <td style={{ padding: '1rem', fontWeight: '700', color: '#374151' }}>{u.userName}</td>
                             <td style={{ padding: '1rem', color: '#374151' }}>{u.email}</td>
                             <td style={{ padding: '1rem' }}>
-                              <Badge 
-                                style={{ 
+                              <Badge
+                                style={{
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
                                   padding: '0.4rem 0.8rem',
@@ -862,54 +862,58 @@ const Users = () => {
                             <td style={{ padding: '1rem' }}>
                               <div className="d-flex gap-2 justify-content-center">
                                 <MotionButton
-                                  whileHover={{ scale: u.designation === 'Admin' ? 1 : 1.05 }}
+                                  whileHover={{
+                                    scale: u.designation === 'Admin' ? 1 : 1.05, background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                                    color: 'white',
+                                    borderColor: '#7e22ce',
+                                    y: -2
+                                  }}
                                   whileTap={{ scale: u.designation === 'Admin' ? 1 : 0.95 }}
                                   size="sm"
                                   onClick={() => openEdit(u)}
                                   disabled={u.designation === 'Admin'}
                                   style={{
-                                    background: u.designation === 'Admin' 
-                                      ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.5) 0%, rgba(124, 58, 237, 0.5) 100%)'
-                                      : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                                    border: 'none',
-                                    borderRadius: '8px',
+                                    background: 'transparent',
+                                    border: '2px solid #7e22ce',
+                                    borderRadius: '10px',
                                     padding: '0.5rem 1rem',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    fontSize: '0.75rem',
-                                    display: 'flex',
+                                    color: '#7e22ce',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
+                                    display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '0.375rem',
-                                    boxShadow: u.designation === 'Admin' ? 'none' : '0 2px 8px rgba(139, 92, 246, 0.3)',
-                                    cursor: u.designation === 'Admin' ? 'not-allowed' : 'pointer',
-                                    opacity: u.designation === 'Admin' ? 0.6 : 1
+                                    gap: '0.5rem',
+                                    transition: 'all 0.2s'
                                   }}
                                 >
                                   <FaEdit /> Edit
                                 </MotionButton>
-                                
+
                                 <MotionButton
-                                  whileHover={{ scale: u.designation === 'Admin' ? 1 : 1.05 }}
+                                  whileHover={{
+                                    scale: u.designation === 'Admin' ? 1 : 1.05, background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
+                                    color: 'white',
+                                    borderColor: '#942f04',
+                                    y: -2
+                                  }}
                                   whileTap={{ scale: u.designation === 'Admin' ? 1 : 0.95 }}
                                   size="sm"
                                   onClick={() => handleDelete(u._id)}
                                   disabled={u.designation === 'Admin'}
                                   style={{
-                                    background: u.designation === 'Admin'
-                                      ? 'linear-gradient(135deg, rgba(220, 38, 38, 0.5) 0%, rgba(185, 28, 28, 0.5) 100%)'
-                                      : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-                                    border: 'none',
-                                    borderRadius: '8px',
+                                    background: 'transparent',
+                                    border: '2px solid #942f04',
+                                    borderRadius: '10px',
                                     padding: '0.5rem 1rem',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    fontSize: '0.75rem',
-                                    display: 'flex',
+                                    color: '#942f04',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
+                                    display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '0.375rem',
-                                    boxShadow: u.designation === 'Admin' ? 'none' : '0 2px 8px rgba(220, 38, 38, 0.3)',
-                                    cursor: u.designation === 'Admin' ? 'not-allowed' : 'pointer',
-                                    opacity: u.designation === 'Admin' ? 0.6 : 1
+                                    gap: '0.5rem',
+                                    transition: 'all 0.2s'
                                   }}
                                 >
                                   <FaTrash /> Delete
@@ -928,9 +932,9 @@ const Users = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      <Modal 
-        show={showModal} 
-        onHide={closeModal} 
+      <Modal
+        show={showModal}
+        onHide={closeModal}
         centered
         backdrop="static"
       >
@@ -940,7 +944,7 @@ const Users = () => {
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Modal.Header 
+          <Modal.Header
             closeButton
             style={{
               background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
@@ -953,7 +957,7 @@ const Users = () => {
               {mode === 'add' ? 'Add New User' : 'Edit User'}
             </Modal.Title>
           </Modal.Header>
-          
+
           <Modal.Body style={{ padding: '2rem', background: '#fafafa' }}>
             <AnimatePresence>
               {error && (
@@ -963,7 +967,7 @@ const Users = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Alert 
+                  <Alert
                     variant="danger"
                     onClose={() => setError('')}
                     dismissible
@@ -1077,7 +1081,7 @@ const Users = () => {
                   <Form.Label style={{ fontWeight: '600', color: '#7e22ce', fontSize: '0.875rem' }}>Designation</Form.Label>
                   <Form.Select
                     value={current.designation}
-                    onChange={(e) => setCurrent({ ...current, designation: e.target.value })}
+                    onChange={e => { setCurrent({ ...current, designation: e.target.value }); e.target.blur(); }}
                     required
                     disabled={submitting}
                     className="gradient-border-input"
@@ -1181,14 +1185,14 @@ const Users = () => {
                 >
                   Cancel
                 </MotionButton>
-                
+
                 <MotionButton
                   whileHover={{ scale: submitting ? 1 : 1.02 }}
                   whileTap={{ scale: submitting ? 1 : 0.98 }}
                   type="submit"
                   disabled={submitting}
                   style={{
-                    background: submitting 
+                    background: submitting
                       ? 'linear-gradient(135deg, rgba(126, 34, 206, 0.6) 0%, rgba(59, 130, 246, 0.6) 100%)'
                       : 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
                     border: 'none',

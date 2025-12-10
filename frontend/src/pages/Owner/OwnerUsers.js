@@ -5,7 +5,7 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, } from 'framer-motion';
 import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
 import {
   FaUsers, FaUserPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaFileImport,
@@ -13,6 +13,8 @@ import {
 } from 'react-icons/fa';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
+
+const MotionButton = motion(Button);
 
 const OwnerUsers = () => {
   const { user } = useAuth();
@@ -759,15 +761,23 @@ const OwnerUsers = () => {
                             <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#6b7280' }}>{u.phoneNumber === 'N/A' ? '-' : u.phoneNumber}</td>
                             <td style={{ padding: '14px 16px', textAlign: 'center' }}>
                               <div className="d-flex justify-content-center gap-2">
-                                <Button
+                                <MotionButton
+                                whileHover={{
+                                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                                      color: 'white',
+                                      borderColor: '#7e22ce',
+                                      scale: 1.1, y: -2
+                                    }}
+                                  whileTap={{ scale: 0.9 }}
                                   size="sm"
                                   onClick={() => openEdit(u)}
                                   style={{
-                                    background: 'linear-gradient(135deg, #5b024bff 0%, #110263ff 100%)',
-                                    border: 'none',
+                                    background: 'transparent',
+                                    border: '2px solid #7e22ce',
                                     borderRadius: '6px',
                                     padding: '6px 12px',
                                     fontWeight: 600,
+                                    color: '#7e22ce',
                                     fontSize: '0.8rem',
                                     boxShadow: '0 1px 2px rgba(245, 158, 11, 0.2)',
                                     display: 'flex',
@@ -776,17 +786,25 @@ const OwnerUsers = () => {
                                   }}
                                 >
                                   <FaEdit /> Edit
-                                </Button>
-                                <Button
+                                </MotionButton>
+                                <MotionButton
+                                whileHover={{
+                                       background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
+                                      color: 'white',
+                                      borderColor: '#942f04',
+                                      scale: 1.1, y: -2
+                                    }}
+                                  whileTap={{ scale: 0.9 }}
                                   size="sm"
                                   onClick={() => handleDelete(u._id)}
                                   style={{
-                                    background: 'linear-gradient(135deg, #7b0505ff 0%, #dc2626 100%)',
-                                    border: 'none',
+                                    background: 'transparent',
+                                    border: '2px solid #942f04',
                                     borderRadius: '6px',
                                     padding: '6px 12px',
                                     fontWeight: 600,
                                     fontSize: '0.8rem',
+                                    color: '#942f04',
                                     boxShadow: '0 1px 2px rgba(239, 68, 68, 0.2)',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -794,7 +812,7 @@ const OwnerUsers = () => {
                                   }}
                                 >
                                   <FaTrash /> Delete
-                                </Button>
+                                </MotionButton>
                               </div>
                             </td>
                           </motion.tr>

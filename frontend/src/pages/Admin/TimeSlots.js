@@ -12,7 +12,7 @@ const MotionCard = motion(Card);
 const MotionButton = motion(Button);
 const MotionTr = motion.tr;
 
-const DAY_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const TimeSlots = () => {
   const { instituteObjectId } = useAuth();
@@ -41,7 +41,7 @@ const TimeSlots = () => {
     try {
       const text = await file.text();
       const { headers, items } = parseCSV(text);
-      const required = ['days','startTime','endTime'];
+      const required = ['days', 'startTime', 'endTime'];
       const hasAll = required.every(h => headers.includes(h));
       if (!hasAll) {
         setImportError('CSV must include headers: days, startTime, endTime');
@@ -75,7 +75,7 @@ const TimeSlots = () => {
           body: JSON.stringify(body)
         });
         if (!res.ok) {
-          const data = await res.json().catch(()=>({}));
+          const data = await res.json().catch(() => ({}));
           throw new Error(data.message || 'Failed to add some rows');
         }
       }
@@ -88,7 +88,7 @@ const TimeSlots = () => {
   };
 
   const exportCSV = () => {
-    const headers = ['days','startTime','endTime'];
+    const headers = ['days', 'startTime', 'endTime'];
     const rows = list.map(t => ({ days: t.days, startTime: t.startTime, endTime: t.endTime }));
     const csv = toCSV(headers, rows);
     downloadCSV('timeslots.csv', csv);
@@ -115,11 +115,11 @@ const TimeSlots = () => {
     }
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     if (instituteObjectId) {
       fetchList();
     }
-  // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [instituteObjectId]);
 
   const usedDays = useMemo(() => new Set(list.map(x => x.days)), [list]);
@@ -210,7 +210,7 @@ const TimeSlots = () => {
                 alignItems: 'center',
                 gap: '0.75rem'
               }}>
-                 Time Slots Management
+                Time Slots Management
               </h2>
               <p style={{
                 fontSize: 'clamp(0.9rem, 2vw, 1rem)',
@@ -223,7 +223,7 @@ const TimeSlots = () => {
                 Configure daily timings for your institute
               </p>
             </div>
-            
+
             <div className="d-flex gap-2 flex-wrap">
               <MotionButton
                 whileHover={{ scale: 1.05 }}
@@ -231,7 +231,7 @@ const TimeSlots = () => {
                 onClick={openAdd}
                 disabled={isFullWeek}
                 style={{
-                  background: isFullWeek 
+                  background: isFullWeek
                     ? 'linear-gradient(135deg, rgba(126, 34, 206, 0.5) 0%, rgba(59, 130, 246, 0.5) 100%)'
                     : 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
                   border: 'none',
@@ -250,7 +250,7 @@ const TimeSlots = () => {
               >
                 <FaPlus /> Add TimeSlot
               </MotionButton>
-              
+
               <MotionButton
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -271,7 +271,7 @@ const TimeSlots = () => {
               >
                 <FaFileImport /> Import
               </MotionButton>
-              
+
               <MotionButton
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -292,13 +292,13 @@ const TimeSlots = () => {
               >
                 <FaFileExport /> Export
               </MotionButton>
-              
-              <input 
-                type="file" 
-                accept=".csv" 
-                ref={fileInputRef} 
-                style={{ display: 'none' }} 
-                onChange={onFileSelected} 
+
+              <input
+                type="file"
+                accept=".csv"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={onFileSelected}
               />
             </div>
           </motion.div>
@@ -316,7 +316,7 @@ const TimeSlots = () => {
             }}
           >
             <InputGroup>
-              <InputGroup.Text 
+              <InputGroup.Text
                 style={{
                   background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
                   border: 'none',
@@ -362,7 +362,7 @@ const TimeSlots = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert 
+                <Alert
                   variant="success"
                   onClose={() => setSuccess('')}
                   dismissible
@@ -387,7 +387,7 @@ const TimeSlots = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert 
+                <Alert
                   variant="danger"
                   onClose={() => setError('')}
                   dismissible
@@ -412,7 +412,7 @@ const TimeSlots = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert 
+                <Alert
                   variant="warning"
                   onClose={() => setImportError('')}
                   dismissible
@@ -464,7 +464,7 @@ const TimeSlots = () => {
                   <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
                     <Table hover responsive style={{ marginBottom: 0 }}>
                       <thead>
-                        <tr style={{ 
+                        <tr style={{
                           background: 'rgba(255, 255, 255, 0.5)',
                           borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
                         }}>
@@ -538,7 +538,7 @@ const TimeSlots = () => {
             <div style={{ overflowX: 'auto' }}>
               <Table hover responsive style={{ marginBottom: 0 }}>
                 <thead>
-                  <tr style={{ 
+                  <tr style={{
                     background: 'rgba(255, 255, 255, 0.5)',
                     borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
                   }}>
@@ -565,7 +565,7 @@ const TimeSlots = () => {
                   ) : (
                     <AnimatePresence>
                       {list
-                        .sort((a,b) => DAY_ORDER.indexOf(a.days) - DAY_ORDER.indexOf(b.days))
+                        .sort((a, b) => DAY_ORDER.indexOf(a.days) - DAY_ORDER.indexOf(b.days))
                         .filter(row => row.days.toLowerCase().includes(searchTerm.toLowerCase()))
                         .map((row, index) => (
                           <MotionTr
@@ -574,7 +574,7 @@ const TimeSlots = () => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ delay: index * 0.05 }}
-                            whileHover={{ 
+                            whileHover={{
                               backgroundColor: 'rgba(139, 92, 246, 0.05)',
                               transition: { duration: 0.2 }
                             }}
@@ -586,8 +586,8 @@ const TimeSlots = () => {
                           >
                             <td style={{ padding: '1rem', fontWeight: '500', color: '#6b7280' }}>{index + 1}</td>
                             <td style={{ padding: '1rem' }}>
-                              <Badge 
-                                style={{ 
+                              <Badge
+                                style={{
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
                                   padding: '0.4rem 0.8rem',
@@ -604,44 +604,56 @@ const TimeSlots = () => {
                             <td style={{ padding: '1rem' }}>
                               <div className="d-flex gap-2 justify-content-center">
                                 <MotionButton
-                                  whileHover={{ scale: 1.05 }}
+                                  whileHover={{
+                                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                                    color: 'white',
+                                    borderColor: '#7e22ce',
+                                    scale: 1.1, y: -2
+                                  }}
                                   whileTap={{ scale: 0.95 }}
                                   size="sm"
                                   onClick={() => openEdit(row)}
                                   style={{
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                                    border: 'none',
-                                    borderRadius: '8px',
+                                    background: 'transparent',
+                                    border: '2px solid #7e22ce',
+                                    borderRadius: '10px',
                                     padding: '0.5rem 1rem',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    fontSize: '0.75rem',
-                                    display: 'flex',
+                                    color: '#7e22ce',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
+                                    display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '0.375rem',
-                                    boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
+                                    gap: '0.5rem',
+                                    transition: 'all 0.2s'
                                   }}
                                 >
                                   <FaEdit /> Edit
                                 </MotionButton>
-                                
+
                                 <MotionButton
-                                  whileHover={{ scale: 1.05 }}
+                                  whileHover={{
+                                    background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
+                                    color: 'white',
+                                    borderColor: '#942f04',
+                                    scale: 1.1, y: -2
+                                  }}
                                   whileTap={{ scale: 0.95 }}
                                   size="sm"
                                   onClick={() => handleDelete(row._id)}
                                   style={{
-                                    background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-                                    border: 'none',
-                                    borderRadius: '8px',
+                                    background: 'transparent',
+                                    border: '2px solid #942f04',
+                                    borderRadius: '10px',
                                     padding: '0.5rem 1rem',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    fontSize: '0.75rem',
-                                    display: 'flex',
+                                    color: '#942f04',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
+                                    display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '0.375rem',
-                                    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)'
+                                    gap: '0.5rem',
+                                    transition: 'all 0.2s'
                                   }}
                                 >
                                   <FaTrash /> Delete
@@ -660,9 +672,9 @@ const TimeSlots = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      <Modal 
-        show={show} 
-        onHide={close} 
+      <Modal
+        show={show}
+        onHide={close}
         centered
         backdrop="static"
       >
@@ -672,7 +684,7 @@ const TimeSlots = () => {
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Modal.Header 
+          <Modal.Header
             closeButton
             style={{
               background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
@@ -685,7 +697,7 @@ const TimeSlots = () => {
               {mode === 'add' ? 'Add Time Slot' : 'Edit Time Slot'}
             </Modal.Title>
           </Modal.Header>
-          
+
           <Modal.Body style={{ padding: '2rem', background: '#fafafa' }}>
             <AnimatePresence>
               {error && (
@@ -695,7 +707,7 @@ const TimeSlots = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Alert 
+                  <Alert
                     variant="danger"
                     onClose={() => setError('')}
                     dismissible
@@ -722,6 +734,16 @@ const TimeSlots = () => {
                 transition={{ delay: 0.1 }}
               >
                 <Form.Group className="mb-4">
+                  <Form.Label style={{
+                    fontWeight: 600,
+                    marginBottom: '0.75rem',
+                    color: '#7e22ce',
+                    fontSize: '0.8rem',
+                    letterSpacing: '0.01em',
+                    lineHeight: 1.2
+                  }}>
+                    Day
+                  </Form.Label>
                   <Form.Select
                     value={current.days}
                     onChange={(e) => setCurrent({ ...current, days: e.target.value })}
@@ -762,6 +784,16 @@ const TimeSlots = () => {
                 transition={{ delay: 0.15 }}
               >
                 <Form.Group className="mb-4">
+                  <Form.Label style={{
+                    fontWeight: 600,
+                    marginBottom: '0.75rem',
+                    color: '#7e22ce',
+                    fontSize: '0.8rem',
+                    letterSpacing: '0.01em',
+                    lineHeight: 1.2
+                  }}>
+                    Start Time
+                  </Form.Label>
                   <Form.Control
                     type="time"
                     placeholder="Start Time"
@@ -796,6 +828,16 @@ const TimeSlots = () => {
                 transition={{ delay: 0.2 }}
               >
                 <Form.Group className="mb-4">
+                  <Form.Label style={{
+                    fontWeight: 600,
+                    marginBottom: '0.75rem',
+                    color: '#7e22ce',
+                    fontSize: '0.8rem',
+                    letterSpacing: '0.01em',
+                    lineHeight: 1.2
+                  }}>
+                    End Time
+                  </Form.Label>
                   <Form.Control
                     type="time"
                     placeholder="End Time"
@@ -851,14 +893,14 @@ const TimeSlots = () => {
                 >
                   Cancel
                 </MotionButton>
-                
+
                 <MotionButton
                   whileHover={{ scale: submitting ? 1 : 1.02 }}
                   whileTap={{ scale: submitting ? 1 : 0.98 }}
                   type="submit"
                   disabled={submitting}
                   style={{
-                    background: submitting 
+                    background: submitting
                       ? 'linear-gradient(135deg, rgba(126, 34, 206, 0.6) 0%, rgba(59, 130, 246, 0.6) 100%)'
                       : 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
                     border: 'none',

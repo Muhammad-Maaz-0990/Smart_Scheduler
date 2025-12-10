@@ -1,5 +1,5 @@
+import { Container, Card, Button, Table, Modal, Form, Alert, Badge, InputGroup } from 'react-bootstrap';
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Button, Table, Modal, Form, Alert, Badge, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FaDoorOpen, FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaFlask, FaChalkboard } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
@@ -424,8 +424,8 @@ const Rooms = () => {
                             Filter Options
                           </div>
                           <Form.Select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
+                            value={statusFilter || ''}
+                            onChange={e => { setStatusFilter(e.target.value); e.target.blur(); }}
                             style={{
                               border: '2px solid rgba(126, 34, 206, 0.2)',
                               borderRadius: '12px',
@@ -761,93 +761,60 @@ const Rooms = () => {
                               </td>
                               <td style={{ padding: '1rem', textAlign: 'center' }}>
                                 <div className="d-flex gap-2 justify-content-center">
-                                  <OverlayTrigger
-                                    placement="top"
-                                    overlay={
-                                      <Tooltip 
-                                        id={`edit-${room._id}`}
-                                        className="custom-gradient-tooltip"
-                                      >
-                                        <div style={{
-                                          background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                          color: 'white',
-                                          borderRadius: '12px',
-                                          padding: '0.5rem 1rem',
-                                          fontSize: '0.875rem',
-                                          fontWeight: 600,
-                                          border: 'none',
-                                          boxShadow: '0 8px 24px rgba(126, 34, 206, 0.4)'
-                                        }}>
-                                          Edit this room
-                                        </div>
-                                      </Tooltip>
-                                    }
+                                  {/* Custom Edit Button (no tooltip) */}
+                                  <MotionButton
+                                    whileHover={{
+                                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                                      color: 'white',
+                                      borderColor: '#7e22ce',
+                                      scale: 1.1, y: -2
+                                    }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleShowModal('edit', room)}
+                                    style={{
+                                      background: 'transparent',
+                                      border: '2px solid #7e22ce',
+                                      borderRadius: '10px',
+                                      padding: '0.5rem 1rem',
+                                      color: '#7e22ce',
+                                      fontWeight: 600,
+                                      fontSize: '0.875rem',
+                                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.5rem',
+                                      transition: 'all 0.2s'
+                                    }}
                                   >
-                                    <MotionButton
-                                      whileHover={{ scale: 1.1, y: -2 }}
-                                      whileTap={{ scale: 0.95 }}
-                                      onClick={() => handleShowModal('edit', room)}
-                                      style={{
-                                        background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                                        border: 'none',
-                                        borderRadius: '10px',
-                                        padding: '0.5rem 1rem',
-                                        color: 'white',
-                                        fontWeight: 600,
-                                        fontSize: '0.875rem',
-                                        boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem'
-                                      }}
-                                    >
-                                      <FaEdit /> Edit
-                                    </MotionButton>
-                                  </OverlayTrigger>
-                                  
-                                  <OverlayTrigger
-                                    placement="top"
-                                    overlay={
-                                      <Tooltip 
-                                        id={`delete-${room._id}`}
-                                        className="custom-gradient-tooltip"
-                                      >
-                                        <div style={{
-                                          background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
-                                          color: 'white',
-                                          borderRadius: '12px',
-                                          padding: '0.5rem 1rem',
-                                          fontSize: '0.875rem',
-                                          fontWeight: 600,
-                                          border: 'none',
-                                          boxShadow: '0 8px 24px rgba(239, 68, 68, 0.4)'
-                                        }}>
-                                          Delete this room
-                                        </div>
-                                      </Tooltip>
-                                    }
+                                    <FaEdit /> Edit
+                                  </MotionButton>
+                                  {/* Custom Delete Button (no tooltip) */}
+                                  <MotionButton
+                                    whileHover={{
+                                      background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
+                                      color: 'white',
+                                      borderColor: '#942f04',
+                                      scale: 1.1, y: -2
+                                    }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleDelete(room._id)}
+                                    style={{
+                                      background: 'transparent',
+                                      border: '2px solid #942f04',
+                                      borderRadius: '10px',
+                                      padding: '0.5rem 1rem',
+                                      color: '#942f04',
+                                      fontWeight: 600,
+                                      fontSize: '0.875rem',
+                                      boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.5rem',
+                                      transition: 'all 0.2s'
+                                    }}
                                   >
-                                    <MotionButton
-                                      whileHover={{ scale: 1.1, y: -2 }}
-                                      whileTap={{ scale: 0.95 }}
-                                      onClick={() => handleDelete(room._id)}
-                                      style={{
-                                        background: 'linear-gradient(135deg, #942f04ff, #800343ff)',
-                                        border: 'none',
-                                        borderRadius: '10px',
-                                        padding: '0.5rem 1rem',
-                                        color: 'white',
-                                        fontWeight: 600,
-                                        fontSize: '0.875rem',
-                                        boxShadow: '0 4px 12px rgba(236, 72, 153, 0.3)',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem'
-                                      }}
-                                    >
-                                      <FaTrash /> Delete
-                                    </MotionButton>
-                                  </OverlayTrigger>
+                                    <FaTrash /> Delete
+                                  </MotionButton>
                                 </div>
                               </td>
                             </MotionTr>
@@ -876,7 +843,7 @@ const Rooms = () => {
           transition={{ duration: 0.3 }}
         >
           <Modal.Header 
-            closeButton 
+            closeButton
             style={{
               background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
               color: 'white',
@@ -938,12 +905,12 @@ const Rooms = () => {
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-4">
                 <Form.Label style={{ 
-                  fontWeight: 700, 
+                  fontWeight: 600,
                   marginBottom: '0.75rem',
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
+                  color: '#7e22ce',
+                  fontSize: '0.8rem',
+                  letterSpacing: '0.01em',
+                  lineHeight: 1.2
                 }}>
                   Room Number
                 </Form.Label>
@@ -967,18 +934,19 @@ const Rooms = () => {
 
               <Form.Group className="mb-4">
                 <Form.Label style={{ 
-                  fontWeight: 700, 
+                  fontWeight: 600,
                   marginBottom: '0.75rem',
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
+                  color: '#7e22ce',
+                  fontSize: '0.8rem',
+                  letterSpacing: '0.01em',
+                  lineHeight: 1.2
+
                 }}>
                   Room Status
                 </Form.Label>
                 <Form.Select
-                  value={currentRoom.roomStatus}
-                  onChange={(e) => setCurrentRoom({ ...currentRoom, roomStatus: e.target.value })}
+                  value={currentRoom.roomStatus || ''}
+                  onChange={e => { setCurrentRoom({ ...currentRoom, roomStatus: e.target.value }); e.target.blur(); }}
                   required
                   style={{
                     border: '2px solid rgba(126, 34, 206, 0.2)',

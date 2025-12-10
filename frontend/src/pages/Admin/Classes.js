@@ -38,7 +38,7 @@ const Classes = () => {
     if (instituteObjectId) {
       fetchClasses();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instituteObjectId]);
 
   const fetchClasses = async () => {
@@ -84,12 +84,12 @@ const Classes = () => {
     setSuccess('');
 
     try {
-      const url = modalMode === 'add' 
+      const url = modalMode === 'add'
         ? 'http://localhost:5000/api/classes'
         : `http://localhost:5000/api/classes/${currentClass._id}`;
-      
+
       const method = modalMode === 'add' ? 'POST' : 'PUT';
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -140,7 +140,7 @@ const Classes = () => {
     try {
       const text = await file.text();
       const { headers, items } = parseCSV(text);
-      const required = ['degree','session','section','year','rank'];
+      const required = ['degree', 'session', 'section', 'year', 'rank'];
       if (!required.every(h => headers.includes(h))) { setImportError('CSV must include headers: ' + required.join(', ')); setImportPreview([]); return; }
       setImportPreview(items);
     } catch { setImportError('Failed to parse CSV'); setImportPreview([]); }
@@ -153,15 +153,15 @@ const Classes = () => {
       for (const c of importPreview) {
         const res = await fetch('http://localhost:5000/api/classes', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ degree: c.degree, session: c.session, section: c.section, year: c.year, rank: Number(c.rank)||1, instituteID: instituteObjectId })
+          body: JSON.stringify({ degree: c.degree, session: c.session, section: c.section, year: c.year, rank: Number(c.rank) || 1, instituteID: instituteObjectId })
         });
-        if (!res.ok) { const d = await res.json().catch(()=>({})); throw new Error(d.message || 'Failed to add some rows'); }
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.message || 'Failed to add some rows'); }
       }
       setSuccess('Imported classes added successfully'); setImportPreview([]); fetchClasses();
     } catch (e) { setError(e.message || 'Import add failed'); }
   };
   const exportCSV = () => {
-    const headers = ['degree','session','section','year','rank'];
+    const headers = ['degree', 'session', 'section', 'year', 'rank'];
     const rows = classes.map(c => ({ degree: c.degree, session: c.session, section: c.section, year: c.year, rank: c.rank }));
     downloadCSV('classes.csv', toCSV(headers, rows));
   };
@@ -199,7 +199,7 @@ const Classes = () => {
                 Manage all classes in your institute
               </p>
             </div>
-            
+
             <div className="d-flex gap-2 flex-wrap">
               <MotionButton
                 whileHover={{ scale: 1.05 }}
@@ -221,7 +221,7 @@ const Classes = () => {
               >
                 <FaPlus /> Add Class
               </MotionButton>
-              
+
               <MotionButton
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -242,7 +242,7 @@ const Classes = () => {
               >
                 <FaFileImport /> Import
               </MotionButton>
-              
+
               <MotionButton
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -263,13 +263,13 @@ const Classes = () => {
               >
                 <FaFileExport /> Export
               </MotionButton>
-              
-              <input 
-                type="file" 
-                accept=".csv,text/csv" 
-                ref={fileInputRef} 
-                style={{ display: 'none' }} 
-                onChange={onFileSelected} 
+
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={onFileSelected}
               />
             </div>
           </motion.div>
@@ -290,7 +290,7 @@ const Classes = () => {
           >
             <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
               <InputGroup style={{ flex: 1, maxWidth: '100%' }}>
-                <InputGroup.Text 
+                <InputGroup.Text
                   style={{
                     background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
                     border: 'none',
@@ -348,153 +348,153 @@ const Classes = () => {
                 >
                   <FaFilter /> Filter
                 </MotionButton>
-                
+
                 <AnimatePresence>
                   {showFilterMenu && (
                     <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Card
-                      style={{
-                        position: 'absolute',
-                        right: 0,
-                        top: 'calc(100% + 0.5rem)',
-                        zIndex: 9999,
-                        minWidth: '280px',
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(139, 92, 246, 0.2)',
-                        borderRadius: '16px',
-                        boxShadow: '0 10px 40px rgba(126, 34, 206, 0.2)'
-                      }}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <Card.Body className="p-3">
-                        <h6 style={{
-                          fontSize: '0.875rem',
-                          fontWeight: '700',
-                          background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          marginBottom: '1rem'
-                        }}>
-                          Filter Classes
-                        </h6>
-                        
-                        <Form.Group className="mb-2">
-                          <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Session</Form.Label>
-                          <Form.Select
-                            size="sm"
-                            value={filters.session}
-                            onChange={(e) => setFilters({ ...filters, session: e.target.value })}
-                            style={{
-                              borderRadius: '8px',
-                              border: '1px solid rgba(139, 92, 246, 0.2)',
-                              fontSize: '0.875rem',
-                              padding: '0.5rem'
-                            }}
-                          >
-                            <option value="All">All Sessions</option>
-                            <option value="Fall">Fall</option>
-                            <option value="Spring">Spring</option>
-                          </Form.Select>
-                        </Form.Group>
+                      <Card
+                        style={{
+                          position: 'absolute',
+                          right: 0,
+                          top: 'calc(100% + 0.5rem)',
+                          zIndex: 9999,
+                          minWidth: '280px',
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          backdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(139, 92, 246, 0.2)',
+                          borderRadius: '16px',
+                          boxShadow: '0 10px 40px rgba(126, 34, 206, 0.2)'
+                        }}
+                      >
+                        <Card.Body className="p-3">
+                          <h6 style={{
+                            fontSize: '0.875rem',
+                            fontWeight: '700',
+                            background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            marginBottom: '1rem'
+                          }}>
+                            Filter Classes
+                          </h6>
 
-                        <Form.Group className="mb-2">
-                          <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Section</Form.Label>
-                          <Form.Select
-                            size="sm"
-                            value={filters.section}
-                            onChange={(e) => setFilters({ ...filters, section: e.target.value })}
-                            style={{
-                              borderRadius: '8px',
-                              border: '1px solid rgba(139, 92, 246, 0.2)',
-                              fontSize: '0.875rem',
-                              padding: '0.5rem'
-                            }}
-                          >
-                            <option value="All">All Sections</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                          </Form.Select>
-                        </Form.Group>
+                          <Form.Group className="mb-2">
+                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Session</Form.Label>
+                            <Form.Select
+                              size="sm"
+                              value={filters.session}
+                              onChange={(e) => setFilters({ ...filters, session: e.target.value })}
+                              style={{
+                                borderRadius: '8px',
+                                border: '1px solid rgba(139, 92, 246, 0.2)',
+                                fontSize: '0.875rem',
+                                padding: '0.5rem'
+                              }}
+                            >
+                              <option value="All">All Sessions</option>
+                              <option value="Fall">Fall</option>
+                              <option value="Spring">Spring</option>
+                            </Form.Select>
+                          </Form.Group>
 
-                        <Form.Group className="mb-2">
-                          <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Year</Form.Label>
-                          <Form.Control
-                            size="sm"
-                            type="text"
-                            placeholder="e.g., 2024"
-                            value={filters.year}
-                            onChange={(e) => setFilters({ ...filters, year: e.target.value })}
-                            style={{
-                              borderRadius: '8px',
-                              border: '1px solid rgba(139, 92, 246, 0.2)',
-                              fontSize: '0.875rem',
-                              padding: '0.5rem'
-                            }}
-                          />
-                        </Form.Group>
+                          <Form.Group className="mb-2">
+                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Section</Form.Label>
+                            <Form.Select
+                              size="sm"
+                              value={filters.section}
+                              onChange={(e) => setFilters({ ...filters, section: e.target.value })}
+                              style={{
+                                borderRadius: '8px',
+                                border: '1px solid rgba(139, 92, 246, 0.2)',
+                                fontSize: '0.875rem',
+                                padding: '0.5rem'
+                              }}
+                            >
+                              <option value="All">All Sections</option>
+                              <option value="A">A</option>
+                              <option value="B">B</option>
+                            </Form.Select>
+                          </Form.Group>
 
-                        <Form.Group className="mb-3">
-                          <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Semester/Rank</Form.Label>
-                          <Form.Control
-                            size="sm"
-                            type="text"
-                            placeholder="e.g., 1, 2, 3..."
-                            value={filters.rank}
-                            onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
-                            style={{
-                              borderRadius: '8px',
-                              border: '1px solid rgba(139, 92, 246, 0.2)',
-                              fontSize: '0.875rem',
-                              padding: '0.5rem'
-                            }}
-                          />
-                        </Form.Group>
+                          <Form.Group className="mb-2">
+                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Year</Form.Label>
+                            <Form.Control
+                              size="sm"
+                              type="text"
+                              placeholder="e.g., 2024"
+                              value={filters.year}
+                              onChange={(e) => setFilters({ ...filters, year: e.target.value })}
+                              style={{
+                                borderRadius: '8px',
+                                border: '1px solid rgba(139, 92, 246, 0.2)',
+                                fontSize: '0.875rem',
+                                padding: '0.5rem'
+                              }}
+                            />
+                          </Form.Group>
 
-                        <div className="d-flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => setFilters({ session: 'All', section: 'All', year: '', rank: '' })}
-                            style={{
-                              flex: 1,
-                              borderRadius: '8px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              padding: '0.5rem',
-                              background: 'rgba(239, 68, 68, 0.1)',
-                              border: '1px solid rgba(239, 68, 68, 0.3)',
-                              color: '#dc2626'
-                            }}
-                          >
-                            Clear
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => setShowFilterMenu(false)}
-                            style={{
-                              flex: 1,
-                              borderRadius: '8px',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
-                              padding: '0.5rem',
-                              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                              border: 'none',
-                              color: 'white'
-                            }}
-                          >
-                            Apply
-                          </Button>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                          <Form.Group className="mb-3">
+                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Semester/Rank</Form.Label>
+                            <Form.Control
+                              size="sm"
+                              type="text"
+                              placeholder="e.g., 1, 2, 3..."
+                              value={filters.rank}
+                              onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
+                              style={{
+                                borderRadius: '8px',
+                                border: '1px solid rgba(139, 92, 246, 0.2)',
+                                fontSize: '0.875rem',
+                                padding: '0.5rem'
+                              }}
+                            />
+                          </Form.Group>
+
+                          <div className="d-flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => setFilters({ session: 'All', section: 'All', year: '', rank: '' })}
+                              style={{
+                                flex: 1,
+                                borderRadius: '8px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                padding: '0.5rem',
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                color: '#dc2626'
+                              }}
+                            >
+                              Clear
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => setShowFilterMenu(false)}
+                              style={{
+                                flex: 1,
+                                borderRadius: '8px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                padding: '0.5rem',
+                                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                                border: 'none',
+                                color: 'white'
+                              }}
+                            >
+                              Apply
+                            </Button>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </Card>
 
@@ -507,7 +507,7 @@ const Classes = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert 
+                <Alert
                   variant="success"
                   onClose={() => setSuccess('')}
                   dismissible
@@ -532,7 +532,7 @@ const Classes = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert 
+                <Alert
                   variant="danger"
                   onClose={() => setError('')}
                   dismissible
@@ -557,7 +557,7 @@ const Classes = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <Alert 
+                <Alert
                   variant="warning"
                   onClose={() => setImportError('')}
                   dismissible
@@ -609,7 +609,7 @@ const Classes = () => {
                   <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
                     <Table hover responsive style={{ marginBottom: 0 }}>
                       <thead>
-                        <tr style={{ 
+                        <tr style={{
                           background: 'rgba(255, 255, 255, 0.5)',
                           borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
                         }}>
@@ -639,7 +639,7 @@ const Classes = () => {
                               <td style={{ padding: '0.75rem' }}>{idx + 1}</td>
                               <td style={{ padding: '0.75rem', fontWeight: '500' }}>{r.degree}</td>
                               <td style={{ padding: '0.75rem' }}>
-                                <Badge style={{ 
+                                <Badge style={{
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
                                   padding: '0.4rem 0.8rem',
@@ -651,7 +651,7 @@ const Classes = () => {
                                 </Badge>
                               </td>
                               <td style={{ padding: '0.75rem' }}>
-                                <Badge style={{ 
+                                <Badge style={{
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
                                   padding: '0.4rem 0.8rem',
@@ -724,7 +724,7 @@ const Classes = () => {
             <div style={{ overflowX: 'auto' }}>
               <Table hover responsive style={{ marginBottom: 0 }}>
                 <thead>
-                  <tr style={{ 
+                  <tr style={{
                     background: 'rgba(255, 255, 255, 0.5)',
                     borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
                   }}>
@@ -765,7 +765,7 @@ const Classes = () => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ delay: index * 0.05 }}
-                            whileHover={{ 
+                            whileHover={{
                               backgroundColor: 'rgba(139, 92, 246, 0.05)',
                               transition: { duration: 0.2 }
                             }}
@@ -778,8 +778,8 @@ const Classes = () => {
                             <td style={{ padding: '1rem', fontWeight: '500', color: '#6b7280' }}>{index + 1}</td>
                             <td style={{ padding: '1rem', fontWeight: '600', color: '#374151' }}>{classItem.degree}</td>
                             <td style={{ padding: '1rem' }}>
-                              <Badge 
-                                style={{ 
+                              <Badge
+                                style={{
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
                                   padding: '0.4rem 0.8rem',
@@ -792,8 +792,8 @@ const Classes = () => {
                               </Badge>
                             </td>
                             <td style={{ padding: '1rem' }}>
-                              <Badge 
-                                style={{ 
+                              <Badge
+                                style={{
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
                                   padding: '0.4rem 0.8rem',
@@ -810,44 +810,54 @@ const Classes = () => {
                             <td style={{ padding: '1rem' }}>
                               <div className="d-flex gap-2 justify-content-center">
                                 <MotionButton
-                                  whileHover={{ scale: 1.05 }}
+                                  whileHover={{
+                                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                                    color: 'white',
+                                    borderColor: '#7e22ce',
+                                    scale: 1.1, y: -2
+                                  }}
                                   whileTap={{ scale: 0.95 }}
-                                  size="sm"
                                   onClick={() => handleShowModal('edit', classItem)}
                                   style={{
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                                    border: 'none',
-                                    borderRadius: '8px',
+                                    background: 'transparent',
+                                    border: '2px solid #7e22ce',
+                                    borderRadius: '10px',
                                     padding: '0.5rem 1rem',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    fontSize: '0.75rem',
-                                    display: 'flex',
+                                    color: '#7e22ce',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
+                                    display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '0.375rem',
-                                    boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
+                                    gap: '0.5rem',
+                                    transition: 'all 0.2s'
                                   }}
                                 >
                                   <FaEdit /> Edit
                                 </MotionButton>
-                                
+
                                 <MotionButton
-                                  whileHover={{ scale: 1.05 }}
+                                  whileHover={{
+                                    background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
+                                    color: 'white',
+                                    borderColor: '#942f04',
+                                    scale: 1.1, y: -2
+                                  }}
                                   whileTap={{ scale: 0.95 }}
-                                  size="sm"
                                   onClick={() => handleDelete(classItem._id)}
                                   style={{
-                                    background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-                                    border: 'none',
-                                    borderRadius: '8px',
+                                    background: 'transparent',
+                                    border: '2px solid #942f04',
+                                    borderRadius: '10px',
                                     padding: '0.5rem 1rem',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    fontSize: '0.75rem',
-                                    display: 'flex',
+                                    color: '#942f04',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
+                                    display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '0.375rem',
-                                    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)'
+                                    gap: '0.5rem',
+                                    transition: 'all 0.2s'
                                   }}
                                 >
                                   <FaTrash /> Delete
@@ -866,13 +876,13 @@ const Classes = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      <Modal 
-        show={showModal} 
-        onHide={handleCloseModal} 
+      <Modal
+        show={showModal}
+        onHide={handleCloseModal}
         centered
         style={{ zIndex: 10000 }}
       >
-        <Modal.Header 
+        <Modal.Header
           closeButton
           style={{
             background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
@@ -898,7 +908,7 @@ const Classes = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                <Alert 
+                <Alert
                   variant="danger"
                   onClose={() => setError('')}
                   dismissible
@@ -921,7 +931,7 @@ const Classes = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                <Alert 
+                <Alert
                   variant="success"
                   onClose={() => setSuccess('')}
                   dismissible
@@ -939,7 +949,7 @@ const Classes = () => {
               </motion.div>
             )}
           </AnimatePresence>
-          
+
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label style={{ fontWeight: '600', color: '#374151', fontSize: '0.875rem', marginBottom: '0.5rem' }}>

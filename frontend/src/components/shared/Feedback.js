@@ -251,7 +251,7 @@ const Feedback = () => {
                       <Form.Select
                         size="sm"
                         value={monthFilter}
-                        onChange={(e) => setMonthFilter(e.target.value)}
+                        onChange={e => { setMonthFilter(e.target.value); e.target.blur(); }}
                         style={{
                           borderRadius: '8px',
                           border: '2px solid #e5e7eb',
@@ -701,7 +701,7 @@ const Feedback = () => {
                 }}>Recipient</Form.Label>
                 <Form.Select
                   value={targetUserID}
-                  onChange={(e) => setTargetUserID(e.target.value)}
+                  onChange={e => { setTargetUserID(e.target.value); e.target.blur(); }}
                   required
                   style={{
                     borderRadius: '10px',
