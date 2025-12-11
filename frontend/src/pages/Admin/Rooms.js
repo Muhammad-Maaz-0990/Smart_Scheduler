@@ -232,7 +232,7 @@ const Rooms = () => {
               <div>
                 <h1 style={{
                   fontSize: 'clamp(1.75rem, 4.5vw, 2.75rem)',
-                  fontWeight: 900,
+                  fontWeight: 400,
                   background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -248,7 +248,7 @@ const Rooms = () => {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  fontWeight: 600,
+                  fontWeight: 400,
                   margin: 0
                 }}>
                   Manage all classrooms and labs in your institute
@@ -264,7 +264,7 @@ const Rooms = () => {
                     border: 'none',
                     borderRadius: '12px',
                     padding: '0.75rem 1.5rem',
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: 'white',
                     boxShadow: '0 8px 24px rgba(126, 34, 206, 0.3)',
                     display: 'flex',
@@ -283,7 +283,7 @@ const Rooms = () => {
                     border: 'none',
                     borderRadius: '12px',
                     padding: '0.75rem 1.5rem',
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: 'white',
                     boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
                     display: 'flex',
@@ -302,7 +302,7 @@ const Rooms = () => {
                     border: 'none',
                     borderRadius: '12px',
                     padding: '0.75rem 1.5rem',
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: 'white',
                     boxShadow: '0 8px 24px rgba(139, 92, 246, 0.3)',
                     display: 'flex',
@@ -380,7 +380,7 @@ const Rooms = () => {
                       border: '2px solid rgba(126, 34, 206, 0.2)',
                       borderRadius: '12px',
                       padding: '0.75rem 1.5rem',
-                      fontWeight: 600,
+                      fontWeight: 400,
                       color: '#7e22ce',
                       display: 'flex',
                       alignItems: 'center',
@@ -413,7 +413,7 @@ const Rooms = () => {
                           backdropFilter: 'blur(20px)'
                         }}>
                           <div style={{ 
-                            fontWeight: 800, 
+                            fontWeight: 500, 
                             fontSize: '1.125rem',
                             marginBottom: '1.25rem',
                             background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
@@ -432,7 +432,7 @@ const Rooms = () => {
                               padding: '0.875rem 1rem',
                               marginBottom: '1.25rem',
                               fontSize: '1rem',
-                              fontWeight: 600,
+                              fontWeight: 400,
                               cursor: 'pointer',
                               background: 'white',
                               transition: 'all 0.3s ease'
@@ -454,7 +454,7 @@ const Rooms = () => {
                                 border: '2px solid rgba(126, 34, 206, 0.2)',
                                 color: '#7e22ce',
                                 borderRadius: '10px',
-                                fontWeight: 600,
+                                fontWeight: 400,
                                 padding: '0.5rem 1.25rem',
                                 fontSize: '0.95rem'
                               }}
@@ -470,7 +470,7 @@ const Rooms = () => {
                                 border: 'none',
                                 color: 'white',
                                 borderRadius: '10px',
-                                fontWeight: 600,
+                                fontWeight: 400,
                                 padding: '0.5rem 1.25rem',
                                 fontSize: '0.95rem',
                                 boxShadow: '0 4px 12px rgba(126, 34, 206, 0.3)'
@@ -506,7 +506,7 @@ const Rooms = () => {
                     border: '2px solid rgba(239, 68, 68, 0.3)',
                     borderRadius: '16px',
                     padding: '1rem 1.5rem',
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: '#dc2626'
                   }}
                 >
@@ -530,7 +530,7 @@ const Rooms = () => {
                     border: '2px solid rgba(16, 185, 129, 0.3)',
                     borderRadius: '16px',
                     padding: '1rem 1.5rem',
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: '#059669'
                   }}
                 >
@@ -554,7 +554,7 @@ const Rooms = () => {
                     border: '2px solid rgba(245, 158, 11, 0.3)',
                     borderRadius: '16px',
                     padding: '1rem 1.5rem',
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: '#d97706'
                   }}
                 >
@@ -585,7 +585,7 @@ const Rooms = () => {
                   <Card.Header style={{
                     background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
                     color: 'white',
-                    fontWeight: 700,
+                    fontWeight: 500,
                     fontSize: '1.125rem',
                     padding: '1.25rem 1.5rem',
                     border: 'none'
@@ -600,9 +600,9 @@ const Rooms = () => {
                             background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.05), rgba(59, 130, 246, 0.05))',
                             borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
                           }}>
-                            <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>#</th>
-                            <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Room Number</th>
-                            <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Room Status</th>
+                            <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>#</th>
+                            <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>Room Number</th>
+                            <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>Room Status</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -615,13 +615,13 @@ const Rooms = () => {
                               style={{ borderBottom: '1px solid rgba(126, 34, 206, 0.1)' }}
                             >
                               <td style={{ padding: '1rem' }}>{idx+1}</td>
-                              <td style={{ padding: '1rem', fontWeight: 600 }}>{r.roomNumber}</td>
+                              <td style={{ padding: '1rem', fontWeight: 400 }}>{r.roomNumber}</td>
                               <td style={{ padding: '1rem' }}>
                                 <Badge style={{
                                   background: r.roomStatus === 'Lab' ? 'linear-gradient(135deg, #06b6d4, #22d3ee)' : 'linear-gradient(135deg, #10b981, #34d399)',
                                   padding: '0.5rem 1rem',
                                   borderRadius: '8px',
-                                  fontWeight: 600
+                                  fontWeight: 400
                                 }}>
                                   {r.roomStatus === 'Lab' ? <><FaFlask /> Lab</> : <><FaChalkboard /> Class</>}
                                 </Badge>
@@ -641,7 +641,7 @@ const Rooms = () => {
                           border: 'none',
                           borderRadius: '12px',
                           padding: '0.75rem 1.5rem',
-                          fontWeight: 600,
+                          fontWeight: 400,
                           color: 'white',
                           boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)'
                         }}
@@ -657,7 +657,7 @@ const Rooms = () => {
                           border: '2px solid rgba(126, 34, 206, 0.2)',
                           borderRadius: '12px',
                           padding: '0.75rem 1.5rem',
-                          fontWeight: 600,
+                          fontWeight: 400,
                           color: '#7e22ce'
                         }}
                       >
@@ -692,10 +692,10 @@ const Rooms = () => {
                         background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.05), rgba(59, 130, 246, 0.05))',
                         borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
                       }}>
-                        <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>#</th>
-                        <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Room Number</th>
-                        <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Room Status</th>
-                        <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce', textAlign: 'center' }}>Actions</th>
+                        <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>#</th>
+                        <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>Room Number</th>
+                        <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>Room Status</th>
+                        <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce', textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -720,7 +720,7 @@ const Rooms = () => {
                               margin: '1rem'
                             }}>
                               <FaDoorOpen style={{ fontSize: '3rem', color: '#7e22ce', marginBottom: '1rem' }} />
-                              <div style={{ fontWeight: 600 }}>No rooms found</div>
+                              <div style={{ fontWeight: 400 }}>No rooms found</div>
                               <div style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>Click "Add Room" to create your first room!</div>
                             </div>
                           </td>
@@ -741,8 +741,8 @@ const Rooms = () => {
                               }}
                               style={{ borderBottom: '1px solid rgba(126, 34, 206, 0.1)' }}
                             >
-                              <td style={{ padding: '1rem', fontWeight: 600 }}>{index + 1}</td>
-                              <td style={{ padding: '1rem', fontSize: '1.05rem', fontWeight: 600, color: '#374151' }}>
+                              <td style={{ padding: '1rem', fontWeight: 400 }}>{index + 1}</td>
+                              <td style={{ padding: '1rem', fontSize: '1.05rem', fontWeight: 400, color: '#374151' }}>
                                 {room.roomNumber}
                               </td>
                               <td style={{ padding: '1rem' }}>
@@ -750,7 +750,7 @@ const Rooms = () => {
                                   background: room.roomStatus === 'Lab' ? 'linear-gradient(135deg, #06b6d4, #22d3ee)' : 'linear-gradient(135deg, #10b981, #34d399)',
                                   padding: '0.5rem 1rem',
                                   borderRadius: '8px',
-                                  fontWeight: 600,
+                                  fontWeight: 400,
                                   fontSize: '0.875rem',
                                   display: 'inline-flex',
                                   alignItems: 'center',
@@ -761,60 +761,32 @@ const Rooms = () => {
                               </td>
                               <td style={{ padding: '1rem', textAlign: 'center' }}>
                                 <div className="d-flex gap-2 justify-content-center">
-                                  {/* Custom Edit Button (no tooltip) */}
-                                  <MotionButton
-                                    whileHover={{
-                                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                      color: 'white',
-                                      borderColor: '#7e22ce',
-                                      scale: 1.1, y: -2
-                                    }}
-                                    whileTap={{ scale: 0.95 }}
+                                  <Button
+                                    variant="outline-success"
+                                    size="sm"
                                     onClick={() => handleShowModal('edit', room)}
                                     style={{
-                                      background: 'transparent',
-                                      border: '2px solid #7e22ce',
-                                      borderRadius: '10px',
-                                      padding: '0.5rem 1rem',
-                                      color: '#7e22ce',
-                                      fontWeight: 600,
-                                      fontSize: '0.875rem',
-                                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
+                                      fontWeight: 400,
                                       display: 'inline-flex',
                                       alignItems: 'center',
-                                      gap: '0.5rem',
-                                      transition: 'all 0.2s'
+                                      gap: '0.5rem'
                                     }}
                                   >
                                     <FaEdit /> Edit
-                                  </MotionButton>
-                                  {/* Custom Delete Button (no tooltip) */}
-                                  <MotionButton
-                                    whileHover={{
-                                      background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
-                                      color: 'white',
-                                      borderColor: '#942f04',
-                                      scale: 1.1, y: -2
-                                    }}
-                                    whileTap={{ scale: 0.95 }}
+                                  </Button>
+                                  <Button
+                                    variant="outline-danger"
+                                    size="sm"
                                     onClick={() => handleDelete(room._id)}
                                     style={{
-                                      background: 'transparent',
-                                      border: '2px solid #942f04',
-                                      borderRadius: '10px',
-                                      padding: '0.5rem 1rem',
-                                      color: '#942f04',
-                                      fontWeight: 600,
-                                      fontSize: '0.875rem',
-                                      boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
+                                      fontWeight: 400,
                                       display: 'inline-flex',
                                       alignItems: 'center',
-                                      gap: '0.5rem',
-                                      transition: 'all 0.2s'
+                                      gap: '0.5rem'
                                     }}
                                   >
                                     <FaTrash /> Delete
-                                  </MotionButton>
+                                  </Button>
                                 </div>
                               </td>
                             </MotionTr>
@@ -852,7 +824,7 @@ const Rooms = () => {
               padding: '1.5rem'
             }}
           >
-            <Modal.Title style={{ fontWeight: 800 }}>
+            <Modal.Title style={{ fontWeight: 500 }}>
               {modalMode === 'add' ? 'Add New Room' : 'Edit Room'}
             </Modal.Title>
           </Modal.Header>
@@ -874,7 +846,7 @@ const Rooms = () => {
                       background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(248, 113, 113, 0.1))',
                       border: '2px solid rgba(239, 68, 68, 0.3)',
                       borderRadius: '12px',
-                      fontWeight: 600
+                      fontWeight: 400
                     }}
                   >
                     {error}
@@ -893,7 +865,7 @@ const Rooms = () => {
                       background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1))',
                       border: '2px solid rgba(16, 185, 129, 0.3)',
                       borderRadius: '12px',
-                      fontWeight: 600
+                      fontWeight: 400
                     }}
                   >
                     {success}
@@ -905,7 +877,7 @@ const Rooms = () => {
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-4">
                 <Form.Label style={{ 
-                  fontWeight: 600,
+                  fontWeight: 400,
                   marginBottom: '0.75rem',
                   color: '#7e22ce',
                   fontSize: '0.8rem',
@@ -934,7 +906,7 @@ const Rooms = () => {
 
               <Form.Group className="mb-4">
                 <Form.Label style={{ 
-                  fontWeight: 600,
+                  fontWeight: 400,
                   marginBottom: '0.75rem',
                   color: '#7e22ce',
                   fontSize: '0.8rem',
@@ -974,7 +946,7 @@ const Rooms = () => {
                     border: '2px solid rgba(126, 34, 206, 0.2)',
                     borderRadius: '12px',
                     padding: '0.75rem 2rem',
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: '#7e22ce'
                   }}
                 >
@@ -989,7 +961,7 @@ const Rooms = () => {
                     border: 'none',
                     borderRadius: '12px',
                     padding: '0.75rem 2rem',
-                    fontWeight: 600,
+                    fontWeight: 400,
                     color: 'white',
                     boxShadow: '0 8px 24px rgba(126, 34, 206, 0.3)'
                   }}

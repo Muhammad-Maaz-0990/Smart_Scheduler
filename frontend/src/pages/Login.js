@@ -19,6 +19,8 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showManualLogin, setShowManualLogin] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,16 +62,44 @@ const Login = () => {
     window.location.href = 'http://localhost:5000/api/auth/google';
   };
 
+  const validateEmail = (email) => {
+    if (!email) {
+      return 'Email is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address';
+    }
+    return '';
+  };
+
+  const validatePassword = (password) => {
+    if (!password) {
+      return 'Password is required';
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return '';
+  };
+
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setEmailError('');
+    setPasswordError('');
+    
+    // Validate fields
+    const emailValidation = validateEmail(email);
+    const passwordValidation = validatePassword(password);
 
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      setLoading(false);
+    if (emailValidation || passwordValidation) {
+      setEmailError(emailValidation);
+      setPasswordError(passwordValidation);
       return;
     }
+
+    setLoading(true);
 
     try {
       const result = await login(email, password);
@@ -93,13 +123,13 @@ const Login = () => {
 
   return (
     <motion.div
-      variants={fadeIn}
-      initial="hidden"
-      animate="visible"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       className="d-flex align-items-center justify-content-center position-relative overflow-hidden"
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        background: '#f5f5f5',
         padding: '1rem',
         fontFamily: 'Poppins, sans-serif'
       }}
@@ -118,10 +148,18 @@ const Login = () => {
         }
         
         .gradient-text {
-          background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: #6941db;
+        }
+        
+        /* Remove autofill background */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 30px white inset !important;
+          box-shadow: 0 0 0 30px white inset !important;
+          -webkit-text-fill-color: #1a1a1a !important;
+          transition: background-color 5000s ease-in-out 0s;
         }
       `}</style>
       
@@ -200,26 +238,10 @@ const Login = () => {
             <motion.div
               variants={heroReveal}
               className="p-4 p-sm-5"
-              animate={{
-                boxShadow: [
-                  '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 20px rgba(126, 34, 206, 0.3)',
-                  '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 40px rgba(126, 34, 206, 0.6), 0 0 60px rgba(59, 130, 246, 0.4)',
-                  '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 20px rgba(126, 34, 206, 0.3)'
-                ]
-              }}
-              transition={{
-                boxShadow: {
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }
-              }}
               style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                borderRadius: '2rem',
-                border: '1px solid rgba(255, 255, 255, 0.2)'
+                background: 'white',
+                borderRadius: '1.5rem',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
               }}
             >
               <motion.div variants={staggerChildren} className="text-center mb-4 mb-sm-5">
@@ -229,9 +251,9 @@ const Login = () => {
                   style={{
                     width: 'clamp(80px, 20vw, 100px)',
                     height: 'clamp(80px, 20vw, 100px)',
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                    background: '#6941db',
                     borderRadius: '50%',
-                    boxShadow: '0 10px 40px rgba(126, 34, 206, 0.5), 0 0 0 8px rgba(126, 34, 206, 0.1)'
+                    boxShadow: '0 10px 40px rgba(105, 65, 219, 0.5), 0 0 0 8px rgba(105, 65, 219, 0.1)'
                   }}
                   whileHover={{ 
                     scale: 1.1, 
@@ -244,7 +266,7 @@ const Login = () => {
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                     style={{ position: 'absolute', inset: '-10px', borderRadius: '50%', border: '2px dashed rgba(126, 34, 206, 0.3)' }}
                   />
-                  <svg width="50" height="50" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '50%', height: '50%', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
+                  <svg width="50" height="50" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '50%', height: '50%' }}>
                     <motion.circle 
                       cx="50" 
                       cy="50" 
@@ -273,22 +295,45 @@ const Login = () => {
                   className="mb-2 gradient-text"
                   style={{
                     fontSize: 'clamp(1.75rem, 5vw, 2.5rem)',
-                    fontWeight: '800',
+                    fontWeight: '600',
                     letterSpacing: '-0.5px'
                   }}
                 >
-                  Welcome Back
+                  Schedule Hub
                 </motion.h2>
                 <motion.p
                   variants={fadeInUp}
                   className="mb-0"
                   style={{
-                    fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
-                    color: '#6b7280',
-                    fontWeight: '500'
+                    fontSize: 'clamp(1.125rem, 3vw, 1.25rem)',
+                    color: '#1a1a1a',
+                    fontWeight: '600'
                   }}
                 >
-                  Access your Smart Scheduler account
+                  Sign in to your account
+                </motion.p>
+                <motion.p
+                  variants={fadeInUp}
+                  className="mb-0 mt-1"
+                  style={{
+                    fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                    color: '#6b7280',
+                    fontWeight: '400'
+                  }}
+                >
+                  Or{' '}
+                  <a
+                    href="/register"
+                    style={{
+                      color: '#6941db',
+                      textDecoration: 'none',
+                      fontWeight: '600'
+                    }}
+                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                  >
+                    register here
+                  </a>
                 </motion.p>
               </motion.div>
 
@@ -309,83 +354,56 @@ const Login = () => {
                 {!showManualLogin ? (
                   <motion.div
                     key="oauth"
-                    variants={staggerChildren}
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 50 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
                   >
                     <MotionButton
-                      onClick={handleGoogleLogin}
-                      disabled={loading}
-                      className="w-100 d-flex align-items-center justify-content-center mb-3 mb-sm-4 position-relative overflow-hidden"
+                      variant="outline-secondary"
+                      className="w-100 d-flex align-items-center justify-content-center shadow-sm position-relative overflow-hidden mb-3 mb-sm-4"
+                      onClick={() => setShowManualLogin(true)}
                       style={{
                         padding: 'clamp(0.875rem, 3vw, 1.125rem)',
                         fontSize: 'clamp(0.9375rem, 2.5vw, 1.0625rem)',
                         fontWeight: '600',
-                        background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                        border: 'none',
+                        background: '#6941db',
+                        border: '2px solid #6941db',
                         borderRadius: '1rem',
                         color: 'white',
                         gap: 'clamp(0.5rem, 2vw, 0.75rem)',
-                        boxShadow: '0 8px 24px rgba(126, 34, 206, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
-                        position: 'relative',
-                        zIndex: 1
+                        transition: 'all 0.3s ease'
                       }}
-                      variants={{
-                        rest: { scale: 1 },
-                        hover: { 
-                          scale: 1.02,
-                          boxShadow: '0 12px 32px rgba(126, 34, 206, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
-                          transition: { duration: 0.2 }
-                        },
-                        tap: { 
-                          scale: 0.98,
-                          transition: { duration: 0.1 }
-                        }
+                      whileHover={{ 
+                        scale: 1.02,
+                        background: 'white',
+                        color: '#6941db',
+                        borderColor: '#d1d5db'
                       }}
-                      initial="rest"
-                      animate="rest"
-                      whileHover="hover"
-                      whileTap="tap"
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <motion.div
-                        animate={{
-                          backgroundPosition: ['-200% 0', '200% 0']
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "linear"
-                        }}
-                        className="position-absolute top-0 start-0 w-100 h-100"
-                        style={{ 
-                          zIndex: -1, 
-                          borderRadius: '1rem',
-                          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-                          backgroundSize: '200% 100%'
-                        }}
-                      />
-                      <svg width="22" height="22" viewBox="0 0 24 24">
-                        <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                        <path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                        <path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                        <path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                      <svg 
+                        width="20" 
+                        height="20" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
                       </svg>
-                      <span>Continue with Google</span>
+                      <span>Sign in with Email</span>
                     </MotionButton>
 
-                    <motion.div
-                      variants={fadeInUp}
+                    <div
                       className="d-flex align-items-center my-3 my-sm-4 position-relative"
                       style={{ gap: 'clamp(0.75rem, 3vw, 1rem)' }}
                     >
-                      <motion.div 
+                      <div 
                         style={{ flex: 1, height: '2px', background: 'linear-gradient(90deg, transparent, #e5e7eb, transparent)' }}
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        transition={{ duration: 0.8, delay: 0.3 }}
                       />
-                      <motion.span 
+                      <span 
                         style={{ 
                           color: '#9ca3af', 
                           fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
@@ -394,66 +412,50 @@ const Login = () => {
                           background: 'rgba(243, 244, 246, 0.8)',
                           borderRadius: '1rem'
                         }}
-                        whileHover={{ scale: 1.1 }}
                       >
                         OR
-                      </motion.span>
-                      <motion.div 
+                      </span>
+                      <div 
                         style={{ flex: 1, height: '2px', background: 'linear-gradient(90deg, transparent, #e5e7eb, transparent)' }}
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        transition={{ duration: 0.8, delay: 0.3 }}
                       />
-                    </motion.div>
+                    </div>
 
                     <MotionButton
-                      variant="outline-secondary"
-                      className="w-100 d-flex align-items-center justify-content-center shadow-sm position-relative overflow-hidden"
-                      onClick={() => setShowManualLogin(true)}
+                      onClick={handleGoogleLogin}
+                      disabled={loading}
+                      className="w-100 d-flex align-items-center justify-content-center"
                       style={{
                         padding: 'clamp(0.875rem, 3vw, 1.125rem)',
                         fontSize: 'clamp(0.9375rem, 2.5vw, 1.0625rem)',
                         fontWeight: '600',
                         background: 'white',
-                        border: '2px solid transparent',
+                        border: '2px solid #e5e7eb',
                         borderRadius: '1rem',
                         color: '#1a1a1a',
-                        gap: 'clamp(0.375rem, 1.5vw, 0.5rem)',
-                        backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce, #3b82f6)',
-                        backgroundOrigin: 'border-box',
-                        backgroundClip: 'padding-box, border-box'
+                        gap: 'clamp(0.375rem, 1.5vw, 0.5rem)'
                       }}
-                      variants={{
-                        rest: { scale: 1 },
-                        hover: { 
-                          scale: 1.02,
-                          boxShadow: '0 8px 24px rgba(126, 34, 206, 0.2)',
-                          transition: { duration: 0.2 }
-                        },
-                        tap: { 
-                          scale: 0.98,
-                          transition: { duration: 0.1 }
-                        }
+                      whileHover={{ 
+                        scale: 1.02,
+                        borderColor: '#d1d5db'
                       }}
-                      initial="rest"
-                      animate="rest"
-                      whileHover="hover"
-                      whileTap="tap"
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                        <polyline points="22,6 12,13 2,6" />
+                      <svg width="22" height="22" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                       </svg>
-                      <span className="gradient-text">Sign in with Email</span>
+                      <span>Continue with Google</span>
                     </MotionButton>
                   </motion.div>
                 ) : (
                   <motion.div
                     key="manual"
-                    variants={staggerChildren}
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
                   >
                     <Form
                       onSubmit={handleManualSubmit}
@@ -463,82 +465,206 @@ const Login = () => {
                       animate="visible"
                     >
                       <motion.div variants={fadeInUp}>
-                        <Form.Group className="mb-3 mb-sm-4">
-                          <Form.Label className="mb-2" style={{
-                            fontSize: 'clamp(0.8125rem, 2vw, 0.9375rem)',
-                            fontWeight: '600',
-                            color: '#374151'
-                          }}>
+                        <Form.Group className="mb-3 mb-sm-4 position-relative">
+                          <motion.label
+                            htmlFor="email-input"
+                            initial={false}
+                            animate={{
+                              top: (email || emailError) ? '-0.5rem' : '50%',
+                              fontSize: (email || emailError) ? 'clamp(0.75rem, 1.8vw, 0.8125rem)' : 'clamp(0.875rem, 2.5vw, 0.9375rem)',
+                              color: emailError ? '#ef4444' : (email ? '#7e22ce' : '#9ca3af'),
+                              y: (email || emailError) ? 0 : '-50%'
+                            }}
+                            transition={{ duration: 0.2 }}
+                            style={{
+                              position: 'absolute',
+                              left: 'clamp(1rem, 3vw, 1.25rem)',
+                              fontWeight: '600',
+                              pointerEvents: 'none',
+                              background: 'white',
+                              padding: '0 0.5rem',
+                              zIndex: 1
+                            }}
+                          >
                             Email Address
-                          </Form.Label>
+                          </motion.label>
                           <motion.div
                             whileFocus={{ scale: 1.01 }}
                             transition={{ duration: 0.2 }}
                           >
                             <Form.Control
-                              type="email"
-                              placeholder="Enter your email"
+                              id="email-input"
+                              type="text"
+                              autoComplete="email"
+                              placeholder=""
                               value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              required
+                              onChange={(e) => {
+                                setEmail(e.target.value);
+                                if (emailError) setEmailError('');
+                              }}
                               style={{
                                 padding: 'clamp(0.875rem, 2.5vw, 1rem) clamp(1rem, 3vw, 1.25rem)',
                                 fontSize: 'clamp(0.875rem, 2.5vw, 0.9375rem)',
-                                border: '2px solid #e5e7eb',
+                                border: emailError ? '2px solid #ef4444' : '2px solid #e5e7eb',
                                 borderRadius: '0.875rem',
                                 transition: 'all 0.3s ease',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                                boxShadow: emailError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)',
+                                WebkitBoxShadow: emailError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)'
                               }}
                               onFocus={(e) => {
-                                e.currentTarget.style.borderColor = '#7e22ce';
-                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(126, 34, 206, 0.15)';
+                                e.currentTarget.style.borderColor = emailError ? '#ef4444' : '#7e22ce';
+                                e.currentTarget.style.boxShadow = emailError ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px rgba(126, 34, 206, 0.15)';
+                                const label = e.currentTarget.previousSibling;
+                                if (label) {
+                                  label.style.top = '-0.5rem';
+                                  label.style.fontSize = 'clamp(0.75rem, 1.8vw, 0.8125rem)';
+                                  label.style.color = emailError ? '#ef4444' : '#7e22ce';
+                                  label.style.transform = 'translateY(0)';
+                                }
                               }}
                               onBlur={(e) => {
-                                e.currentTarget.style.borderColor = '#e5e7eb';
-                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
+                                e.currentTarget.style.borderColor = emailError ? '#ef4444' : '#e5e7eb';
+                                e.currentTarget.style.boxShadow = emailError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)';
+                                if (!email) {
+                                  const label = e.currentTarget.previousSibling;
+                                  if (label) {
+                                    label.style.top = '50%';
+                                    label.style.fontSize = 'clamp(0.875rem, 2.5vw, 0.9375rem)';
+                                    label.style.color = emailError ? '#ef4444' : '#9ca3af';
+                                    label.style.transform = 'translateY(-50%)';
+                                  }
+                                }
                               }}
                             />
                           </motion.div>
+                          <AnimatePresence>
+                            {emailError && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
+                                style={{
+                                  marginTop: '0.5rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  color: '#ef4444',
+                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                                  fontWeight: '500'
+                                }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <line x1="12" y1="8" x2="12" y2="12" />
+                                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                {emailError}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </Form.Group>
                       </motion.div>
 
                       <motion.div variants={fadeInUp}>
-                        <Form.Group className="mb-3 mb-sm-4">
-                          <Form.Label className="mb-2" style={{
-                            fontSize: 'clamp(0.8125rem, 2vw, 0.9375rem)',
-                            fontWeight: '600',
-                            color: '#374151'
-                          }}>
+                        <Form.Group className="mb-3 mb-sm-4 position-relative">
+                          <motion.label
+                            htmlFor="password-input"
+                            initial={false}
+                            animate={{
+                              top: (password || passwordError) ? '-0.5rem' : '50%',
+                              fontSize: (password || passwordError) ? 'clamp(0.75rem, 1.8vw, 0.8125rem)' : 'clamp(0.875rem, 2.5vw, 0.9375rem)',
+                              color: passwordError ? '#ef4444' : (password ? '#7e22ce' : '#9ca3af'),
+                              y: (password || passwordError) ? 0 : '-50%'
+                            }}
+                            transition={{ duration: 0.2 }}
+                            style={{
+                              position: 'absolute',
+                              left: 'clamp(1rem, 3vw, 1.25rem)',
+                              fontWeight: '600',
+                              pointerEvents: 'none',
+                              background: 'white',
+                              padding: '0 0.5rem',
+                              zIndex: 1
+                            }}
+                          >
                             Password
-                          </Form.Label>
+                          </motion.label>
                           <motion.div
                             whileFocus={{ scale: 1.01 }}
                             transition={{ duration: 0.2 }}
                           >
                             <Form.Control
+                              id="password-input"
                               type="password"
-                              placeholder="Enter your password"
+                              autoComplete="current-password"
+                              placeholder=""
                               value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              required
+                              onChange={(e) => {
+                                setPassword(e.target.value);
+                                if (passwordError) setPasswordError('');
+                              }}
                               style={{
                                 padding: 'clamp(0.875rem, 2.5vw, 1rem) clamp(1rem, 3vw, 1.25rem)',
                                 fontSize: 'clamp(0.875rem, 2.5vw, 0.9375rem)',
-                                border: '2px solid #e5e7eb',
+                                border: passwordError ? '2px solid #ef4444' : '2px solid #e5e7eb',
                                 borderRadius: '0.875rem',
                                 transition: 'all 0.3s ease',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                                boxShadow: passwordError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)',
+                                WebkitBoxShadow: passwordError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)'
                               }}
                               onFocus={(e) => {
-                                e.currentTarget.style.borderColor = '#7e22ce';
-                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(126, 34, 206, 0.15)';
+                                e.currentTarget.style.borderColor = passwordError ? '#ef4444' : '#7e22ce';
+                                e.currentTarget.style.boxShadow = passwordError ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px rgba(126, 34, 206, 0.15)';
+                                const label = e.currentTarget.previousSibling;
+                                if (label) {
+                                  label.style.top = '-0.5rem';
+                                  label.style.fontSize = 'clamp(0.75rem, 1.8vw, 0.8125rem)';
+                                  label.style.color = passwordError ? '#ef4444' : '#7e22ce';
+                                  label.style.transform = 'translateY(0)';
+                                }
                               }}
                               onBlur={(e) => {
-                                e.currentTarget.style.borderColor = '#e5e7eb';
-                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
+                                e.currentTarget.style.borderColor = passwordError ? '#ef4444' : '#e5e7eb';
+                                e.currentTarget.style.boxShadow = passwordError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)';
+                                if (!password) {
+                                  const label = e.currentTarget.previousSibling;
+                                  if (label) {
+                                    label.style.top = '50%';
+                                    label.style.fontSize = 'clamp(0.875rem, 2.5vw, 0.9375rem)';
+                                    label.style.color = passwordError ? '#ef4444' : '#9ca3af';
+                                    label.style.transform = 'translateY(-50%)';
+                                  }
+                                }
                               }}
                             />
                           </motion.div>
+                          <AnimatePresence>
+                            {passwordError && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
+                                style={{
+                                  marginTop: '0.5rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  color: '#ef4444',
+                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                                  fontWeight: '500'
+                                }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <line x1="12" y1="8" x2="12" y2="12" />
+                                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                {passwordError}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </Form.Group>
                       </motion.div>
 
@@ -550,46 +676,20 @@ const Login = () => {
                           padding: 'clamp(0.875rem, 3vw, 1.125rem)',
                           fontSize: 'clamp(0.9375rem, 2.5vw, 1.0625rem)',
                           fontWeight: '600',
-                          background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                          border: 'none',
+                          background: '#6941db',
+                          border: '2px solid #6941db',
                           borderRadius: '1rem',
                           color: 'white',
-                          boxShadow: '0 8px 24px rgba(126, 34, 206, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)'
+                          transition: 'all 0.3s ease'
                         }}
-                        variants={{
-                          rest: { scale: 1 },
-                          hover: { 
-                            scale: 1.02,
-                            boxShadow: '0 12px 32px rgba(126, 34, 206, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
-                            transition: { duration: 0.2 }
-                          },
-                          tap: { 
-                            scale: 0.98,
-                            transition: { duration: 0.1 }
-                          }
+                        whileHover={{ 
+                          scale: 1.02,
+                          background: 'white',
+                          color: '#6941db',
+                          borderColor: '#d1d5db'
                         }}
-                        initial="rest"
-                        animate="rest"
-                        whileHover="hover"
-                        whileTap="tap"
+                        whileTap={{ scale: 0.98 }}
                       >
-                          <motion.div
-                            animate={{
-                              backgroundPosition: ['-200% 0', '200% 0']
-                            }}
-                            transition={{
-                              duration: 2,
-                              repeat: Infinity,
-                              ease: "linear"
-                            }}
-                            className="position-absolute top-0 start-0 w-100 h-100"
-                            style={{ 
-                              zIndex: -1, 
-                              borderRadius: '1rem',
-                              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-                              backgroundSize: '200% 100%'
-                            }}
-                          />
                         {loading ? (
                           <>
                             <Spinner animation="border" size="sm" className="me-2" />
@@ -612,17 +712,10 @@ const Login = () => {
                         fontWeight: '600',
                         padding: '0.5rem'
                       }}
-                      variants={{
-                        rest: { scale: 1, x: 0 },
-                        hover: { 
-                          scale: 1.02,
-                          x: -4,
-                          transition: { duration: 0.2 }
-                        }
+                      whileHover={{ 
+                        scale: 1.02,
+                        x: -4
                       }}
-                      initial="rest"
-                      animate="rest"
-                      whileHover="hover"
                     >
                       ← Back to Google Sign In
                     </MotionButton>

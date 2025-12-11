@@ -740,7 +740,7 @@ const Register = () => {
         transition={{ duration: 0.6 }}
         style={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+          background: '#f5f5f5',
           fontFamily: 'Poppins, sans-serif'
         }}
       >
@@ -792,12 +792,12 @@ const Register = () => {
                       width: 'clamp(80px, 18vw, 100px)',
                       height: 'clamp(80px, 18vw, 100px)',
                       margin: '0 auto clamp(0.75rem, 2vw, 1rem)',
-                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                      background: '#6941db',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 10px 40px rgba(126, 34, 206, 0.5), 0 0 0 8px rgba(126, 34, 206, 0.1)',
+                      boxShadow: '0 10px 40px rgba(105, 65, 219, 0.5), 0 0 0 8px rgba(105, 65, 219, 0.1)',
                       position: 'relative'
                     }}
                   >
@@ -837,10 +837,7 @@ const Register = () => {
                   variants={slideInFromBottom}
                 >
                   <h1 className="welcome-title" style={{ 
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
+                    color: '#6941db',
                     fontSize: 'clamp(1.5rem, 4vw, 2rem)',
                     fontWeight: '800',
                     margin: 0,
@@ -868,27 +865,23 @@ const Register = () => {
                   className="w-100 position-relative overflow-hidden"
                   onClick={() => setCurrentStep(0)}
                   style={{
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    border: 'none',
-                    padding: 'clamp(0.75rem, 2.5vw, 1rem)',
+                    background: '#6941db',
+                    border: '2px solid #6941db',
+                    padding: 'clamp(0.875rem, 3vw, 1.125rem)',
                     fontWeight: 600,
-                    fontSize: 'clamp(0.9375rem, 2.2vw, 1.0625rem)',
+                    fontSize: 'clamp(0.9375rem, 2.5vw, 1.0625rem)',
                     borderRadius: '1rem',
-                    boxShadow: '0 10px 30px rgba(126, 34, 206, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
+                    color: 'white',
+                    transition: 'all 0.3s ease',
                     marginBottom: 'clamp(0.75rem, 2vw, 1rem)'
                   }}
-                  variants={{
-                    rest: { scale: 1 },
-                    hover: { 
-                      scale: 1.03,
-                      boxShadow: '0 15px 40px rgba(126, 34, 206, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
-                      transition: { duration: 0.2 }
-                    },
-                    tap: { scale: 0.97 }
+                  whileHover={{ 
+                    scale: 1.02,
+                    background: 'white',
+                    color: '#6941db',
+                    borderColor: '#d1d5db'
                   }}
-                  initial="rest"
-                  whileHover="hover"
-                  whileTap="tap"
+                  whileTap={{ scale: 0.98 }}
                 >
                   Register Institute
                 </MotionButton>
@@ -907,7 +900,7 @@ const Register = () => {
       animate={{ opacity: 1 }}
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        background: '#f5f5f5',
         fontFamily: 'Poppins, sans-serif'
       }}
     >
@@ -944,10 +937,7 @@ const Register = () => {
                 initial="hidden"
                 animate="visible"
                 style={{
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
+                  color: '#6941db',
                   fontSize: 'clamp(1.5rem, 4vw, 2rem)',
                   fontWeight: '800',
                   textAlign: 'center',
@@ -1024,18 +1014,20 @@ const Register = () => {
                     onClick={handleNext}
                     style={{
                       flex: 1,
-                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                      border: 'none',
+                      background: '#6941db',
+                      border: '2px solid #6941db',
                       padding: 'clamp(0.625rem, 2vw, 0.875rem)',
                       borderRadius: '0.875rem',
                       fontWeight: '600',
                       fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                      boxShadow: '0 8px 20px rgba(126, 34, 206, 0.3)',
-                      color: 'white'
+                      color: 'white',
+                      transition: 'all 0.3s ease'
                     }}
                     whileHover={{ 
                       scale: 1.02,
-                      boxShadow: '0 10px 30px rgba(126, 34, 206, 0.4)'
+                      background: 'white',
+                      color: '#6941db',
+                      borderColor: '#d1d5db'
                     }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -1048,18 +1040,20 @@ const Register = () => {
                     disabled={loading || !formData.termsAccepted || !formData.privacyAccepted}
                     style={{
                       flex: 1,
-                      background: 'linear-gradient(90deg, #7e22ce 0%, #3b82f6 100%)',
-                      border: 'none',
+                      background: '#6941db',
+                      border: '2px solid #6941db',
                       padding: 'clamp(0.625rem, 2vw, 0.875rem)',
                       borderRadius: '0.875rem',
                       fontWeight: '600',
                       fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                      boxShadow: '0 8px 20px rgba(126, 34, 206, 0.35)',
-                      color: 'white'
+                      color: 'white',
+                      transition: 'all 0.3s ease'
                     }}
                     whileHover={{ 
                       scale: loading ? 1 : 1.02,
-                      boxShadow: loading ? '0 8px 20px rgba(126, 34, 206, 0.35)' : '0 10px 30px rgba(126, 34, 206, 0.5)'
+                      background: loading ? '#6941db' : 'white',
+                      color: loading ? 'white' : '#6941db',
+                      borderColor: loading ? '#6941db' : '#d1d5db'
                     }}
                     whileTap={{ scale: loading ? 1 : 0.98 }}
                   >
