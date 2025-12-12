@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Table, Badge } from 'react-bootstrap';
+import { Container, Card, Table, Badge, Row, Col, Form } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import axios from 'axios';
@@ -15,6 +15,8 @@ const TeacherDashboard = () => {
   const [todayClasses, setTodayClasses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [filterDay, setFilterDay] = useState(''); // '' means auto-select today
+  const [showMine, setShowMine] = useState(true); // default show my classes
 
   const to12hAmpm = (hhmm) => {
     if (!hhmm || typeof hhmm !== 'string') return hhmm;
@@ -32,6 +34,43 @@ const TeacherDashboard = () => {
     return text.replace(/\b([01]?\d|2[0-3]):([0-5]\d)\b/g, (match) => to12hAmpm(match));
   };
 
+  const fetchForFilters = async (selectedDay, onlyMine) => {
+    setLoading(true);
+    setError('');
+    try {
+      const tsRes = await axios.get('/api/timeslots/my/today');
+      const ts = tsRes.data || null;
+      setTodaySlot(ts);
+
+      const listRes = await axios.get('/api/timetables-gen/list');
+      const items = listRes.data?.items || [];
+      const current = items.find(h => !!h.currentStatus);
+      if (!current) {
+        setTodayClasses([]);
+      } else {
+        // Determine target day: if selectedDay is empty, use today's
+        const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        const todayFull = dayNames[new Date().getDay()];
+        const short = (selectedDay ? String(selectedDay).slice(0,3) : todayFull.slice(0,3));
+        const params = new URLSearchParams();
+        params.set('day', short);
+        const isTeacher = String(user?.role || user?.designation || '').toLowerCase() === 'teacher';
+        const instructorName = user?.userName || user?.name || '';
+        if (onlyMine && isTeacher && instructorName) {
+          params.set('instructor', instructorName);
+        }
+        const detailsRes = await axios.get(`/api/timetables-gen/details/${encodeURIComponent(current.instituteTimeTableID)}/by-day?${params.toString()}`);
+        const details = detailsRes.data?.details || [];
+        setTodayClasses(details);
+      }
+    } catch (e) {
+      setError(e?.response?.data?.message || 'Failed to load today\'s schedule');
+      setTodayClasses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -47,12 +86,20 @@ const TeacherDashboard = () => {
         if (!current) {
           setTodayClasses([]);
         } else {
-          const detailsRes = await axios.get(`/api/timetables-gen/details/${encodeURIComponent(current.instituteTimeTableID)}`);
-          const details = detailsRes.data?.details || [];
+          // Initial load uses "today" and current showMine
           const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-          const todayName = dayNames[new Date().getDay()];
-          const filtered = details.filter(d => String(d.day) === todayName);
-          setTodayClasses(filtered);
+          const todayFull = dayNames[new Date().getDay()];
+          const short = todayFull.slice(0,3);
+          const params = new URLSearchParams();
+          params.set('day', short);
+          const isTeacher = String(user?.role || user?.designation || '').toLowerCase() === 'teacher';
+          const instructorName = user?.userName || user?.name || '';
+          if (showMine && isTeacher && instructorName) {
+            params.set('instructor', instructorName);
+          }
+          const detailsRes = await axios.get(`/api/timetables-gen/details/${encodeURIComponent(current.instituteTimeTableID)}/by-day?${params.toString()}`);
+          const details = detailsRes.data?.details || [];
+          setTodayClasses(details);
         }
       } catch (e) {
         setError(e?.response?.data?.message || 'Failed to load today\'s schedule');
@@ -63,6 +110,12 @@ const TeacherDashboard = () => {
     };
     load();
   }, []);
+
+  // Refetch when filters change
+  useEffect(() => {
+    fetchForFilters(filterDay, showMine);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterDay, showMine]);
 
   return (
     <>
@@ -135,6 +188,54 @@ const TeacherDashboard = () => {
                 Today's Schedule
               </Card.Header>
               <Card.Body className="p-0">
+                {/* Filters */}
+                <div style={{
+                  padding: '12px 20px',
+                  borderBottom: '1px solid rgba(126, 34, 206, 0.2)',
+                  background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.06) 0%, rgba(107, 33, 168, 0.06) 100%)'
+                }}>
+                  <Row className="align-items-center g-3">
+                    <Col md={4} sm={12}>
+                      <Form.Label style={{ fontWeight: 600, color: '#6b21a8' }}>Filter by Day</Form.Label>
+                      <Form.Select size="sm" value={filterDay} onChange={(e)=>setFilterDay(e.target.value)}>
+                        <option value="">Today</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                      </Form.Select>
+                    </Col>
+                    <Col md={4} sm={12}>
+                      <Form.Check
+                        type="switch"
+                        id="show-mine-switch"
+                        label="Show only my classes"
+                        checked={showMine}
+                        onChange={(e)=>setShowMine(e.target.checked)}
+                        style={{ fontWeight: 600, color: '#6b21a8' }}
+                      />
+                    </Col>
+                    <Col md={4} sm={12} className="text-md-end">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm me-3"
+                        onClick={() => { setFilterDay(''); setShowMine(true); fetchForFilters('', true); }}
+                        style={{ fontWeight: 600 }}
+                      >
+                        Reset
+                      </button>
+                      {todaySlot && todaySlot.startTime && (
+                        <span style={{ color: '#7e22ce', fontWeight: 600 }}>
+                          <FaClock className="me-2" />
+                          Institute Hours: {todaySlot.days} • {to12hAmpm(todaySlot.startTime)} - {to12hAmpm(todaySlot.endTime)}
+                        </span>
+                      )}
+                    </Col>
+                  </Row>
+                </div>
                 {todaySlot && todaySlot.startTime && (
                   <div style={{
                     background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.1) 0%, rgba(107, 33, 168, 0.1) 100%)',

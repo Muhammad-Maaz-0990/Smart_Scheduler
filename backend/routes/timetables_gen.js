@@ -242,6 +242,46 @@ router.get('/details/:id', protect, async (req, res) => {
   }
 });
 
+// GET /api/timetables-gen/details/:id/by-day?day=Mon|Monday&instructor=Name
+// Returns filtered detail rows for a specific timetable by day and optional instructor
+router.get('/details/:id/by-day', protect, async (req, res) => {
+  try {
+    const { instituteID } = req.user || {};
+    if (!instituteID) return res.status(400).json({ message: 'User has no institute' });
+
+    const instituteTimeTableID = Number(req.params.id);
+    const { day: qDay, instructor: qInstructor } = req.query || {};
+    if (!qDay || String(qDay).trim() === '') {
+      return res.status(400).json({ message: 'Query param "day" is required' });
+    }
+
+    const header = await InstituteTimeTables.findOne({ instituteTimeTableID, instituteID }).lean();
+    if (!header) return res.status(404).json({ message: 'Timetable not found' });
+
+    const key = keyFor(instituteTimeTableID, instituteID, header.year);
+    // Accept both short and full day names
+    const mapShortToFull = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday', Sun:'Sunday' };
+    const qDayStr = String(qDay).trim();
+    const fullDay = mapShortToFull[qDayStr] || qDayStr;
+    const shortDay = fullDay.slice(0,3);
+
+    const query = { key, $or: [ { day: fullDay }, { day: shortDay } ] };
+
+    // Instructor filtering: only apply when explicitly provided via query
+    const instructor = qInstructor;
+    if (instructor && String(instructor).trim() !== '') {
+      // Use regex for case-insensitive partial match
+      query.instructorName = { $regex: new RegExp(String(instructor).trim(), 'i') };
+    }
+
+    const details = await InstituteTimeTableDetails.find(query).lean();
+    return res.json({ header, details });
+  } catch (err) {
+    console.error('Details by-day error:', err?.message || err);
+    return res.status(500).json({ message: 'Failed to fetch timetable by day' });
+  }
+});
+
 // PUT /api/timetables-gen/details/:id
 // Body: { details: [...] }
 // Updates all detail rows for a timetable

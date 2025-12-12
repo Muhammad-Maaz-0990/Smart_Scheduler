@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Table, Badge } from 'react-bootstrap';
+import { Container, Card, Table, Badge, Row, Col, Form } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import axios from 'axios';
@@ -13,6 +13,8 @@ const StudentDashboard = () => {
   const { user } = useAuth();
   const [todaySlot, setTodaySlot] = useState(null);
   const [todayClasses, setTodayClasses] = useState([]);
+  const [classOptions, setClassOptions] = useState([]);
+  const [selectedClass, setSelectedClass] = useState(''); // '' means all classes
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,6 +35,45 @@ const StudentDashboard = () => {
     return text.replace(/\b([01]?\d|2[0-3]):([0-5]\d)\b/g, (match) => to12hAmpm(match));
   };
 
+  const fetchForFilters = async (selectedCls) => {
+    setLoading(true);
+    setError('');
+    try {
+      const tsRes = await axios.get('/api/timeslots/my/today');
+      const ts = tsRes.data || null;
+      setTodaySlot(ts);
+
+      const listRes = await axios.get('/api/timetables-gen/list');
+      const items = listRes.data?.items || [];
+      const current = items.find(h => !!h.currentStatus);
+      if (!current) {
+        setTodayClasses([]);
+      } else {
+        // Determine target day: today
+        const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        const todayFull = dayNames[new Date().getDay()];
+        const short = todayFull.slice(0,3);
+        const params = new URLSearchParams();
+        params.set('day', short);
+        const detailsRes = await axios.get(`/api/timetables-gen/details/${encodeURIComponent(current.instituteTimeTableID)}/by-day?${params.toString()}`);
+        const details = detailsRes.data?.details || [];
+        // Filter by selected class if provided
+        const filtered = selectedCls ? details.filter(d => String(d.class || '') === selectedCls) : details;
+        setTodayClasses(filtered);
+        // Populate class options from current timetable (unique class names)
+        const allDetailsRes = await axios.get(`/api/timetables-gen/details/${encodeURIComponent(current.instituteTimeTableID)}`);
+        const allDetails = allDetailsRes.data?.details || [];
+        const uniqueClasses = Array.from(new Set(allDetails.map(d => String(d.class || '').trim()).filter(Boolean)));
+        setClassOptions(uniqueClasses);
+      }
+    } catch (e) {
+      setError(e?.response?.data?.message || 'Failed to load today\'s schedule');
+      setTodayClasses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -50,13 +91,19 @@ const StudentDashboard = () => {
         if (!current) {
           setTodayClasses([]);
         } else {
-          // 3) Fetch details and filter by today's day name
-          const detailsRes = await axios.get(`/api/timetables-gen/details/${encodeURIComponent(current.instituteTimeTableID)}`);
-          const details = detailsRes.data?.details || [];
+          // 3) Fetch details for today via backend filter and build class options
           const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-          const todayName = dayNames[new Date().getDay()];
-          const filtered = details.filter(d => String(d.day) === todayName);
-          setTodayClasses(filtered);
+          const todayFull = dayNames[new Date().getDay()];
+          const short = todayFull.slice(0,3);
+          const params = new URLSearchParams();
+          params.set('day', short);
+          const detailsRes = await axios.get(`/api/timetables-gen/details/${encodeURIComponent(current.instituteTimeTableID)}/by-day?${params.toString()}`);
+          const details = detailsRes.data?.details || [];
+          setTodayClasses(details);
+          const allDetailsRes = await axios.get(`/api/timetables-gen/details/${encodeURIComponent(current.instituteTimeTableID)}`);
+          const allDetails = allDetailsRes.data?.details || [];
+          const uniqueClasses = Array.from(new Set(allDetails.map(d => String(d.class || '').trim()).filter(Boolean)));
+          setClassOptions(uniqueClasses);
         }
       } catch (e) {
         setError(e?.response?.data?.message || 'Failed to load today\'s schedule');
@@ -67,6 +114,12 @@ const StudentDashboard = () => {
     };
     load();
   }, []);
+
+  // Refetch when class filter changes
+  useEffect(() => {
+    fetchForFilters(selectedClass);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClass]);
 
   return (
     <>
@@ -139,6 +192,40 @@ const StudentDashboard = () => {
                 Today's Schedule
               </Card.Header>
               <Card.Body className="p-0">
+                {/* Filters */}
+                <div style={{
+                  padding: '12px 20px',
+                  borderBottom: '1px solid rgba(126, 34, 206, 0.2)',
+                  background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.06) 0%, rgba(107, 33, 168, 0.06) 100%)'
+                }}>
+                  <Row className="align-items-center g-3">
+                    <Col md={6} sm={12}>
+                      <Form.Label style={{ fontWeight: 600, color: '#6b21a8' }}>Filter by Class</Form.Label>
+                      <Form.Select size="sm" value={selectedClass} onChange={(e)=>setSelectedClass(e.target.value)}>
+                        <option value="">All Classes</option>
+                        {classOptions.map(cls => (
+                          <option key={cls} value={cls}>{cls}</option>
+                        ))}
+                      </Form.Select>
+                    </Col>
+                    <Col md={6} sm={12} className="text-md-end">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => { setSelectedClass(''); fetchForFilters(''); }}
+                        style={{ fontWeight: 600 }}
+                      >
+                        Reset
+                      </button>
+                      {todaySlot && todaySlot.startTime && (
+                        <span style={{ color: '#7e22ce', fontWeight: 600, marginLeft: '1rem' }}>
+                          <FaClock className="me-2" />
+                          Institute Hours: {todaySlot.days} • {to12hAmpm(todaySlot.startTime)} - {to12hAmpm(todaySlot.endTime)}
+                        </span>
+                      )}
+                    </Col>
+                  </Row>
+                </div>
                 {todaySlot && todaySlot.startTime && (
                   <div style={{
                     background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.1) 0%, rgba(107, 33, 168, 0.1) 100%)',
