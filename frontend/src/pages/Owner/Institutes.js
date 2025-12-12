@@ -13,6 +13,7 @@ const Institutes = () => {
   const [error, setError] = useState('');
   const [showDetail, setShowDetail] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [notifying, setNotifying] = useState(new Set());
 
   const fetchInstitutes = () => {
     setLoading(true);
@@ -223,6 +224,57 @@ const Institutes = () => {
                               >
                                 <FaEye /> View
                               </Button>
+                              {(['Trial','Expired','None',''].includes(String(inst.subscription || '').trim())) && (
+                                <Button
+                                  size="sm"
+                                  className="ms-2"
+                                  disabled={notifying.has(String(inst.instituteID))}
+                                  onClick={async () => {
+                                    const id = String(inst.instituteID);
+                                    setNotifying(prev => new Set([...prev, id]));
+                                    try {
+                                      const reason = String(inst.subscription || '').trim() === 'Trial' ? 'trial-ended' : 'payment-ended';
+                                      await fetch(`http://localhost:5000/api/payments/notify/${encodeURIComponent(inst.instituteID)}`, {
+                                        method: 'POST',
+                                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ reason })
+                                      });
+                                      alert('Reminder sent to institute admin');
+                                    } catch (err) {
+                                      alert('Failed to send reminder');
+                                    } finally {
+                                      setNotifying(prev => {
+                                        const next = new Set(prev);
+                                        next.delete(id);
+                                        return next;
+                                      });
+                                    }
+                                  }}
+                                  style={{
+                                    background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+                                    border: 'none',
+                                    padding: '8px 18px',
+                                    borderRadius: '10px',
+                                    fontWeight: 700,
+                                    fontSize: '0.85rem',
+                                    boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)',
+                                    transition: 'all 0.2s ease',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.3)';
+                                  }}
+                                >
+                                  {notifying.has(String(inst.instituteID)) ? 'Notifying…' : 'Notify'}
+                                </Button>
+                              )}
                             </td>
                           </motion.tr>
                         ))

@@ -36,15 +36,18 @@ router.post('/login', [
   }
 
   const { email, password } = req.body;
+  const loginEmail = String(email || '').trim();
 
   try {
     // Prefer regular Users (Admin/Student/Teacher) first so Admin dashboard shows correctly
-    let user = await Users.findOne({ email });
+    // Case-insensitive email lookup to avoid casing mismatches
+    const emailQuery = { email: new RegExp(`^${loginEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
+    let user = await Users.findOne(emailQuery);
     let userType = 'User';
 
     // If not found in Users, fallback to OwnerUser
     if (!user) {
-      user = await OwnerUser.findOne({ email });
+      user = await OwnerUser.findOne(emailQuery);
       userType = 'Owner';
     }
 

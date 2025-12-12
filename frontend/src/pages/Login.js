@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  fadeIn,
   fadeInUp,
   heroReveal,
   staggerChildren,
@@ -21,6 +20,7 @@ const Login = () => {
   const [showManualLogin, setShowManualLogin] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -594,9 +594,10 @@ const Login = () => {
                             whileFocus={{ scale: 1.01 }}
                             transition={{ duration: 0.2 }}
                           >
+                            <div style={{ position: 'relative' }}>
                             <Form.Control
                               id="password-input"
-                              type="password"
+                              type={showPassword ? 'text' : 'password'}
                               autoComplete="current-password"
                               placeholder=""
                               value={password}
@@ -638,6 +639,35 @@ const Login = () => {
                                 }
                               }}
                             />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword((v) => !v)}
+                              aria-label={showPassword ? 'Hide password' : 'Show password'}
+                              style={{
+                                position: 'absolute',
+                                right: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#6b7280',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {showPassword ? (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-5 0-9.27-3.11-11-8 1.03-2.77 2.86-5.02 5.2-6.53M1 1l22 22" />
+                                  <path d="M9.88 9.88A3 3 0 0 0 12 15a3 3 0 0 0 2.12-.88" />
+                                  <path d="M7.5 7.5C8.76 6.56 10.31 6 12 6c5 0 9.27 3.11 11 8-.6 1.6-1.5 3.04-2.6 4.26" />
+                                </svg>
+                              ) : (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                              )}
+                            </button>
+                            </div>
                           </motion.div>
                           <AnimatePresence>
                             {passwordError && (

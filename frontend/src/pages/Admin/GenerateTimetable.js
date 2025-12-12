@@ -230,6 +230,7 @@ function GenerateTimetable() {
         const assignments = [];
         const allRoomNumbers = [];
         const roomTypes = {};
+        const classLabRooms = {}; // class name -> array of lab roomNumbers
 
         // Collect unique classes from both Class and Lab room assignments
         const uniqueClassIds = new Set();
@@ -252,6 +253,21 @@ function GenerateTimetable() {
           if (roomObj?.roomNumber && !allRoomNumbers.includes(roomObj.roomNumber)) {
             allRoomNumbers.push(roomObj.roomNumber);
             roomTypes[roomObj.roomNumber] = roomObj.roomType === 'Lab' ? 'Lab' : 'Class';
+          }
+        });
+
+        // Map lab room selections per class (by class name)
+        uniqueClassIds.forEach(clsId => {
+          const clsObj = classes.find(c => c._id === clsId);
+          const className = clsObj ? `${clsObj.degree} ${clsObj.year}-${clsObj.section}` : undefined;
+          if (!className) return;
+          // find all selected lab rooms that include this class
+          const labRoomNumbersForClass = Object.entries(roomLabMap)
+            .filter(([rId, arr]) => Array.isArray(arr) && arr.includes(clsId))
+            .map(([rId]) => rooms.find(r => r._id === rId)?.roomNumber)
+            .filter(Boolean);
+          if (labRoomNumbersForClass.length) {
+            classLabRooms[className] = labRoomNumbersForClass;
           }
         });
 
@@ -294,6 +310,7 @@ function GenerateTimetable() {
           assignments,
           rooms: allRoomNumbers,
           roomTypes,
+          classLabRooms,
           timeslots: [
             { day: 'Mon', start: '08:00', end: '09:00' },
             { day: 'Mon', start: '09:00', end: '10:00' },
@@ -658,7 +675,7 @@ function GenerateTimetable() {
                     Step 3: Assign Courses to Classes
                   </h2>
                   <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
-                    Select courses in two sections: Class Rooms show theory courses; Lab Rooms show lab courses. If a class is in both, select in both sections.
+                    Select courses in two sections: Class Rooms show theory courses; Lab Courses are selected once per class (not per lab room).
                   </p>
 
                   {/* Class Rooms Section */}
@@ -714,22 +731,27 @@ function GenerateTimetable() {
 
                   {/* Lab Rooms Section */}
                   <div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginBottom: '12px' }}>Lab Rooms</div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginBottom: '12px' }}>Lab Courses (by Class)</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      {Object.entries(roomLabMap).filter(([, arr]) => Array.isArray(arr) && arr.length > 0).length === 0 ? (
-                        <div style={{ color: '#6b7280', fontSize: '14px' }}>No classes assigned to Lab rooms</div>
-                      ) : (
-                        Object.entries(roomLabMap).flatMap(([rId, arr]) => arr.map(classId => ({ rId, classId }))).map(({ rId, classId }) => {
+                      {(() => {
+                        // Unique classes that are assigned to any lab room
+                        const labClassIds = Array.from(new Set(
+                          Object.values(roomLabMap)
+                            .filter(arr => Array.isArray(arr))
+                            .flat()
+                        ));
+                        if (labClassIds.length === 0) {
+                          return <div style={{ color: '#6b7280', fontSize: '14px' }}>No classes assigned to any Lab room</div>;
+                        }
+                        const availableLabCourses = courses.filter(c => (c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
+                        return labClassIds.map((classId) => {
                           const cls = classes.find(c => c._id === classId);
-                          const roomNumber = rooms.find(r => r._id === rId)?.roomNumber;
-                          const availableCourses = courses.filter(c => (c.courseType === 'Lab' || /lab/i.test(c.courseTitle || '')));
                           return (
-                            <div key={`${rId}-${classId}`} style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '20px', background: '#fff' }}>
+                            <div key={`lab-${classId}`} style={{ border: '2px solid #e5e7eb', borderRadius: '12px', padding: '20px', background: '#fff' }}>
                               <div style={{ marginBottom: '12px' }}>
                                 <div style={{ fontSize: '16px', fontWeight: 700, color: '#7c3aed' }}>
                                   {cls ? `${cls.degree} ${cls.year}-${cls.section}` : 'Unknown Class'}
                                 </div>
-                                <div style={{ fontSize: '13px', color: '#6b7280' }}>Room: {roomNumber} (Lab)</div>
                                 {Object.values(roomClassMap).includes(classId) && (
                                   <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
                                     This class is also in a Class room. Select theory courses in the Class Rooms section above.
@@ -737,10 +759,10 @@ function GenerateTimetable() {
                                 )}
                               </div>
                               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                {availableCourses.length === 0 ? (
+                                {availableLabCourses.length === 0 ? (
                                   <div style={{ color: '#6b7280', fontSize: '14px' }}>No lab courses available</div>
                                 ) : (
-                                  availableCourses.map((course) => (
+                                  availableLabCourses.map((course) => (
                                     <button
                                       key={course._id}
                                       onClick={() => handleCourseToggle(classId, course._id)}
@@ -763,8 +785,8 @@ function GenerateTimetable() {
                               </div>
                             </div>
                           );
-                        })
-                      )}
+                        });
+                      })()}
                     </div>
                   </div>
                 </div>

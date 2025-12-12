@@ -40,6 +40,8 @@ class GeneratePayload(BaseModel):
     assignments: List[Dict[str, Any]]
     rooms: List[str]
     roomTypes: Dict[str, str] = {}
+    # Optional: restrict lab rooms per class name
+    classLabRooms: Optional[Dict[str, List[str]]] = None
     timeslots: List[Dict[str, Any]]  # expected { day: 'Mon', start: '10:00', end: '11:00' }
     breaks: BreaksConfig
     slotMinutes: int = 60
@@ -76,7 +78,10 @@ def respects_break(day: str, start: str, end: str, breaks: BreaksConfig) -> bool
 
 
 def split_into_slices(start: str, end: str, minutes: int) -> List[tuple]:
-    """Split a window (start,end) into fixed-length slices in minutes."""
+    """Split a window (start,end) into fixed-length slices in minutes.
+    Note: This creates aligned slices starting at the window start.
+    A separate helper will add post-break aligned slices when needed.
+    """
     def to_min(t: str) -> int:
         h, m = t.split(":")
         return int(h) * 60 + int(m)
@@ -87,12 +92,47 @@ def split_into_slices(start: str, end: str, minutes: int) -> List[tuple]:
     s = to_min(start)
     e = to_min(end)
     out = []
-    threshold = max(1, minutes - 10)  # require near-full slice length (allow small buffer)
+    threshold = max(1, minutes - 10)
     while s + threshold <= e:
         nxt = min(s + minutes, e)
         out.append((from_min(s), from_min(nxt)))
         s = nxt
     return out
+
+def add_post_break_slices(day: str, start: str, end: str, minutes: int, breaks: BreaksConfig) -> List[tuple]:
+    """Generate additional slices that start exactly at break end so sessions resume immediately.
+    Only added when a break window falls within [start, end].
+    """
+    def to_min(t: str) -> int:
+        h, m = t.split(":")
+        return int(h) * 60 + int(m)
+    def from_min(x: int) -> str:
+        h = x // 60
+        m = x % 60
+        return f"{h:02d}:{m:02d}"
+
+    # resolve break window for this day
+    if breaks.mode == "same" and breaks.same:
+        bs, be = breaks.same.start, breaks.same.end
+    elif breaks.mode == "per-day" and breaks.perDay and day in breaks.perDay:
+        bw = breaks.perDay[day]
+        bs, be = bw.start, bw.end
+    else:
+        return []
+
+    s = to_min(start); e = to_min(end)
+    s2 = to_min(bs); e2 = to_min(be)
+    # if break overlaps window, start extra series at break end
+    if s2 < e and e2 > s:
+        cur = max(e2, s)
+        out = []
+        threshold = max(1, minutes - 10)
+        while cur + threshold <= e:
+            nxt = min(cur + minutes, e)
+            out.append((from_min(cur), from_min(nxt)))
+            cur = nxt
+        return out
+    return []
 
 
 class CSPVariable:
@@ -134,10 +174,13 @@ class CSPDomain:
 class CSPSolver:
     """Constraint Satisfaction Problem solver for timetable scheduling."""
     
-    def __init__(self, payload: GeneratePayload, seed: int):
+    def __init__(self, payload: GeneratePayload, seed: int, max_seconds: float = 8.0):
         random.seed(seed)
         self.payload = payload
         self.seed = seed
+        self.max_seconds = max_seconds
+        import time
+        self._start_time = time.time()
         self.variables: List[CSPVariable] = []
         self.domains: Dict[int, CSPDomain] = {}
         self.constraints_checked = 0
@@ -243,6 +286,8 @@ class CSPSolver:
             
             # Split into fixed-length slices
             slices = split_into_slices(start, end, self.payload.slotMinutes)
+            # Add slices starting exactly at break end to resume immediately
+            slices += add_post_break_slices(day, start, end, self.payload.slotMinutes, self.payload.breaks)
             
             for s, e in slices:
                 if respects_break(day, s, e, self.payload.breaks):
@@ -250,9 +295,14 @@ class CSPSolver:
                         slots_by_day[day] = []
                     slots_by_day[day].append((s, e))
         
-        # Sort by start time
+        # Sort and de-duplicate by start time
         for day in slots_by_day:
-            slots_by_day[day].sort(key=lambda x: x[0])
+            dedup = {}
+            for s, e in slots_by_day[day]:
+                # keep earliest end for same start to avoid duplicates
+                if s not in dedup or e < dedup[s]:
+                    dedup[s] = e
+            slots_by_day[day] = sorted([(s, dedup[s]) for s in dedup.keys()], key=lambda x: x[0])
         
         return slots_by_day
     
@@ -262,11 +312,15 @@ class CSPSolver:
         Labs require consecutive time slots (ideally 3 hours).
         Prefers dedicated lab rooms but can use classrooms if needed.
         """
-        # Get lab rooms first, then fall back to all rooms
-        lab_rooms = [r for r in self.payload.rooms 
-                    if self.payload.roomTypes.get(r, "Class") == "Lab"]
+        # Preferred lab rooms: if class-specific restriction provided, honor it
+        if self.payload.classLabRooms and var.class_name in self.payload.classLabRooms:
+            lab_rooms = [r for r in self.payload.classLabRooms.get(var.class_name, [])
+                         if self.payload.roomTypes.get(r, "Class") == "Lab"]
+        else:
+            lab_rooms = [r for r in self.payload.rooms 
+                         if self.payload.roomTypes.get(r, "Class") == "Lab"]
         
-        # If no dedicated lab rooms, allow using regular classrooms for labs
+        # If no dedicated lab rooms matched restriction, fallback to any selected rooms
         if not lab_rooms:
             lab_rooms = self.payload.rooms
         
@@ -721,8 +775,15 @@ class CSPSolver:
     
     # ==================== BACKTRACKING SEARCH ====================
     
+    def _time_exceeded(self) -> bool:
+        import time
+        return (time.time() - self._start_time) > self.max_seconds
+
     def backtrack(self) -> bool:
         """Backtracking search with forward checking."""
+        # Abort if time budget exceeded to avoid hanging
+        if self._time_exceeded():
+            return False
         # Check if assignment is complete
         var = self.select_unassigned_variable()
         if var is None:
@@ -858,7 +919,8 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
     
     # Create and solve CSP
     try:
-        solver = CSPSolver(payload, seed)
+        # Limit solve time to avoid hanging; adjustable if needed
+        solver = CSPSolver(payload, seed, max_seconds=8.0)
     except Exception as e:
         raise HTTPException(status_code=400, detail={
             "message": f"Failed to initialize CSP solver: {str(e)}",
@@ -904,7 +966,7 @@ def generate_candidate(payload: GeneratePayload, seed: int) -> Dict[str, Any]:
                 "constraintsChecked": solver.constraints_checked,
                 "backtracks": solver.backtracks,
             },
-            "hint": "Insufficient time slots or rooms. Try: adding more rooms, extending time windows, reducing sessions, or adjusting break times."
+            "hint": "Solver timed out or insufficient resources. Try: adding more rooms, extending time windows, reducing sessions, or adjusting break times."
         })
     
     # Get the solution

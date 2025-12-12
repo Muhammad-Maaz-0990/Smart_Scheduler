@@ -831,6 +831,26 @@ function TimeTable({ isAdmin = false }) {
       setTimeout(() => setError(''), 3000);
       return;
     }
+
+    // Additional validations
+    if (lectureDuration < 30) {
+      setError('Lecture duration must be at least 30 minutes');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    const totalWindow = endMinutes - startMinutes;
+    const effectiveWindow = totalWindow - (hasBreak ? breakDuration : 0);
+    if (effectiveWindow < lectureDuration) {
+      setError('Time window too short for selected duration and break');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    const possibleLectures = Math.floor(effectiveWindow / lectureDuration);
+    if (hasBreak && breakAfterLecture > possibleLectures) {
+      setError(`Break after lecture exceeds possible count (${possibleLectures})`);
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
     
     // Use break settings from modal
     const breakAfterLectureNum = hasBreak ? breakAfterLecture : null;
@@ -862,7 +882,9 @@ function TimeTable({ isAdmin = false }) {
       if (breakAfterLectureNum !== null && lectureCount === breakAfterLectureNum && breakDurationMinutes > 0) {
         // Calculate new break times
         const breakStartMinutes = currentMinutes;
-        const breakEndMinutes = currentMinutes + breakDurationMinutes;
+        let breakEndMinutes = currentMinutes + breakDurationMinutes;
+        // Clamp break end to not exceed overall endMinutes
+        if (breakEndMinutes > endMinutes) breakEndMinutes = endMinutes;
         
         const breakStartHour = Math.floor(breakStartMinutes / 60);
         const breakStartMin = breakStartMinutes % 60;
@@ -873,7 +895,7 @@ function TimeTable({ isAdmin = false }) {
         newBreakEnd = `${String(breakEndHour).padStart(2, '0')}:${String(breakEndMin).padStart(2, '0')}`;
         
         // Skip ahead by break duration
-        currentMinutes += breakDurationMinutes;
+        currentMinutes += (breakEndMinutes - breakStartMinutes);
       }
     }
     
@@ -1774,15 +1796,15 @@ function TimeTable({ isAdmin = false }) {
                   </Form.Label>
                   <Form.Control
                     type="number"
-                    min="15"
+                    min="30"
                     max="180"
-                    step="15"
+                    step="5"
                     value={timeSettings.lectureDuration}
                     onChange={(e) => setTimeSettings({ ...timeSettings, lectureDuration: parseInt(e.target.value) || 60 })}
                     style={{ borderColor: '#d1d5db' }}
                   />
                   <Form.Text className="text-muted">
-                    Common values: 50 minutes (1 hour class), 60 minutes, 75 minutes, 90 minutes
+                    Common values: 30, 45, 60, 75, 90 minutes
                   </Form.Text>
                 </Form.Group>
 
@@ -2319,7 +2341,8 @@ function TimetableTables({
   console.log('Break pairs found:', breakPairs);
   
   let breakStart = null, breakEnd = null;
-  if (header?.breakStart && header?.breakEnd) {
+  // In edit mode, always derive break from the current grid rather than header
+  if (!isEditMode && header?.breakStart && header?.breakEnd) {
     breakStart = String(header.breakStart);
     breakEnd = String(header.breakEnd);
     console.log('Using header break:', { breakStart, breakEnd });

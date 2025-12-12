@@ -109,7 +109,7 @@ const TeacherDashboard = () => {
       }
     };
     load();
-  }, []);
+  }, [showMine, user?.designation, user?.name, user?.role, user?.userName]);
 
   // Refetch when filters change
   useEffect(() => {

@@ -4,6 +4,7 @@ const { protect } = require('../middleware/auth');
 const InstituteSubscription = require('../models/Subscription');
 const InstituteInformation = require('../models/InstituteInformation');
 const Users = require('../models/Users');
+const { sendPaymentReminder } = require('../utils/mailer');
 async function resolveInstituteIDFromUser(user) {
   if (user?.instituteID) return user.instituteID;
   if (!user?.id) return null;
@@ -213,3 +214,49 @@ async function webhookHandler(req, res) {
 }
 
 module.exports = { router, webhookHandler };
+// GET /api/payments/all
+// Owner-only: list all payments across institutes
+router.get('/all', protect, async (req, res) => {
+  try {
+    const role = (req.user?.designation || '').toLowerCase();
+    if (role !== 'owner') return res.status(403).json({ message: 'Only owner can view all payments' });
+    const items = await InstituteSubscription.find({}).sort({ paymentDate: -1 }).limit(200).lean();
+    // Attach institute names for context
+    const instituteIDs = Array.from(new Set(items.map(i => i.instituteID).filter(Boolean)));
+    const institutes = await InstituteInformation.find({ instituteID: { $in: instituteIDs } }).select('instituteID instituteName').lean();
+    const nameById = new Map(institutes.map(i => [String(i.instituteID), i.instituteName]));
+    const rows = items.map(i => ({
+      paymentID: i.paymentID,
+      instituteID: i.instituteID,
+      instituteName: nameById.get(String(i.instituteID)) || '',
+      paymentDate: i.paymentDate,
+      amount: i.amount,
+    }));
+    return res.json({ items: rows });
+  } catch (err) {
+    console.error('List all payments error:', err?.message || err);
+    return res.status(500).json({ message: 'Failed to fetch payments' });
+  }
+});
+
+// POST /api/payments/notify/:instituteID
+// Owner-only: send a payment reminder email to the admin of given institute
+router.post('/notify/:instituteID', protect, async (req, res) => {
+  try {
+    const role = (req.user?.designation || '').toLowerCase();
+    if (role !== 'owner') return res.status(403).json({ message: 'Only owner can notify institutes' });
+    const { instituteID } = req.params;
+    const { reason } = req.body || {}; // 'trial-ended' | 'payment-ended'
+    if (!instituteID) return res.status(400).json({ message: 'Missing instituteID' });
+    const inst = await InstituteInformation.findOne({ instituteID }).lean();
+    if (!inst) return res.status(404).json({ message: 'Institute not found' });
+    const adminUser = await Users.findOne({ instituteID, designation: 'Admin' }).lean();
+    const toEmail = adminUser?.email || inst?.email || null;
+    if (!toEmail) return res.status(404).json({ message: 'No admin email found for institute' });
+    await sendPaymentReminder({ to: toEmail, instituteName: inst.instituteName, reason: reason || 'payment-ended' });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('Notify payment error:', err?.message || err);
+    return res.status(500).json({ message: 'Failed to send reminder' });
+  }
+});

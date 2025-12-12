@@ -70,3 +70,38 @@ async function sendInstituteUserWelcome({ to, userName, designation, institute, 
 }
 
 module.exports = { sendInstituteUserWelcome };
+
+function renderPaymentReminderHtml({ instituteName, reason }) {
+  const appUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const isTrial = String(reason).toLowerCase() === 'trial-ended';
+  const isExpired = String(reason).toLowerCase() === 'payment-ended' || String(reason).toLowerCase() === 'expired';
+  const message = isTrial
+    ? `The trial for <strong>${instituteName || 'your institute'}</strong> has ended. Please upgrade to continue using Smart Scheduler without interruption.`
+    : `The subscription for <strong>${instituteName || 'your institute'}</strong> has expired. Please renew to avoid interruption.`;
+  return `
+  <div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#1f2937">
+    <h2 style="color:#111827;margin:0 0 12px">Subscription Renewal Reminder</h2>
+    <p style="margin:0 0 12px">Dear Admin,</p>
+    <p style="margin:0 0 12px">${message}</p>
+    <p style="margin:0 0 16px"><a href="${appUrl}/admin/profile" style="background:#4f46e5;color:#fff;text-decoration:none;padding:10px 16px;border-radius:6px">Manage Subscription</a></p>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>
+    <p style="color:#6b7280;margin:0">If you already paid, you can ignore this message.</p>
+  </div>`;
+}
+
+async function sendPaymentReminder({ to, instituteName, reason }) {
+  const transporter = await getTransporter();
+  const from = process.env.SMTP_FROM || 'Smart Scheduler <no-reply@smart-scheduler.local>';
+  const subject = String(reason).toLowerCase() === 'trial-ended'
+    ? `Trial Ended: ${instituteName || 'Institute'}`
+    : `Subscription Expired: ${instituteName || 'Institute'}`;
+  const html = renderPaymentReminderHtml({ instituteName, reason });
+  const info = await transporter.sendMail({ from, to, subject, html });
+  if (nodemailer.getTestMessageUrl && info && info.messageId) {
+    const preview = nodemailer.getTestMessageUrl(info);
+    if (preview) console.log('Email preview URL:', preview);
+  }
+  return info;
+}
+
+module.exports.sendPaymentReminder = sendPaymentReminder;

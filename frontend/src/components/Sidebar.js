@@ -22,7 +22,14 @@ const Sidebar = ({ activeMenu }) => {
   const navigate = useNavigate();
   const { user, logout, instituteObjectId, loadSubscriptionOnce } = useAuth();
   const [instituteInfo, setInstituteInfo] = useState(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sidebarCollapsed');
+      return saved === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isExpired, setIsExpired] = useState(false);
@@ -41,6 +48,12 @@ const Sidebar = ({ activeMenu }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sidebarCollapsed', String(isCollapsed));
+    } catch {}
+  }, [isCollapsed]);
 
   useEffect(() => {
     const fetchInstituteInfo = async () => {
@@ -117,6 +130,7 @@ const Sidebar = ({ activeMenu }) => {
     } else {
       navigate(`${basePath}/${menu}`);
     }
+    // Preserve collapsed state; only close mobile overlay
     setIsMobileOpen(false);
   };
 
@@ -140,6 +154,7 @@ const Sidebar = ({ activeMenu }) => {
   const ownerMenu = [
     { icon: FaBuilding, label: 'Institutes', value: 'institutes' },
     { icon: FaUsers, label: 'Owner Users', value: 'ownerUsers' },
+    { icon: FaCalendar, label: 'Payments', value: 'payments' },
     { icon: FaUserCog, label: 'Profile', value: 'profile' }
   ];
 
