@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Landing from './pages/Landing';
 import OwnerDashboard from './pages/Owner/OwnerDashboard';
 import Institutes from './pages/Owner/Institutes';
 import OwnerUsers from './pages/Owner/OwnerUsers';
@@ -42,7 +43,7 @@ function App() {
       >
         <div className="App">
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<Login />} />
