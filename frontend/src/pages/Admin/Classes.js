@@ -176,25 +176,23 @@ const Classes = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
+            style={{ minHeight: '95px' }}
           >
             <div>
               <h2 style={{
-                fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-                fontWeight: '800',
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '0.5rem'
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                color: '#000000',
+                marginBottom: '0.5rem',
+                letterSpacing: '-0.5px'
               }}>
                 Classes Management
               </h2>
               <p style={{
-                fontSize: 'clamp(0.9rem, 2vw, 1rem)',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                fontSize: '0.875rem',
+                color: '#6b7280',
                 margin: 0,
-                fontWeight: '600'
+                fontWeight: '500'
               }}>
                 Manage all classes in your institute
               </p>

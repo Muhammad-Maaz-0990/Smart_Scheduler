@@ -9,6 +9,9 @@ import '../Dashboard.css';
 
 const MotionCol = motion(Col);
 
+// Global purple color variable
+const PURPLE_COLOR = '#6941db';
+
 const AdminDashboard = () => {
   const { user, instituteObjectId } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -87,22 +90,18 @@ const AdminDashboard = () => {
   }, [user, instituteObjectId]);
 
   const statsData = [
-    { icon: FaChalkboardTeacher, value: counts.teachers, label: 'Teachers', color: '#7e22ce', delay: 0, description: 'Total active teachers', trend: '+12%' },
-    { icon: FaUserGraduate, value: counts.students, label: 'Students', color: '#3b82f6', delay: 0.1, description: 'Total enrolled students', trend: '+8%' },
-    { icon: FaBook, value: counts.courses, label: 'Courses', color: '#8b5cf6', delay: 0.2, description: 'Active courses offered', trend: '+5%' },
-    { icon: FaCalendarAlt, value: counts.schedules, label: 'Schedules', color: '#6366f1', delay: 0.3, description: 'Generated timetables', trend: 'New' },
-    { icon: FaDoorOpen, value: counts.rooms, label: 'Rooms', color: '#7e22ce', delay: 0.4, description: 'Available classrooms', trend: '+2' },
-    { icon: FaUsers, value: counts.classes, label: 'Classes', color: '#3b82f6', delay: 0.5, description: 'Total class sections', trend: '+3' },
+    { icon: FaChalkboardTeacher, value: counts.teachers, label: 'Teachers', color: PURPLE_COLOR, delay: 0, description: 'Total active teachers', trend: '+12%' },
+    { icon: FaUserGraduate, value: counts.students, label: 'Students', color: PURPLE_COLOR, delay: 0.1, description: 'Total enrolled students', trend: '+8%' },
+    { icon: FaBook, value: counts.courses, label: 'Courses', color: PURPLE_COLOR, delay: 0.2, description: 'Active courses offered', trend: '+5%' },
+    { icon: FaCalendarAlt, value: counts.schedules, label: 'Schedules', color: PURPLE_COLOR, delay: 0.3, description: 'Generated timetables', trend: 'New' },
+    { icon: FaDoorOpen, value: counts.rooms, label: 'Rooms', color: PURPLE_COLOR, delay: 0.4, description: 'Available classrooms', trend: '+2' },
+    { icon: FaUsers, value: counts.classes, label: 'Classes', color: PURPLE_COLOR, delay: 0.5, description: 'Total class sections', trend: '+3' },
   ];
 
   return (
     <>
       <Sidebar activeMenu="dashboard" />
       <div className="dashboard-page">
-        {/* Animated Background Elements */}
-        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(126, 34, 206, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
-        <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 15s ease-in-out infinite reverse' }}></div>
-
         <Container fluid className="dashboard-content">
           {/* Title Section */}
           <motion.div 
@@ -114,14 +113,14 @@ const AdminDashboard = () => {
             <Badge 
               bg="light" 
               style={{
-                background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.1), rgba(59, 130, 246, 0.1))',
-                color: '#7e22ce',
+                background: '#f3f4f6',
+                color: '#000000',
                 fontSize: '0.875rem',
-                fontWeight: 600,
+                fontWeight: 500,
                 padding: '0.5rem 1.25rem',
                 borderRadius: '50px',
                 marginBottom: '1rem',
-                border: '2px solid rgba(126, 34, 206, 0.2)',
+                border: '2px solid #e5e7eb',
                 display: 'inline-block'
               }}
             >
@@ -131,11 +130,8 @@ const AdminDashboard = () => {
             
             <h1 style={{
               fontSize: 'clamp(1.75rem, 4.5vw, 2.75rem)',
-              fontWeight: 900,
-              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              fontWeight: 600,
+              color: '#000000',
               marginBottom: '1rem',
               letterSpacing: '-1.5px'
             }}>
@@ -143,11 +139,8 @@ const AdminDashboard = () => {
             </h1>
             <p style={{
               fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
-              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              fontWeight: 600
+              color: '#000000',
+              fontWeight: 500
             }}>
               Welcome back, <span style={{ fontWeight: 700 }}>{user?.userName || 'Admin'}</span>! 
               Managing <span style={{ fontWeight: 700 }}>{user?.instituteName || 'your institute'}</span>
@@ -167,20 +160,16 @@ const AdminDashboard = () => {
               <Alert 
                 variant="danger" 
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 245, 250, 0.95) 100%)',
+                  background: '#ffffff',
                   border: '2px solid rgba(220, 38, 38, 0.2)',
                   borderRadius: '16px',
                   boxShadow: '0 8px 24px rgba(220, 38, 38, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04)',
-                  backdropFilter: 'blur(10px)',
                   padding: '1.5rem',
                   marginBottom: '2rem'
                 }}
               >
                 <Alert.Heading style={{
-                  background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
+                  color: '#dc2626',
                   fontWeight: 800,
                   fontSize: '1.25rem',
                   marginBottom: '0.75rem'
@@ -213,54 +202,65 @@ const AdminDashboard = () => {
                 >
                   <OverlayTrigger
                     placement="top"
+                    delay={{ show: 100, hide: 0 }}
                     overlay={
                       <Tooltip 
                         id={`tooltip-${stat.label}`}
                         className="custom-gradient-tooltip"
                       >
                         <div style={{
-                          background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                          color: 'white',
-                          borderRadius: '16px',
-                          padding: '0.75rem 1.25rem',
-                          fontSize: '0.9rem',
-                          fontWeight: 600,
+                          background: PURPLE_COLOR,
+                          color: '#ffffff',
+                          borderRadius: '12px',
+                          padding: '0.5rem 1rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 500,
                           border: 'none',
-                          boxShadow: '0 8px 24px rgba(126, 34, 206, 0.4)'
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
                         }}>
                           {stat.description}
                         </div>
                       </Tooltip>
                     }
                   >
-                    <motion.div whileHover={{ scale: 1.03, y: -8 }}>
+                    <motion.div 
+                      whileHover={{ scale: 1.01 }} 
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                    >
                       <Card style={{
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 100%)',
-                        backdropFilter: 'blur(20px)',
-                        border: '2px solid rgba(126, 34, 206, 0.12)',
+                        background: '#ffffff',
+                        border: `2px solid ${PURPLE_COLOR}20`,
                         borderRadius: '24px',
-                        boxShadow: '0 10px 40px rgba(126, 34, 206, 0.1), 0 3px 12px rgba(59, 130, 246, 0.05)',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
                         height: '100%',
                         position: 'relative',
                         overflow: 'hidden',
-                        transition: 'all 0.3s ease',
+                        transition: 'box-shadow 0.15s ease, transform 0.15s ease',
                         cursor: 'pointer'
-                      }}>
-
-                        {/* Bottom gradient bar */}
-                        <motion.div 
-                          style={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            height: '4px',
-                            background: 'linear-gradient(90deg, #7e22ce, #3b82f6, #7e22ce)'
-                          }}
-                          initial={{ scaleX: 0 }}
-                          whileHover={{ scaleX: 1 }}
-                          transition={{ duration: 0.5 }}
-                        />
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
+                        const iconBg = e.currentTarget.querySelector('[data-icon-bg]');
+                        const icon = e.currentTarget.querySelector('svg');
+                        const valueText = e.currentTarget.querySelector('h3');
+                        const labelText = e.currentTarget.querySelector('p');
+                        if (iconBg) iconBg.style.background = PURPLE_COLOR;
+                        if (icon) icon.style.color = '#ffffff';
+                        if (valueText) valueText.style.color = PURPLE_COLOR;
+                        if (labelText) labelText.style.color = PURPLE_COLOR;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+                        const iconBg = e.currentTarget.querySelector('[data-icon-bg]');
+                        const icon = e.currentTarget.querySelector('svg');
+                        const valueText = e.currentTarget.querySelector('h3');
+                        const labelText = e.currentTarget.querySelector('p');
+                        if (iconBg) iconBg.style.background = '#00000010';
+                        if (icon) icon.style.color = '#000000';
+                        if (valueText) valueText.style.color = '#000000';
+                        if (labelText) labelText.style.color = '#000000';
+                      }}
+                      >
                         
                         <Card.Body style={{ 
                           textAlign: 'center', 
@@ -271,51 +271,44 @@ const AdminDashboard = () => {
                           alignItems: 'center'
                         }}>
                           {/* Icon */}
-                          <motion.div 
+                          <div 
                             style={{
                               position: 'relative',
                               marginBottom: '1.5rem'
                             }}
-                            whileHover={{ rotate: 360, scale: 1.1 }}
-                            transition={{ duration: 0.6 }}
                           >
                             <div style={{
-                              fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
-                              background: `linear-gradient(135deg, ${stat.color} 0%, #3b82f6 100%)`,
-                              WebkitBackgroundClip: 'text',
-                              WebkitTextFillColor: 'transparent',
-                              backgroundClip: 'text',
+                              fontSize: 'clamp(2rem, 4vw, 2.5rem)',
                               display: 'inline-flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              width: 'clamp(80px, 15vw, 110px)',
-                              height: 'clamp(80px, 15vw, 110px)',
-                              position: 'relative'
+                              width: 'clamp(60px, 12vw, 80px)',
+                              height: 'clamp(60px, 12vw, 80px)',
+                              position: 'relative',
+                              transition: 'color 0.15s ease'
                             }}>
-                              <div style={{
+                              <div data-icon-bg style={{
                                 position: 'absolute',
                                 width: '100%',
                                 height: '100%',
-                                background: `linear-gradient(135deg, ${stat.color}20, rgba(59, 130, 246, 0.08))`,
+                                background: '#00000010',
                                 borderRadius: '50%',
-                                zIndex: -1,
-                                boxShadow: `0 8px 24px ${stat.color}30`
+                                zIndex: 0,
+                                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
+                                transition: 'background 0.15s ease'
                               }}></div>
-                              <stat.icon />
+                              <stat.icon style={{ color: '#000000', transition: 'color 0.15s ease', position: 'relative', zIndex: 1 }} />
                             </div>
-                          </motion.div>
+                          </div>
                           
                           {/* Value */}
                           <motion.h3 
                             style={{
-                              fontSize: 'clamp(2.25rem, 5.5vw, 3.25rem)',
-                              fontWeight: 900,
-                              background: `linear-gradient(135deg, ${stat.color} 0%, #3b82f6 100%)`,
-                              WebkitBackgroundClip: 'text',
-                              WebkitTextFillColor: 'transparent',
-                              backgroundClip: 'text',
+                              fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+                              fontWeight: 700,
+                              color: '#000000',
                               marginBottom: '0.5rem',
-                              letterSpacing: '-2px',
+                              letterSpacing: '-1px',
                               lineHeight: 1.2
                             }}
                             initial={{ scale: 0 }}
@@ -327,31 +320,17 @@ const AdminDashboard = () => {
                           
                           {/* Label */}
                           <p style={{
-                            fontSize: 'clamp(0.8rem, 1.75vw, 1rem)',
-                            background: `linear-gradient(135deg, ${stat.color} 0%, #3b82f6 100%)`,
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
+                            fontSize: 'clamp(0.7rem, 1.5vw, 0.875rem)',
+                            color: '#000000',
                             margin: 0,
                             marginTop: '0.5rem',
-                            fontWeight: 800,
+                            fontWeight: 600,
                             textTransform: 'uppercase',
-                            letterSpacing: '1.5px',
+                            letterSpacing: '1px',
                             position: 'relative',
                             paddingBottom: '0.75rem'
                           }}>
                             {stat.label}
-                            <span style={{
-                              position: 'absolute',
-                              bottom: 0,
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              width: '50px',
-                              height: '3px',
-                              background: `linear-gradient(90deg, transparent, ${stat.color}, #3b82f6, transparent)`,
-                              borderRadius: '2px',
-                              display: 'block'
-                            }}></span>
                           </p>
                           
                           {/* Progress Bar */}
@@ -362,16 +341,16 @@ const AdminDashboard = () => {
                               width: '80%',
                               marginTop: '1rem',
                               borderRadius: '50px',
-                              background: 'rgba(126, 34, 206, 0.1)',
+                              background: `${PURPLE_COLOR}20`,
                               overflow: 'hidden'
                             }}
                           >
                             <ProgressBar 
                               now={Math.min((stat.value / 10) * 100, 100)}
                               style={{
-                                background: `linear-gradient(90deg, ${stat.color}, #3b82f6)`,
+                                background: PURPLE_COLOR,
                                 borderRadius: '50px',
-                                boxShadow: `0 0 10px ${stat.color}80`
+                                boxShadow: `0 0 10px ${PURPLE_COLOR}60`
                               }}
                             />
                           </ProgressBar>

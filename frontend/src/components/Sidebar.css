@@ -4,14 +4,17 @@
   top: 0;
   height: 100vh;
   width: 260px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  transition: width 0.3s ease, transform 0.3s ease;
+  background: #ffffff;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;
+  color: #111827;
+  will-change: transform, width;
+  transform: translateZ(0);
 }
 
 .sidebar.collapsed {
@@ -23,7 +26,7 @@
   display: flex;
   align-items: center;
   gap: 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #e5e7eb;
   min-height: 95px;
 }
 
@@ -43,8 +46,8 @@
 
 .institute-name {
   font-size: 16px;
-  font-weight: bold;
-  color: white;
+  font-weight: 700;
+  color: #111827;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -52,7 +55,7 @@
 
 .institute-subtitle {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #6b7280;
 }
 
 .sidebar-nav {
@@ -69,35 +72,35 @@
   gap: 15px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: #1f2937;
   font-size: 15px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   text-align: left;
   position: relative;
+  border-radius: 10px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .sidebar-menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: #f3e8ff;
+  color: #111827;
   padding-left: 25px;
 }
 
 .sidebar-menu-item.active {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-weight: bold;
-  border-left: 4px solid white;
+  background: linear-gradient(135deg, #6941db 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border-left: 4px solid transparent;
 }
 
 .sidebar-menu-item.active::before {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: white;
+  display: none;
+}
+
+.sidebar-menu-item:last-child {
+  border-bottom: none;
 }
 
 .menu-icon {
@@ -105,6 +108,7 @@
   flex-shrink: 0;
   width: 25px;
   text-align: center;
+  color: inherit;
 }
 
 .menu-label {
@@ -119,7 +123,7 @@
 
 .sidebar-footer {
   padding: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid #e5e7eb;
 }
 
 .user-info {
@@ -128,15 +132,16 @@
   gap: 12px;
   margin-bottom: 15px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
   border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .user-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, #6941db 0%, #8b5cf6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -153,7 +158,7 @@
 
 .user-name {
   font-size: 14px;
-  color: white;
+  color: #111827;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -162,16 +167,16 @@
 
 .user-role {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #6b7280;
 }
 
 .logout-btn-sidebar {
   width: 100%;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #dc2626;
   border: none;
   border-radius: 8px;
-  color: white;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -183,7 +188,7 @@
 }
 
 .logout-btn-sidebar:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #b91c1c;
   transform: translateY(-2px);
 }
 
@@ -233,14 +238,15 @@
 
   .sidebar {
     position: fixed;
-    transform: translateX(-100%);
+    transform: translate3d(-100%, 0, 0);
     width: 260px;
     z-index: 1000;
     left: 0;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sidebar.mobile-open {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
     z-index: 1000;
   }
 
@@ -261,11 +267,11 @@
 
   .sidebar.collapsed {
     width: 260px;
-    transform: translateX(-100%);
+    transform: translate3d(-100%, 0, 0);
   }
 
   .sidebar.collapsed.mobile-open {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 
   .sidebar-header {

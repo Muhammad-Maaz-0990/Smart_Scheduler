@@ -235,7 +235,7 @@ const Sidebar = ({ activeMenu }) => {
               }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', background: '#6941db' }}
             >
               {role === 'Owner' ? (
                 /* Smart Scheduler Logo and Name for Owner */
@@ -245,11 +245,11 @@ const Sidebar = ({ activeMenu }) => {
                       width: 55,
                       height: 55,
                       borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                      background: '#6941db',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 8px 16px rgba(124, 58, 237, 0.4)'
+                      boxShadow: '0 8px 16px rgba(124, 58, 237, 0.3)'
                     }}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -262,13 +262,13 @@ const Sidebar = ({ activeMenu }) => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 }}
                     >
-                      <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', letterSpacing: '-0.5px' }}>
+                      <div style={{ fontWeight: 800, fontSize: 18, color: '#ffffff', letterSpacing: '-0.5px' }}>
                         Smart Scheduler
                       </div>
                       <div style={{
                         fontWeight: 600,
                         fontSize: 13,
-                        color: '#c7d2fe',
+                        color: 'rgba(255, 255, 255, 0.8)',
                         marginTop: 4,
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
@@ -303,7 +303,7 @@ const Sidebar = ({ activeMenu }) => {
                         width: 55,
                         height: 55,
                         borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: '#6941db',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -325,7 +325,7 @@ const Sidebar = ({ activeMenu }) => {
                       <div style={{
                         fontWeight: 800,
                         fontSize: 18,
-                        color: '#fff',
+                        color: '#ffffff',
                         letterSpacing: '-0.5px',
                         maxWidth: 150,
                         whiteSpace: 'nowrap',
@@ -337,7 +337,7 @@ const Sidebar = ({ activeMenu }) => {
                       <div style={{
                         fontWeight: 600,
                         fontSize: 13,
-                        color: '#c7d2fe',
+                        color: 'rgba(255, 255, 255, 0.8)',
                         marginTop: 4,
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
@@ -372,9 +372,9 @@ const Sidebar = ({ activeMenu }) => {
                     custom={idx * 0.05}
                     style={{
                       background: isActive
-                        ? 'rgba(255, 255, 255, 0.15)'
+                        ? 'linear-gradient(135deg, #6941db 0%, #8b5cf6 100%)'
                         : 'transparent',
-                      borderLeft: isActive ? '4px solid white' : '4px solid transparent',
+                      borderLeft: isActive ? '4px solid #ffffff' : '4px solid transparent',
                       borderRadius: '8px',
                       padding: '0.875rem 1rem',
                       margin: '0.5rem 0.5rem',
@@ -382,7 +382,7 @@ const Sidebar = ({ activeMenu }) => {
                       alignItems: 'center',
                       gap: '0.75rem',
                       cursor: 'pointer',
-                      color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
+                      color: isActive ? '#ffffff' : 'rgba(31, 41, 55, 0.8)',
                       fontWeight: isActive ? 700 : 600,
                       fontSize: '0.95rem',
                       transition: 'all 0.2s',
@@ -396,7 +396,7 @@ const Sidebar = ({ activeMenu }) => {
                         display: 'flex',
                         alignItems: 'center',
                         fontSize: '1.1rem',
-                        color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.75)'
+                        color: isActive ? '#ffffff' : 'rgba(31, 41, 55, 0.8)'
                       }}
                       whileHover={{ scale: 1.15, rotate: 5 }}
                       transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -413,20 +413,7 @@ const Sidebar = ({ activeMenu }) => {
                         {item.label}
                       </motion.span>
                     )}
-                    {isActive && (
-                      <motion.div
-                        style={{
-                          position: 'absolute',
-                          right: 0,
-                          width: 3,
-                          height: '100%',
-                          background: 'linear-gradient(180deg, #7c3aed 0%, #3b82f6 100%)'
-                        }}
-                        initial={{ scaleY: 0 }}
-                        animate={{ scaleY: 1 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    )}
+
                   </motion.button>
                 );
               })}
@@ -446,7 +433,7 @@ const Sidebar = ({ activeMenu }) => {
                 whileHover={{ scale: 1.05, x: 4 }}
                 whileTap={{ scale: 0.95 }}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  background: '#dc2626',
                   borderLeft: '4px solid transparent',
                   borderRadius: '8px',
                   padding: '0.875rem 1rem',
@@ -455,7 +442,7 @@ const Sidebar = ({ activeMenu }) => {
                   alignItems: 'center',
                   gap: '0.75rem',
                   cursor: 'pointer',
-                  color: 'rgba(255, 255, 255, 0.85)',
+                  color: '#ffffff',
                   fontWeight: 700,
                   fontSize: '0.95rem',
                   border: 'none',

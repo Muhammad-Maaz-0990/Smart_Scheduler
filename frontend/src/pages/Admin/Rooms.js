@@ -226,28 +226,22 @@ const Rooms = () => {
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            style={{ marginBottom: '2rem' }}
+            style={{ marginBottom: '2rem', minHeight: '95px' }}
           >
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3" style={{ minHeight: '95px' }}>
               <div>
                 <h1 style={{
-                  fontSize: 'clamp(1.75rem, 4.5vw, 2.75rem)',
-                  fontWeight: 400,
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  color: '#000000',
                   marginBottom: '0.5rem',
-                  letterSpacing: '-1.5px'
+                  letterSpacing: '-0.5px'
                 }}>
                   Rooms Management
                 </h1>
                 <p style={{
-                  fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
+                  fontSize: '0.875rem',
+                  color: '#6b7280',
                   fontWeight: 400,
                   margin: 0
                 }}>
