@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Button, Form, Alert } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import PhoneInput from 'react-phone-number-input';
+import PhoneInput, { getCountryCallingCode, getCountries } from 'react-phone-number-input';
+import en from 'react-phone-number-input/locale/en.json';
 import 'react-phone-number-input/style.css';
 import {
   slideInFromLeft,
@@ -20,8 +21,20 @@ import './Register.css';
 const MotionButton = motion(Button);
 const MotionDiv = motion.div;
 
+// Country names mapping
+const countryNames = {
+  'PK': 'Pakistan',
+  'US': 'United States',
+  'GB': 'United Kingdom',
+  'IN': 'India',
+  'AE': 'United Arab Emirates',
+  'SA': 'Saudi Arabia'
+};
+
 const Register = () => {
   const [currentStep, setCurrentStep] = useState(-1);
+  const [selectedCountry, setSelectedCountry] = useState('PK');
+  const [selectedContactCountry, setSelectedContactCountry] = useState('PK');
   const [formData, setFormData] = useState({
     // Step 1: Admin/User Information
     userName: '',
@@ -452,17 +465,27 @@ const Register = () => {
             <motion.div variants={slideInFromBottom}>
               <Form.Group className="mb-2">
                 <Form.Label className="form-label">Phone Number</Form.Label>
-                <PhoneInput
-                  international
-                  defaultCountry="PK"
-                  value={formData.phoneNumber}
-                  onChange={handlePhoneChange}
-                  className="phone-input-custom"
-                  placeholder="Enter phone number"
-                  smartCaret={true}
-                  countryCallingCodeEditable={false}
-                  limitMaxLength={true}
-                />
+                <div className="phone-input-wrapper">
+                  <PhoneInput
+                    international
+                    defaultCountry="PK"
+                    value={formData.phoneNumber}
+                    onChange={handlePhoneChange}
+                    onCountryChange={(country) => {
+                      setSelectedCountry(country);
+                      setFormData(prev => ({ ...prev, country }));
+                    }}
+                    className="phone-input-custom"
+                    placeholder="Enter phone number"
+                    smartCaret={true}
+                    countryCallingCodeEditable={false}
+                    limitMaxLength={true}
+                    labels={en}
+                  />
+                  <span className="country-name-display">
+                    {selectedCountry ? (en[selectedCountry] || countryNames[selectedCountry] || 'Select your country') : 'Select your country'}
+                  </span>
+                </div>
               </Form.Group>
             </motion.div>
 
@@ -640,17 +663,26 @@ const Register = () => {
             <motion.div variants={slideInFromBottom}>
               <Form.Group className="mb-2">
                 <Form.Label className="form-label">Institute Contact Number</Form.Label>
-                <PhoneInput
-                  international
-                  defaultCountry="PK"
-                  value={formData.contactNumber}
-                  onChange={handleContactNumberChange}
-                  className="phone-input-custom"
-                  placeholder="Enter institute contact number"
-                  smartCaret={true}
-                  countryCallingCodeEditable={false}
-                  limitMaxLength={true}
-                />
+                <div className="phone-input-wrapper">
+                  <PhoneInput
+                    international
+                    defaultCountry="PK"
+                    value={formData.contactNumber}
+                    onChange={handleContactNumberChange}
+                    onCountryChange={(country) => {
+                      setSelectedContactCountry(country);
+                    }}
+                    className="phone-input-custom"
+                    placeholder="Enter institute contact number"
+                    smartCaret={true}
+                    countryCallingCodeEditable={false}
+                    limitMaxLength={true}
+                    labels={en}
+                  />
+                  <span className="country-name-display">
+                    {selectedContactCountry ? (en[selectedContactCountry] || countryNames[selectedContactCountry] || 'Select your country') : 'Select your country'}
+                  </span>
+                </div>
               </Form.Group>
             </motion.div>
 
