@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Card, Badge, Button, Alert, Spinner, Container, Row, Col } from 'react-bootstrap';
-import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaEdit, FaLock, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaEdit, FaLock, FaCheckCircle, FaExclamationCircle, FaUserCog } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MotionCard = motion(Card);
@@ -171,19 +171,33 @@ const Profile = () => {
             flexWrap: 'wrap',
             gap: '1rem'
           }}>
-            <div>
-              <h1 style={{
-                fontSize: '1.875rem',
-                fontWeight: '700',
-                color: '#7c3aed',
-                margin: 0,
-                marginBottom: '0.25rem'
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 15px rgba(124, 58, 237, 0.3)'
               }}>
-                Profile
-              </h1>
-              <p style={{ color: '#6b7280', margin: 0, fontSize: '0.875rem' }}>
-                Manage your account information
-              </p>
+                <FaUserCog style={{ fontSize: '1.5rem', color: 'white' }} />
+              </div>
+              <div>
+                <h1 style={{
+                  fontSize: '1.875rem',
+                  fontWeight: '700',
+                  color: '#7c3aed',
+                  margin: 0,
+                  marginBottom: '0.25rem'
+                }}>
+                  Profile
+                </h1>
+                <p style={{ color: '#6b7280', margin: 0, fontSize: '0.875rem' }}>
+                  Manage your account information
+                </p>
+              </div>
             </div>
             
             {user?.designation === 'Admin' && (

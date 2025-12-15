@@ -81,26 +81,6 @@ const Sidebar = ({ activeMenu }) => {
     }
   }, [user]);
 
-  // Load subscription status and gate menus for Admin/Student/Teacher
-  useEffect(() => {
-    let mounted = true;
-    const run = async () => {
-      try {
-        if (!instituteObjectId) {
-          if (mounted) setIsExpired(false);
-          return;
-        }
-        const sub = await loadSubscriptionOnce(instituteObjectId);
-        if (mounted) setIsExpired(!!sub?.isExpired);
-      } catch {
-        if (mounted) setIsExpired(false);
-      }
-    };
-    run();
-    return () => { mounted = false; };
-  }, [instituteObjectId, loadSubscriptionOnce]);
-
-  // Toggle global class to allow full-width content when sidebar hidden
   useEffect(() => {
     const body = document.body;
     if (!isVisible) {
@@ -135,6 +115,7 @@ const Sidebar = ({ activeMenu }) => {
   };
 
   const handleLogout = () => {
+    setIsMobileOpen(false);
     logout();
     navigate('/login');
   };
@@ -175,6 +156,7 @@ const Sidebar = ({ activeMenu }) => {
   const gatedMenu = [{ icon: '🔧', label: 'Profile', value: 'profile' }];
   const baseMenu = role === 'Admin' ? adminMenu : role === 'Student' ? studentMenu : role === 'Teacher' ? teacherMenu : ownerMenu;
   const menuItems = (isGateRole && isExpired) ? gatedMenu : baseMenu;
+  const sidebarMenuItems = [...menuItems, { icon: FaDoorOpen, label: 'Logout', value: 'logout' }];
 
   return (
     <>
@@ -197,8 +179,6 @@ const Sidebar = ({ activeMenu }) => {
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           transition: 'all 0.2s'
         }}
-        whileHover={{ scale: 1.08, boxShadow: '0 6px 16px rgba(124, 58, 237, 0.25)' }}
-        whileTap={{ scale: 0.95 }}
         onClick={() => {
           setIsMobileOpen(!isMobileOpen);
           setIsVisible(true);
@@ -220,8 +200,6 @@ const Sidebar = ({ activeMenu }) => {
           ></motion.div>
         )}
       </AnimatePresence>
-
-      {/* Sidebar */}
       <motion.div 
         className={`sidebar no-print ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}
         style={{ display: isMobile && !isMobileOpen ? 'none' : 'flex' }}
@@ -233,9 +211,12 @@ const Sidebar = ({ activeMenu }) => {
                 handleMenuClick('dashboard');
                 setIsMobileOpen(false);
               }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{ cursor: 'pointer', background: '#6941db' }}
+              style={{
+                cursor: 'pointer',
+                background: '#ffffff',
+                borderBottom: '1px solid rgba(17, 24, 39, 0.08)',
+                boxShadow: '0 4px 12px rgba(17, 24, 39, 0.05)'
+              }}
             >
               {role === 'Owner' ? (
                 /* Smart Scheduler Logo and Name for Owner */
@@ -251,7 +232,6 @@ const Sidebar = ({ activeMenu }) => {
                       justifyContent: 'center',
                       boxShadow: '0 8px 16px rgba(124, 58, 237, 0.3)'
                     }}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     <FaClockIcon style={{ fontSize: 28, color: 'white' }} />
@@ -262,13 +242,13 @@ const Sidebar = ({ activeMenu }) => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 }}
                     >
-                      <div style={{ fontWeight: 800, fontSize: 18, color: '#ffffff', letterSpacing: '-0.5px' }}>
+                      <div style={{ fontWeight: 800, fontSize: 18, color: '#111827', letterSpacing: '-0.5px' }}>
                         Smart Scheduler
                       </div>
                       <div style={{
                         fontWeight: 600,
                         fontSize: 13,
-                        color: 'rgba(255, 255, 255, 0.8)',
+                        color: '#4b5563',
                         marginTop: 4,
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
@@ -282,7 +262,6 @@ const Sidebar = ({ activeMenu }) => {
                 /* Institute Logo, Name and Designation for Admin/Student/Teacher */
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <motion.div
-                    whileHover={{ scale: 1.1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
                     {instituteInfo?.instituteLogo ? (
@@ -294,14 +273,12 @@ const Sidebar = ({ activeMenu }) => {
                           height: 55,
                           borderRadius: '12px',
                           objectFit: 'cover',
-                          border: '2px solid rgba(255,255,255,0.3)',
+                          border: '2px solid rgba(17, 24, 39, 0.08)',
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
                         }}
                       />
                     ) : (
                       <div style={{
-                        width: 55,
-                        height: 55,
                         borderRadius: '12px',
                         background: '#6941db',
                         display: 'flex',
@@ -309,8 +286,6 @@ const Sidebar = ({ activeMenu }) => {
                         justifyContent: 'center',
                         fontSize: 24,
                         fontWeight: 'bold',
-                        color: '#fff',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
                       }}>
                         {instituteInfo?.instituteName?.charAt(0) || 'I'}
                       </div>
@@ -325,7 +300,7 @@ const Sidebar = ({ activeMenu }) => {
                       <div style={{
                         fontWeight: 800,
                         fontSize: 18,
-                        color: '#ffffff',
+                        color: '#111827',
                         letterSpacing: '-0.5px',
                         maxWidth: 150,
                         whiteSpace: 'nowrap',
@@ -337,7 +312,7 @@ const Sidebar = ({ activeMenu }) => {
                       <div style={{
                         fontWeight: 600,
                         fontSize: 13,
-                        color: 'rgba(255, 255, 255, 0.8)',
+                        color: '#4b5563',
                         marginTop: 4,
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
@@ -357,58 +332,38 @@ const Sidebar = ({ activeMenu }) => {
               animate="visible"
               variants={staggerChildren}
             >
-              {menuItems.map((item, idx) => {
+              {sidebarMenuItems.map((item, idx) => {
                 const Icon = item.icon;
-                const isActive = activeMenu === item.value;
+                const isLogout = item.value === 'logout';
+                const isActive = !isLogout && activeMenu === item.value;
+                const iconColor = isActive ? '#4338CA' : isLogout ? '#dc2626' : 'currentColor';
                 return (
                   <motion.button
                     key={item.value}
-                    className={`sidebar-menu-item ${isActive ? 'active' : ''}`}
-                    onClick={() => handleMenuClick(item.value)}
+                    className={`sidebar-menu-item${isActive ? ' active' : ''}${isLogout ? ' logout' : ''}`}
+                    onClick={() => (isLogout ? handleLogout() : handleMenuClick(item.value))}
                     title={item.label}
                     variants={cascadeFade}
-                    whileHover={{ scale: 1.05, x: 4 }}
-                    whileTap={{ scale: 0.95 }}
                     custom={idx * 0.05}
-                    style={{
-                      background: isActive
-                        ? 'linear-gradient(135deg, #6941db 0%, #8b5cf6 100%)'
-                        : 'transparent',
-                      borderLeft: isActive ? '4px solid #ffffff' : '4px solid transparent',
-                      borderRadius: '8px',
-                      padding: '0.875rem 1rem',
-                      margin: '0.5rem 0.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      cursor: 'pointer',
-                      color: isActive ? '#ffffff' : 'rgba(31, 41, 55, 0.8)',
-                      fontWeight: isActive ? 700 : 600,
-                      fontSize: '0.95rem',
-                      transition: 'all 0.2s',
-                      border: 'none',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}
                   >
-                    <motion.span
+                    <span
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         fontSize: '1.1rem',
-                        color: isActive ? '#ffffff' : 'rgba(31, 41, 55, 0.8)'
+                        color: iconColor,
+                        zIndex: 1
                       }}
-                      whileHover={{ scale: 1.15, rotate: 5 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     >
                       <Icon />
-                    </motion.span>
+                    </span>
                     {!isCollapsed && (
                       <motion.span
                         className="menu-label"
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 }}
+                        style={{ zIndex: 1 }}
                       >
                         {item.label}
                       </motion.span>
@@ -418,59 +373,10 @@ const Sidebar = ({ activeMenu }) => {
                 );
               })}
             </motion.nav>
-
-            {/* User Info & Logout */}
-            <motion.div
-              className="sidebar-footer"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <motion.button
-                className="logout-btn-sidebar"
-                onClick={handleLogout}
-                title="Logout"
-                whileHover={{ scale: 1.05, x: 4 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  background: '#dc2626',
-                  borderLeft: '4px solid transparent',
-                  borderRadius: '8px',
-                  padding: '0.875rem 1rem',
-                  margin: '0.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  cursor: 'pointer',
-                  color: '#ffffff',
-                  fontWeight: 700,
-                  fontSize: '0.95rem',
-                  border: 'none',
-                  transition: 'all 0.2s',
-                  width: 'calc(100% - 1rem)'
-                }}
-              >
-                <motion.span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    fontSize: '1.1rem'
-                  }}
-                  whileHover={{ rotate: -15, scale: 1.15 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <FaDoorOpen />
-                </motion.span>
-                {!isCollapsed && <span className="menu-label">Logout</span>}
-              </motion.button>
-            </motion.div>
-
             {/* Collapse Toggle (Desktop only) */}
             <motion.button
               className="collapse-toggle"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
             >
               {isCollapsed ? '→' : '←'}
             </motion.button>

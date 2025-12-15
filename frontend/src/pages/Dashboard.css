@@ -256,6 +256,7 @@ div[style*="marginLeft: '250px'"] {
   position: relative;
   z-index: 10;
   padding: 2rem;
+  padding-top: 0;
 }
 
 @media (max-width: 768px) {

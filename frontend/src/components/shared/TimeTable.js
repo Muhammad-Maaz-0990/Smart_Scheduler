@@ -968,28 +968,42 @@ function TimeTable({ isAdmin = false }) {
         variants={fadeInUp}
         className="mb-4"
       >
-        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4">
-          <div>
-            <h2 style={{ 
-              fontSize: 'clamp(1.5rem, 3vw, 1.75rem)',
-              fontWeight: 700,
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4" style={{ paddingTop: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '12px',
               background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              marginBottom: '0.5rem',
-              letterSpacing: '-0.5px'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
             }}>
-              Time Tables Management
-            </h2>
-            <p style={{ 
-              fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
-              color: '#6b7280',
-              fontWeight: 500,
-              marginBottom: 0
-            }}>
-              Explore all timetables of your institute
-            </p>
+              <FaCalendarAlt style={{ fontSize: '1.5rem', color: 'white' }} />
+            </div>
+            <div>
+              <h2 style={{ 
+                fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+                fontWeight: '800',
+                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                marginBottom: '0.5rem'
+              }}>
+                Time Tables Management
+              </h2>
+              <p style={{ 
+                fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                margin: 0,
+                fontWeight: '600'
+              }}>
+                Explore all timetables of your institute
+              </p>
+            </div>
           </div>
 
           <div className="d-flex flex-wrap gap-2 no-print">

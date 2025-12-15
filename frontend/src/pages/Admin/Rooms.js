@@ -1,4 +1,4 @@
-import { Container, Card, Button, Table, Modal, Form, Alert, Badge, InputGroup } from 'react-bootstrap';
+import { Container, Card, Button, Table, Modal, Form, Alert, InputGroup } from 'react-bootstrap';
 import React, { useState, useEffect } from 'react';
 import { FaDoorOpen, FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaFlask, FaChalkboard } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -223,91 +223,113 @@ const Rooms = () => {
         <Container fluid className="dashboard-content">
           {/* Header Section */}
           <motion.div
-            initial={{ opacity: 0, y: -30 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            style={{ marginBottom: '2rem', minHeight: '95px' }}
+            className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
+            style={{ paddingTop: '1rem' }}
           >
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3" style={{ minHeight: '95px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
+              }}>
+                <FaDoorOpen style={{ fontSize: '1.5rem', color: 'white' }} />
+              </div>
               <div>
-                <h1 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 700,
-                  color: '#000000',
-                  marginBottom: '0.5rem',
-                  letterSpacing: '-0.5px'
+                <h2 style={{
+                  fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+                  fontWeight: '800',
+                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  marginBottom: '0.5rem'
                 }}>
                   Rooms Management
-                </h1>
+                </h2>
                 <p style={{
-                  fontSize: '0.875rem',
-                  color: '#6b7280',
-                  fontWeight: 400,
-                  margin: 0
+                  fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  margin: 0,
+                  fontWeight: '600'
                 }}>
                   Manage all classrooms and labs in your institute
                 </p>
               </div>
-              <div className="d-flex gap-2 flex-wrap">
-                <MotionButton
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleShowModal('add')}
-                  style={{
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    border: 'none',
-                    borderRadius: '12px',
-                    padding: '0.75rem 1.5rem',
-                    fontWeight: 400,
-                    color: 'white',
-                    boxShadow: '0 8px 24px rgba(126, 34, 206, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <FaPlus /> Add Room
-                </MotionButton>
-                <MotionButton
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onImportClick}
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-                    border: 'none',
-                    borderRadius: '12px',
-                    padding: '0.75rem 1.5rem',
-                    fontWeight: 400,
-                    color: 'white',
-                    boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <FaFileImport /> Import
-                </MotionButton>
-                <MotionButton
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={exportCSV}
-                  style={{
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                    border: 'none',
-                    borderRadius: '12px',
-                    padding: '0.75rem 1.5rem',
-                    fontWeight: 400,
-                    color: 'white',
-                    boxShadow: '0 8px 24px rgba(139, 92, 246, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <FaFileExport /> Export
-                </MotionButton>
-                <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
-              </div>
+            </div>
+            
+            <div className="d-flex gap-2 flex-wrap">
+              <MotionButton
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleShowModal('add')}
+                style={{
+                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                  border: 'none',
+                  padding: '0.625rem 1.25rem',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  boxShadow: '0 4px 15px rgba(126, 34, 206, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <FaPlus /> Add Room
+              </MotionButton>
+              
+              <MotionButton
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onImportClick}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+                  border: 'none',
+                  padding: '0.625rem 1.25rem',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <FaFileImport /> Import
+              </MotionButton>
+              
+              <MotionButton
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={exportCSV}
+                style={{
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                  border: 'none',
+                  padding: '0.625rem 1.25rem',
+                  borderRadius: '12px',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <FaFileExport /> Export
+              </MotionButton>
+              
+              <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
             </div>
           </motion.div>
 
@@ -586,17 +608,14 @@ const Rooms = () => {
                   }}>
                     📋 Import Preview ({importPreview.length} rooms)
                   </Card.Header>
-                  <Card.Body style={{ padding: '1.5rem' }}>
-                    <div style={{ overflowX: 'auto', marginBottom: '1.5rem' }}>
+                  <Card.Body style={{ padding: 0 }}>
+                    <div style={{ overflowX: 'auto' }}>
                       <Table hover responsive style={{ marginBottom: 0 }}>
-                        <thead>
-                          <tr style={{
-                            background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.05), rgba(59, 130, 246, 0.05))',
-                            borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
-                          }}>
-                            <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>#</th>
-                            <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>Room Number</th>
-                            <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>Room Status</th>
+                        <thead style={{ backgroundColor: '#6941db' }}>
+                          <tr>
+                            <th style={{ padding: '1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: '#6941db' }}>#</th>
+                            <th style={{ padding: '1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: '#6941db' }}>Room Number</th>
+                            <th style={{ padding: '1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: '#6941db' }}>Room Status</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -606,19 +625,24 @@ const Rooms = () => {
                               initial={{ opacity: 0, x: -20 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: idx * 0.05 }}
+                              whileHover={{
+                                backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                                transition: { duration: 0.2 }
+                              }}
                               style={{ borderBottom: '1px solid rgba(126, 34, 206, 0.1)' }}
                             >
                               <td style={{ padding: '1rem' }}>{idx+1}</td>
                               <td style={{ padding: '1rem', fontWeight: 400 }}>{r.roomNumber}</td>
                               <td style={{ padding: '1rem' }}>
-                                <Badge style={{
-                                  background: r.roomStatus === 'Lab' ? 'linear-gradient(135deg, #06b6d4, #22d3ee)' : 'linear-gradient(135deg, #10b981, #34d399)',
-                                  padding: '0.5rem 1rem',
-                                  borderRadius: '8px',
-                                  fontWeight: 400
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  color: '#111827',
+                                  fontWeight: 500
                                 }}>
                                   {r.roomStatus === 'Lab' ? <><FaFlask /> Lab</> : <><FaChalkboard /> Class</>}
-                                </Badge>
+                                </span>
                               </td>
                             </motion.tr>
                           ))}
@@ -678,18 +702,15 @@ const Rooms = () => {
               boxShadow: '0 10px 40px rgba(126, 34, 206, 0.1)',
               overflow: 'hidden'
             }}>
-              <Card.Body style={{ padding: '1.5rem' }}>
+              <Card.Body style={{ padding: 0 }}>
                 <div style={{ overflowX: 'auto' }}>
                   <Table hover responsive style={{ marginBottom: 0 }}>
-                    <thead>
-                      <tr style={{
-                        background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.05), rgba(59, 130, 246, 0.05))',
-                        borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
-                      }}>
-                        <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>#</th>
-                        <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>Room Number</th>
-                        <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce' }}>Room Status</th>
-                        <th style={{ padding: '1rem', fontWeight: 500, color: '#7e22ce', textAlign: 'center' }}>Actions</th>
+                    <thead style={{ backgroundColor: '#6941db' }}>
+                      <tr>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: '#6941db' }}>#</th>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: '#6941db' }}>Room Number</th>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: '#6941db' }}>Room Status</th>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'white', textAlign: 'center', borderBottom: 'none', backgroundColor: '#6941db' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -730,7 +751,7 @@ const Rooms = () => {
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.05 }}
                               whileHover={{ 
-                                backgroundColor: 'rgba(126, 34, 206, 0.05)',
+                                backgroundColor: 'rgba(79, 70, 229, 0.12)',
                                 transition: { duration: 0.2 }
                               }}
                               style={{ borderBottom: '1px solid rgba(126, 34, 206, 0.1)' }}
@@ -740,18 +761,16 @@ const Rooms = () => {
                                 {room.roomNumber}
                               </td>
                               <td style={{ padding: '1rem' }}>
-                                <Badge style={{
-                                  background: room.roomStatus === 'Lab' ? 'linear-gradient(135deg, #06b6d4, #22d3ee)' : 'linear-gradient(135deg, #10b981, #34d399)',
-                                  padding: '0.5rem 1rem',
-                                  borderRadius: '8px',
-                                  fontWeight: 400,
-                                  fontSize: '0.875rem',
+                                <span style={{
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '0.5rem'
+                                  gap: '0.5rem',
+                                  color: '#111827',
+                                  fontWeight: 500,
+                                  fontSize: '0.95rem'
                                 }}>
                                   {room.roomStatus === 'Lab' ? <><FaFlask /> Lab</> : <><FaChalkboard /> Class</>}
-                                </Badge>
+                                </span>
                               </td>
                               <td style={{ padding: '1rem', textAlign: 'center' }}>
                                 <div className="d-flex gap-2 justify-content-center">

@@ -3,7 +3,7 @@ import { Container, Card, Table, Alert, Button, Modal, Form, Badge, InputGroup }
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
-import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaEdit, FaTrash, FaClock } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
@@ -191,37 +191,53 @@ const TimeSlots = () => {
     <>
       <Sidebar activeMenu="timeslots" />
       <div className="dashboard-page">
+        {/* Animated Background */}
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(126, 34, 206, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
+        <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%)', animation: 'float 15s ease-in-out infinite reverse' }}></div>
+
         <Container fluid className="dashboard-content">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
+            style={{ paddingTop: '1rem' }}
           >
-            <div>
-              <h2 style={{
-                fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-                fontWeight: '800',
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '12px',
                 background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '0.5rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.75rem'
+                justifyContent: 'center',
+                boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
               }}>
-                Time Slots Management
-              </h2>
-              <p style={{
-                fontSize: 'clamp(0.9rem, 2vw, 1rem)',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                margin: 0,
-                fontWeight: '600'
-              }}>
-                Configure daily timings for your institute
-              </p>
+                <FaClock style={{ fontSize: '1.5rem', color: 'white' }} />
+              </div>
+              <div>
+                <h2 style={{
+                  fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+                  fontWeight: '800',
+                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  marginBottom: '0.5rem'
+                }}>
+                  Time Slots Management
+                </h2>
+                <p style={{
+                  fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  margin: 0,
+                  fontWeight: '600'
+                }}>
+                  Configure daily timings for your institute
+                </p>
+              </div>
             </div>
 
             <div className="d-flex gap-2 flex-wrap">
@@ -475,11 +491,20 @@ const TimeSlots = () => {
                       </thead>
                       <tbody>
                         {importPreview.map((row, idx) => (
-                          <tr key={idx} style={{ fontSize: '0.875rem', borderBottom: '1px solid rgba(0, 0, 0, 0.05)' }}>
+                          <motion.tr 
+                            key={idx} 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            whileHover={{
+                              backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                              transition: { duration: 0.2 }
+                            }}
+                            style={{ fontSize: '0.875rem', borderBottom: '1px solid rgba(0, 0, 0, 0.05)' }}>
                             <td style={{ padding: '0.75rem', fontWeight: '600' }}>{row.days}</td>
                             <td style={{ padding: '0.75rem' }}>{row.startTime}</td>
                             <td style={{ padding: '0.75rem' }}>{row.endTime}</td>
-                          </tr>
+                          </motion.tr>
                         ))}
                       </tbody>
                     </Table>
@@ -575,7 +600,7 @@ const TimeSlots = () => {
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ delay: index * 0.05 }}
                             whileHover={{
-                              backgroundColor: 'rgba(139, 92, 246, 0.05)',
+                              backgroundColor: 'rgba(79, 70, 229, 0.12)',
                               transition: { duration: 0.2 }
                             }}
                             style={{

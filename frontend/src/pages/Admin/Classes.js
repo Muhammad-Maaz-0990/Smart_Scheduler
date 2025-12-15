@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Button, Table, Modal, Form, Alert, Badge, In
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
-import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUsers } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
@@ -170,32 +170,53 @@ const Classes = () => {
     <>
       <Sidebar activeMenu="classes" />
       <div className="dashboard-page">
+        {/* Animated Background */}
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(126, 34, 206, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
+        <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%)', animation: 'float 15s ease-in-out infinite reverse' }}></div>
+
         <Container fluid className="dashboard-content">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
-            style={{ minHeight: '95px' }}
+            style={{ paddingTop: '1rem' }}
           >
-            <div>
-              <h2 style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: '#000000',
-                marginBottom: '0.5rem',
-                letterSpacing: '-0.5px'
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
               }}>
-                Classes Management
-              </h2>
-              <p style={{
-                fontSize: '0.875rem',
-                color: '#6b7280',
-                margin: 0,
-                fontWeight: '500'
-              }}>
-                Manage all classes in your institute
-              </p>
+                <FaUsers style={{ fontSize: '1.5rem', color: 'white' }} />
+              </div>
+              <div>
+                <h2 style={{
+                  fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+                  fontWeight: '800',
+                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  marginBottom: '0.5rem'
+                }}>
+                  Classes Management
+                </h2>
+                <p style={{
+                  fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  margin: 0,
+                  fontWeight: '600'
+                }}>
+                  Manage all classes in your institute
+                </p>
+              </div>
             </div>
 
             <div className="d-flex gap-2 flex-wrap">
@@ -629,6 +650,10 @@ const Classes = () => {
                               animate={{ opacity: 1, x: 0 }}
                               exit={{ opacity: 0, x: 20 }}
                               transition={{ delay: idx * 0.05 }}
+                              whileHover={{
+                                backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                                transition: { duration: 0.2 }
+                              }}
                               style={{
                                 fontSize: '0.875rem',
                                 transition: 'all 0.2s ease',
@@ -765,7 +790,7 @@ const Classes = () => {
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ delay: index * 0.05 }}
                             whileHover={{
-                              backgroundColor: 'rgba(139, 92, 246, 0.05)',
+                              backgroundColor: 'rgba(79, 70, 229, 0.12)',
                               transition: { duration: 0.2 }
                             }}
                             style={{

@@ -5,7 +5,7 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
-import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUserShield } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
@@ -315,6 +315,10 @@ const Users = () => {
     <>
       <Sidebar activeMenu="users" />
       <div className="dashboard-page">
+        {/* Animated Background */}
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(126, 34, 206, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
+        <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%)', animation: 'float 15s ease-in-out infinite reverse' }}></div>
+
         <Container fluid className="dashboard-content">
           {/* Header */}
           <motion.div
@@ -725,14 +729,23 @@ const Users = () => {
                       </thead>
                       <tbody>
                         {importPreview.map((r, idx) => (
-                          <tr key={idx} style={{ fontSize: '0.875rem', borderBottom: '1px solid rgba(0, 0, 0, 0.05)' }}>
+                          <motion.tr 
+                            key={idx} 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            whileHover={{
+                              backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                              transition: { duration: 0.2 }
+                            }}
+                            style={{ fontSize: '0.875rem', borderBottom: '1px solid rgba(0, 0, 0, 0.05)' }}>
                             <td style={{ padding: '0.75rem' }}>{idx + 1}</td>
                             <td style={{ padding: '0.75rem', fontWeight: '600' }}>{r.userName}</td>
                             <td style={{ padding: '0.75rem' }}>{r.email}</td>
                             <td style={{ padding: '0.75rem' }}>{r.designation}</td>
                             <td style={{ padding: '0.75rem' }}>{r.phoneNumber}</td>
                             <td style={{ padding: '0.75rem' }}>{r.cnic}</td>
-                          </tr>
+                          </motion.tr>
                         ))}
                       </tbody>
                     </Table>
@@ -831,7 +844,7 @@ const Users = () => {
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ delay: index * 0.05 }}
                             whileHover={{
-                              backgroundColor: 'rgba(139, 92, 246, 0.05)',
+                              backgroundColor: 'rgba(79, 70, 229, 0.12)',
                               transition: { duration: 0.2 }
                             }}
                             style={{
