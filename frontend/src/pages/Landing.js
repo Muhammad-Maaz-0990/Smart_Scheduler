@@ -115,9 +115,20 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                     borderRadius: '10px',
                     padding: '8px 20px',
                     borderColor: '#7e22ce',
-                    color: '#7e22ce'
+                    color: '#7e22ce',
+                    transition: 'all 0.3s ease'
                   }} 
                   onClick={onSignIn}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)';
+                    e.target.style.color = 'white';
+                    e.target.style.borderColor = 'transparent';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'transparent';
+                    e.target.style.color = '#7e22ce';
+                    e.target.style.borderColor = '#7e22ce';
+                  }}
                 >
                   Sign In
                 </Button>
@@ -189,8 +200,24 @@ const TopBar = ({ onSignIn, onSignUp }) => {
               <div style={{ display: 'flex', gap: '12px' }}>
                 <Button 
                   variant="outline-primary" 
-                  style={{ flex: 1, fontWeight: 600 }} 
+                  style={{ 
+                    flex: 1, 
+                    fontWeight: 600,
+                    borderColor: '#7e22ce',
+                    color: '#7e22ce',
+                    transition: 'all 0.3s ease'
+                  }} 
                   onClick={() => { onSignIn(); setMobileMenuOpen(false); }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)';
+                    e.target.style.color = 'white';
+                    e.target.style.borderColor = 'transparent';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'transparent';
+                    e.target.style.color = '#7e22ce';
+                    e.target.style.borderColor = '#7e22ce';
+                  }}
                 >
                   Sign In
                 </Button>
@@ -773,10 +800,12 @@ const Pricing = ({ onSignUp }) => (
               <Card.Body style={{ padding: '48px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '3.5rem', fontWeight: 900, color: '#111827' }}>$49</span>
+                    <span style={{ fontSize: '3.5rem', fontWeight: 900, color: '#111827' }}>$49 </span>
                     <span style={{ fontSize: '1.2rem', color: '#6b7280' }}>/month</span>
+                    <span style={{ fontSize: '3.5rem', fontWeight: 900, color: '#111827' }}> / $300 </span>
+                    <span style={{ fontSize: '1.2rem', color: '#6b7280' }}>/year</span>
                   </div>
-                  <p style={{ color: '#6b7280', marginTop: '8px' }}>Billed monthly, cancel anytime</p>
+                  <p style={{ color: '#6b7280', marginTop: '8px' }}>Billed monthly or yearly, cancel anytime</p>
                 </div>
 
                 <div style={{ marginBottom: '40px' }}>
