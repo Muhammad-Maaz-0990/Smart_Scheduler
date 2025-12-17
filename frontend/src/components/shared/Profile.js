@@ -39,7 +39,8 @@ const Profile = () => {
       }
     };
     load();
-  }, [user, loadInstituteOnce, loadSubscriptionOnce]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // If redirected back from Stripe Checkout success, confirm and record payment
   useEffect(() => {
@@ -76,7 +77,8 @@ const Profile = () => {
       };
       confirm();
     }
-  }, [user, loadSubscriptionOnce, loadPaymentsHistoryOnce]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const startPayment = async (plan) => {
     try {
@@ -108,7 +110,8 @@ const Profile = () => {
       }
     };
     loadHistory();
-  }, [user, loadPaymentsHistoryOnce]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const getLogoUrl = (logo) => {
     if (!logo) return null;
@@ -452,24 +455,26 @@ const Profile = () => {
                           </div>
                         </div>
                       </Col>
-                      <Col md={6}>
-                        <div style={{ marginBottom: '1rem' }}>
-                          <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.5rem' }}>
-                            Subscription
+                      {user?.designation === 'Admin' && (
+                        <Col md={6}>
+                          <div style={{ marginBottom: '1rem' }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.5rem' }}>
+                              Subscription
+                            </div>
+                            <Badge
+                              style={{
+                                background: institute.subscription === 'Trial' ? '#f59e0b' : institute.subscription === 'Monthly' ? '#3b82f6' : '#10b981',
+                                padding: '0.375rem 0.75rem',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                borderRadius: '6px'
+                              }}
+                            >
+                              {institute.subscription}
+                            </Badge>
                           </div>
-                          <Badge
-                            style={{
-                              background: institute.subscription === 'Trial' ? '#f59e0b' : institute.subscription === 'Monthly' ? '#3b82f6' : '#10b981',
-                              padding: '0.375rem 0.75rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '600',
-                              borderRadius: '6px'
-                            }}
-                          >
-                            {institute.subscription}
-                          </Badge>
-                        </div>
-                      </Col>
+                        </Col>
+                      )}
                       {institute.created_at && (
                         <Col md={6}>
                           <div style={{ marginBottom: '1rem' }}>
@@ -482,7 +487,7 @@ const Profile = () => {
                           </div>
                         </Col>
                       )}
-                      <Col xs={12}>
+                      <Col md={6}>
                         <div>
                           <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.5rem' }}>
                             Address
@@ -597,6 +602,7 @@ const Profile = () => {
                         </div>
                         <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827' }}>
                           {new Date(status.lastPayment.paymentDate).toLocaleDateString()} • {status.lastPayment.amount}
+                          {status.subscriptionType && status.subscriptionType !== 'Trial' ? ` • ${status.subscriptionType}` : ''}
                         </div>
                       </div>
                     )}
@@ -666,7 +672,7 @@ const Profile = () => {
                             }}
                           >
                             <div style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>Monthly</div>
-                            <div>PKR 100</div>
+                            <div>$49 USD</div>
                           </MotionButton>
                         </Col>
                         <Col md={6}>
@@ -702,7 +708,7 @@ const Profile = () => {
                               SAVE
                             </Badge>
                             <div style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>Yearly</div>
-                            <div>{paying ? 'Processing...' : 'PKR 1200'}</div>
+                            <div>{paying ? 'Processing...' : '$300 USD'}</div>
                           </MotionButton>
                         </Col>
                       </Row>

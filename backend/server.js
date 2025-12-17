@@ -5,7 +5,8 @@ const dotenv = require('dotenv');
 const session = require('express-session');
 const passport = require('passport');
 
-dotenv.config();
+// Load .env and override any pre-set env vars (avoids stale STRIPE keys in shell)
+dotenv.config({ override: true });
 // Env configured via .env (Stripe, FRONTEND_URL, etc.)
 
 const app = express();
@@ -40,13 +41,26 @@ app.use(passport.session());
 // Passport configuration
 require('./config/passport')(passport);
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smart_scheduler', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('✅ MongoDB Connected Successfully'))
-.catch((err) => console.error('❌ MongoDB Connection Error:', err));
+// MongoDB Connection with retry logic
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smart_scheduler', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log('✅ MongoDB Connected Successfully');
+  } catch (err) {
+    console.error('❌ MongoDB Connection Error:', err.message);
+    console.log('⚠️  Please check:');
+    console.log('   1. Your internet connection');
+    console.log('   2. MongoDB Atlas IP whitelist settings');
+    console.log('   3. MongoDB credentials in .env file');
+    console.log('   Retrying in 5 seconds...');
+    setTimeout(connectDB, 5000);
+  }
+};
+connectDB();
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));

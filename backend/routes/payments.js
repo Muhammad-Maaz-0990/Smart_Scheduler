@@ -22,12 +22,12 @@ const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-const CURRENCY = (process.env.STRIPE_CURRENCY || 'pkr').toLowerCase();
+const CURRENCY = (process.env.STRIPE_CURRENCY || 'usd').toLowerCase();
 
 function getAmountForPlan(plan) {
-  // PKR values; Stripe amount is in paisa (x100)
-  if (String(plan).toLowerCase() === 'yearly') return 1200 * 100;
-  return 100 * 100; // default monthly
+  // USD values; Stripe amount is in cents (x100)
+  if (String(plan).toLowerCase() === 'yearly') return 30000; // $300 USD
+  return 4900; // $49 USD monthly
 }
 
 async function recordPayment({ instituteID, plan, paymentIntentId, amount }) {
@@ -41,8 +41,11 @@ async function recordPayment({ instituteID, plan, paymentIntentId, amount }) {
       amount,
     });
   }
-  if (plan === 'Monthly' || plan === 'Yearly') {
-    await InstituteInformation.updateOne({ instituteID }, { $set: { subscription: plan } });
+  // Normalize and persist subscription type based on the plan used to pay
+  const norm = String(plan || '').trim().toLowerCase();
+  const subscription = norm === 'yearly' ? 'Yearly' : norm === 'monthly' ? 'Monthly' : null;
+  if (subscription) {
+    await InstituteInformation.updateOne({ instituteID }, { $set: { subscription } });
   }
 }
 
