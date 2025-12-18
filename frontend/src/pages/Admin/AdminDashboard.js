@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Alert, Badge, OverlayTrigger, Tooltip, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Alert, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FaChalkboardTeacher, FaUserGraduate, FaBook, FaCalendarAlt, FaDoorOpen, FaUsers, FaTrophy } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
@@ -119,6 +119,7 @@ const AdminDashboard = () => {
                 fontWeight: 500,
                 padding: '0.5rem 1.25rem',
                 borderRadius: '50px',
+                marginTop: '1.5rem',
                 marginBottom: '1rem',
                 border: '2px solid #e5e7eb',
                 display: 'inline-block'
@@ -333,27 +334,7 @@ const AdminDashboard = () => {
                             {stat.label}
                           </p>
                           
-                          {/* Progress Bar */}
-                          <ProgressBar 
-                            now={Math.min((stat.value / 10) * 100, 100)} 
-                            style={{
-                              height: '6px',
-                              width: '80%',
-                              marginTop: '1rem',
-                              borderRadius: '50px',
-                              background: `${PURPLE_COLOR}20`,
-                              overflow: 'hidden'
-                            }}
-                          >
-                            <ProgressBar 
-                              now={Math.min((stat.value / 10) * 100, 100)}
-                              style={{
-                                background: PURPLE_COLOR,
-                                borderRadius: '50px',
-                                boxShadow: `0 0 10px ${PURPLE_COLOR}60`
-                              }}
-                            />
-                          </ProgressBar>
+                          {/* Progress Bar removed as requested */}
                         </Card.Body>
                       </Card>
                     </motion.div>

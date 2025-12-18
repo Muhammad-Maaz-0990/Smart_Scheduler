@@ -20,7 +20,7 @@ import './Sidebar.css';
 
 const Sidebar = ({ activeMenu }) => {
   const navigate = useNavigate();
-  const { user, logout, instituteObjectId, loadSubscriptionOnce } = useAuth();
+  const { user, logout } = useAuth();
   const [instituteInfo, setInstituteInfo] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
@@ -32,7 +32,7 @@ const Sidebar = ({ activeMenu }) => {
   });
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [isExpired, setIsExpired] = useState(false);
+  const [isExpired] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
   const role = user?.designation || 'Owner';
   const showLabels = !isCollapsed || (isMobile && isMobileOpen);
@@ -337,7 +337,8 @@ const Sidebar = ({ activeMenu }) => {
                 const Icon = item.icon;
                 const isLogout = item.value === 'logout';
                 const isActive = !isLogout && activeMenu === item.value;
-                const iconColor = isActive ? '#4338CA' : isLogout ? '#dc2626' : 'currentColor';
+                // Make icons inherit from button color so hover can switch to white
+                const iconColor = isActive ? '#4338CA' : 'currentColor';
                 return (
                   <motion.button
                     key={item.value}
