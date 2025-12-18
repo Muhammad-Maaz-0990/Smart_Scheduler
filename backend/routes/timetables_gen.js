@@ -336,13 +336,13 @@ router.put('/details/:id', protect, async (req, res) => {
 });
 
 // PATCH /api/timetables-gen/header/:id
-// Body: { visibility?: boolean, currentStatus?: boolean }
+// Body: { visibility?: boolean, currentStatus?: boolean, breakStart?: string, breakEnd?: string }
 router.patch('/header/:id', protect, async (req, res) => {
   try {
     const { instituteID } = req.user || {};
     if (!instituteID) return res.status(400).json({ message: 'User has no institute' });
     const instituteTimeTableID = Number(req.params.id);
-    const { visibility, currentStatus } = req.body || {};
+    const { visibility, currentStatus, breakStart, breakEnd } = req.body || {};
 
     const header = await InstituteTimeTables.findOne({ instituteTimeTableID, instituteID });
     if (!header) return res.status(404).json({ message: 'Timetable not found' });
@@ -350,6 +350,8 @@ router.patch('/header/:id', protect, async (req, res) => {
     const updates = {};
     if (typeof visibility === 'boolean') updates.visibility = visibility;
     if (typeof currentStatus === 'boolean') updates.currentStatus = currentStatus;
+    if (typeof breakStart === 'string' && breakStart.trim() !== '') updates.breakStart = String(breakStart);
+    if (typeof breakEnd === 'string' && breakEnd.trim() !== '') updates.breakEnd = String(breakEnd);
 
     // If setting currentStatus true, unset currentStatus for all other timetables of this institute
     if (updates.currentStatus === true) {

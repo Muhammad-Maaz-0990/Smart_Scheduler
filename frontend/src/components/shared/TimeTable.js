@@ -804,8 +804,8 @@ function TimeTable({ isAdmin = false }) {
     setShowTimeSettingsModal(false);
   }, []);
 
-  // Update time settings and regenerate all timetables
-  const handleUpdateTimeSettings = useCallback(() => {
+  // Update time settings and regenerate only the selected timetable
+  const handleUpdateTimeSettings = useCallback(async () => {
     const { startTime, endTime, lectureDuration, hasBreak, breakAfterLecture, breakDuration } = timeSettings;
     
     if (!startTime || !endTime || !lectureDuration || lectureDuration <= 0) {
@@ -951,13 +951,30 @@ function TimeTable({ isAdmin = false }) {
     setEditDetails(newEditDetails);
     setShowTimeSettingsModal(false);
     setRenderKey(prev => prev + 1); // Force re-render
-    
+
+    // Persist break window on the header for this timetable only (optional)
+    try {
+      const token = localStorage.getItem('token');
+      if (selected && token) {
+        await fetch(`http://localhost:5000/api/timetables-gen/header/${encodeURIComponent(selected.instituteTimeTableID)}` , {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ breakStart: newBreakStart || undefined, breakEnd: newBreakEnd || undefined })
+        });
+      }
+    } catch (_) {
+      // Non-blocking: header persist is best-effort
+    }
+
     const breakMsg = hasBreak 
       ? ` Break set after lecture ${breakAfterLecture} (${breakDuration} min).`
       : ' No break time set.';
-    setSuccessMessage(`Time settings updated successfully! All timetables regenerated.${breakMsg}`);
+    setSuccessMessage(`Time settings updated for the selected timetable.${breakMsg}`);
     setTimeout(() => setSuccessMessage(''), 4000);
-  }, [timeSettings, editDetails, allClasses]);
+  }, [timeSettings, editDetails, allClasses, selected]);
 
   return (
     <Container fluid className="p-3 p-md-4" style={{ minHeight: '100vh' }}>
@@ -1767,7 +1784,7 @@ function TimeTable({ isAdmin = false }) {
                 border: '1px solid rgba(245, 158, 11, 0.2)'
               }}>
                 <p style={{ margin: 0, fontSize: '0.875rem', color: '#92400e', fontWeight: 500 }}>
-                  ⚠️ This will regenerate all time slots for all classes. Existing data will be preserved where possible based on time slot position.
+                  ⚠️ This updates time slots for this timetable only. Existing cells try to keep their course/room/teacher by slot position.
                 </p>
               </div>
 
@@ -1902,7 +1919,7 @@ function TimeTable({ isAdmin = false }) {
                     }}
                   >
                     <FaSave />
-                    Update All Tables
+                    Apply To This Timetable
                   </Button>
                   <Button
                     variant="secondary"
@@ -2355,7 +2372,7 @@ function TimetableTables({
   console.log('Break pairs found:', breakPairs);
   
   let breakStart = null, breakEnd = null;
-  // In edit mode, always derive break from the current grid rather than header
+  // Prefer grid-derived break; if missing, fall back to header (also in edit mode)
   if (!isEditMode && header?.breakStart && header?.breakEnd) {
     breakStart = String(header.breakStart);
     breakEnd = String(header.breakEnd);
@@ -2364,6 +2381,11 @@ function TimetableTables({
     const top = Object.entries(breakPairs).sort((a, b) => b[1] - a[1])[0][0];
     [breakStart, breakEnd] = top.split('-');
     console.log('Using calculated break from pairs:', { breakStart, breakEnd });
+  } else if (header?.breakStart && header?.breakEnd) {
+    // When entering edit mode, details might not carry break; use header as fallback
+    breakStart = String(header.breakStart);
+    breakEnd = String(header.breakEnd);
+    console.log('Fallback to header break in edit mode:', { breakStart, breakEnd });
   }
   
   console.log('Final break times to display:', { breakStart, breakEnd });
