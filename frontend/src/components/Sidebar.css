@@ -134,6 +134,11 @@
   display: none;
 }
 
+/* When mobile overlay is open, always show labels even if collapsed */
+.sidebar.force-expanded .menu-label {
+  display: inline !important;
+}
+
 .sidebar-footer {
   padding: 15px;
   border-top: 1px solid #e5e7eb;

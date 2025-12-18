@@ -35,6 +35,7 @@ const Sidebar = ({ activeMenu }) => {
   const [isExpired, setIsExpired] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
   const role = user?.designation || 'Owner';
+  const showLabels = !isCollapsed || (isMobile && isMobileOpen);
 
   // Handle window resize for responsive design
   useEffect(() => {
@@ -201,7 +202,7 @@ const Sidebar = ({ activeMenu }) => {
         )}
       </AnimatePresence>
       <motion.div 
-        className={`sidebar no-print ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}
+        className={`sidebar no-print ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open force-expanded' : ''}`}
         style={{ display: isMobile && !isMobileOpen ? 'none' : 'flex' }}
       >
             {/* Institute Info (click to go to dashboard) */}
@@ -236,7 +237,7 @@ const Sidebar = ({ activeMenu }) => {
                   >
                     <FaClockIcon style={{ fontSize: 28, color: 'white' }} />
                   </motion.div>
-                  {!isCollapsed && (
+                  {showLabels && (
                     <motion.div
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -291,7 +292,7 @@ const Sidebar = ({ activeMenu }) => {
                       </div>
                     )}
                   </motion.div>
-                  {!isCollapsed && (
+                  {showLabels && (
                     <motion.div
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -357,7 +358,7 @@ const Sidebar = ({ activeMenu }) => {
                     >
                       <Icon />
                     </span>
-                    {!isCollapsed && (
+                    {showLabels && (
                       <motion.span
                         className="menu-label"
                         initial={{ opacity: 0, x: -10 }}
