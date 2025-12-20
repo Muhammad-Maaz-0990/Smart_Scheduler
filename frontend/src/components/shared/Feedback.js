@@ -108,34 +108,35 @@ const Feedback = () => {
   }, [isAdmin]);
 
   return (
-    <div style={{ minHeight: '100vh', padding: isMobile ? '1rem 0' : '2rem 0' }}>
+    <div style={{ minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ marginBottom: isMobile ? '1rem' : '2rem' }}>
+      <div style={{ marginBottom: isMobile ? '1rem' : '2rem', paddingTop: '1rem' }}>
         <div style={{
           display: 'flex',
-          alignItems: 'center',
-          gap: isMobile ? '0.75rem' : '1rem',
-          marginBottom: '0.5rem'
+          alignItems: 'flex-start',
+          gap: isMobile ? '0.75rem' : '1rem'
         }}>
           <div style={{
             width: isMobile ? '40px' : '50px',
             height: isMobile ? '40px' : '50px',
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+            background: '#6941db',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            flexShrink: 0
           }}>
             <FaComments style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', color: 'white' }} />
           </div>
           <div>
             <h1 style={{
-              fontSize: isMobile ? '1.5rem' : '1.875rem',
+              fontSize: '1.5rem',
               fontWeight: '700',
-              color: '#7c3aed',
+              color: '#6941db',
+              lineHeight: '1.2',
               margin: 0
             }}>Feedback & Messages</h1>
-            <p style={{ color: '#6b7280', fontSize: isMobile ? '0.75rem' : '0.875rem', margin: 0 }}>
+            <p style={{ color: '#6941db', fontSize: isMobile ? '0.75rem' : 'clamp(0.85rem, 1.8vw, 0.95rem)', margin: 0, fontWeight: '600' }}>
               Manage conversations with your team
             </p>
           </div>
@@ -158,7 +159,7 @@ const Feedback = () => {
                 left: '12px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                color: '#7c3aed',
+                color: '#6941db',
                 fontSize: '0.875rem'
               }} />
               <Form.Control
@@ -183,7 +184,7 @@ const Feedback = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNew(true)}
                 style={{
-                  background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                  background: '#6941db',
                   border: 'none',
                   color: 'white',
                   borderRadius: '10px',
@@ -244,7 +245,7 @@ const Feedback = () => {
                       padding: '1rem',
                       borderBottom: '1px solid #e5e7eb',
                       fontWeight: 600,
-                      color: '#7c3aed',
+                      color: '#6941db',
                       fontSize: '0.875rem'
                     }}>Filter by Month</div>
                     <div style={{ padding: '1rem' }}>
@@ -297,7 +298,7 @@ const Feedback = () => {
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setShowFilterMenu(false)}
                           style={{
-                            background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                            background: '#6941db',
                             border: 'none',
                             color: 'white',
                             borderRadius: '8px',
@@ -349,7 +350,7 @@ const Feedback = () => {
                   <ListGroup.Item style={{
                     padding: '2rem',
                     textAlign: 'center',
-                    color: '#7c3aed',
+                    color: '#6941db',
                     fontWeight: '600',
                     background: 'transparent',
                     border: 'none'
@@ -396,10 +397,10 @@ const Feedback = () => {
                           onClick={() => setActive(t.feedbackID)}
                           style={{
                             background: t.feedbackID === active 
-                              ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%)'
+                              ? 'rgba(105, 65, 219, 0.12)'
                               : 'white',
                             border: t.feedbackID === active
-                              ? '2px solid #7c3aed'
+                              ? '2px solid #6941db'
                               : '2px solid #e5e7eb',
                             borderRadius: '14px',
                             padding: isMobile ? '0.875rem' : '1rem',
@@ -429,7 +430,7 @@ const Feedback = () => {
                         >
                           <div style={{
                             fontWeight: 700,
-                            color: t.feedbackID === active ? '#7c3aed' : '#111827',
+                            color: t.feedbackID === active ? '#6941db' : '#111827',
                             marginBottom: '0.5rem',
                             fontSize: isMobile ? '0.875rem' : '0.95rem',
                             lineHeight: 1.4
@@ -446,7 +447,7 @@ const Feedback = () => {
                           }}>
                             <span style={{ 
                               fontWeight: 600,
-                              color: t.feedbackID === active ? '#7c3aed' : '#374151'
+                              color: t.feedbackID === active ? '#6941db' : '#374151'
                             }}>
                               {t.user?.userName || 'User'}
                             </span>
@@ -480,7 +481,7 @@ const Feedback = () => {
               marginBottom: '1.5rem',
               padding: isMobile ? '1rem' : '1.5rem',
               borderRadius: '16px',
-              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              background: 'white',
               border: '2px solid #e5e7eb',
               boxShadow: '0 4px 12px rgba(124, 58, 237, 0.08)'
             }}
@@ -488,10 +489,7 @@ const Feedback = () => {
             <div style={{
               fontWeight: 800,
               fontSize: isMobile ? '1.125rem' : '1.375rem',
-              background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              color: '#6941db',
               marginBottom: '0.75rem'
             }}>
               {activeThread?.title || 'Select a conversation'}
@@ -507,8 +505,8 @@ const Feedback = () => {
               }}>
                 <span style={{
                   fontWeight: 700,
-                  color: '#7c3aed',
-                  background: 'rgba(124, 58, 237, 0.1)',
+                  color: '#6941db',
+                  background: 'rgba(105, 65, 219, 0.1)',
                   padding: '0.25rem 0.75rem',
                   borderRadius: '8px',
                   fontSize: isMobile ? '0.7rem' : '0.875rem'
@@ -578,11 +576,24 @@ const Feedback = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: idx * 0.05 }}
-                      className={`d-flex ${mine ? 'justify-content-end' : 'justify-content-start'}`}
+                      className={`d-flex flex-column ${mine ? 'align-items-end' : 'align-items-start'}`}
                     >
+                      {/* Sender Name Above Bubble */}
+                      <div style={{
+                        fontSize: '0.7rem',
+                        color: '#6b7280',
+                        fontWeight: 600,
+                        marginBottom: '0.25rem',
+                        paddingLeft: mine ? '0' : '0.5rem',
+                        paddingRight: mine ? '0.5rem' : '0'
+                      }}>
+                        {m.sender === 'Admin' ? 'Admin' : (activeThread?.user?.userName || 'User')}
+                      </div>
+                      
+                      {/* Message Bubble */}
                       <div style={{
                         background: mine
-                          ? 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)'
+                          ? '#6941db'
                           : '#ffffff',
                         color: mine ? 'white' : '#111827',
                         borderRadius: mine ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
@@ -648,7 +659,7 @@ const Feedback = () => {
                     className={`btn ${isMobile ? 'w-100' : 'w-md-auto'}`}
                     style={{
                       background: (active && !sending && text.trim())
-                        ? 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)'
+                        ? '#6941db'
                         : '#d1d5db',
                       border: 'none',
                       color: 'white',
@@ -682,7 +693,7 @@ const Feedback = () => {
       <Modal show={showNew} onHide={() => setShowNew(false)} centered>
         <Form onSubmit={handleCreate}>
           <Modal.Header style={{
-            background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+            background: '#6941db',
             borderBottom: 'none',
             padding: '1.5rem'
           }} closeButton>
@@ -772,7 +783,7 @@ const Feedback = () => {
               whileTap={{ scale: 0.95 }}
               type="submit"
               style={{
-                background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
+                background: '#6941db',
                 border: 'none',
                 color: 'white',
                 borderRadius: '10px',
@@ -795,9 +806,8 @@ const Feedback = () => {
         .gradient-border-input:focus {
           outline: none !important;
           box-shadow: none !important;
-          border: 2px solid transparent !important;
-          background: linear-gradient(white, white) padding-box,
-                      linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%) border-box !important;
+          border: 2px solid #6941db !important;
+          background: white !important;
         }
       `}</style>
     </div>

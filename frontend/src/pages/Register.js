@@ -18,7 +18,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import './Register.css';
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 const MotionDiv = motion.div;
 
 // Country names mapping

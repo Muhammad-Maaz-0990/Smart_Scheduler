@@ -7,7 +7,7 @@ import Sidebar from '../../components/Sidebar';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
-const MotionCol = motion(Col);
+const MotionCol = motion.create(Col);
 
 // Global purple color variable
 const PURPLE_COLOR = '#6941db';

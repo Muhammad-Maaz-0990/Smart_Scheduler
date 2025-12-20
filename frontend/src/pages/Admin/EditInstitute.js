@@ -11,8 +11,8 @@ import { useAuth } from '../../context/AuthContext';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
-const MotionCard = motion(Card);
-const MotionButton = motion(Button);
+const MotionCard = motion.create(Card);
+const MotionButton = motion.create(Button);
 
 const EditInstitute = () => {
   const navigate = useNavigate();

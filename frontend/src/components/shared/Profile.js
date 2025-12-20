@@ -6,8 +6,8 @@ import { Card, Badge, Button, Alert, Spinner, Container, Row, Col } from 'react-
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaEdit, FaLock, FaCheckCircle, FaExclamationCircle, FaUserCog } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MotionCard = motion(Card);
-const MotionButton = motion(Button);
+const MotionCard = motion.create(Card);
+const MotionButton = motion.create(Button);
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -136,7 +136,7 @@ const Profile = () => {
           style={{
             width: '3rem',
             height: '3rem',
-            color: '#7c3aed'
+            color: '#6941db'
           }}
         />
       </div>
@@ -160,51 +160,47 @@ const Profile = () => {
       paddingBottom: '3rem'
     }}>
       {/* Header */}
-      <div style={{
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '1.5rem 0',
-        marginBottom: '2rem'
-      }}>
-        <Container>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '1rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(124, 58, 237, 0.3)'
+      <Container style={{ paddingTop: '1rem', marginBottom: '2rem' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'start',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+            <div style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '12px',
+              background: '#6941db',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
+              flexShrink: 0
+            }}>
+              <FaUserCog style={{ fontSize: '1.5rem', color: 'white' }} />
+            </div>
+            <div>
+              <h1 style={{
+                fontSize: '1.5rem',
+                fontWeight: '800',
+                color: '#6941db',
+                lineHeight: '1.2',
+                margin: 0
               }}>
-                <FaUserCog style={{ fontSize: '1.5rem', color: 'white' }} />
-              </div>
-              <div>
-                <h1 style={{
-                  fontSize: '1.875rem',
-                  fontWeight: '700',
-                  color: '#7c3aed',
-                  margin: 0,
-                  marginBottom: '0.25rem'
-                }}>
-                  Profile
-                </h1>
-                <p style={{ color: '#6b7280', margin: 0, fontSize: '0.875rem' }}>
+                Profile
+              </h1>
+              <p style={{ color: '#6941db', margin: 0, fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)', fontWeight: '600' }}>
                   Manage your account information
                 </p>
               </div>
             </div>
-            
-            {user?.designation === 'Admin' && (
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          </div>
+          
+          {user?.designation === 'Admin' && (
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1rem' }}>
                 <MotionButton
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -215,8 +211,8 @@ const Profile = () => {
                     padding: '0.625rem 1.25rem',
                     fontWeight: '600',
                     fontSize: '0.875rem',
-                    border: '2px solid #7c3aed',
-                    color: '#7c3aed',
+                    border: '2px solid #6941db',
+                    color: '#6941db',
                     background: 'white',
                     display: 'flex',
                     alignItems: 'center',
@@ -235,7 +231,7 @@ const Profile = () => {
                     fontWeight: '600',
                     fontSize: '0.875rem',
                     border: 'none',
-                    background: '#7c3aed',
+                    background: '#6941db',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',
@@ -246,9 +242,7 @@ const Profile = () => {
                 </MotionButton>
               </div>
             )}
-          </div>
         </Container>
-      </div>
 
       <Container>
         <Row className="g-4">
@@ -267,15 +261,15 @@ const Profile = () => {
               }}
             >
               <div style={{
-                background: '#7c3aed',
+                background: 'rgba(79, 70, 229, 0.12)',
                 padding: '0.75rem 1.5rem',
-                borderBottom: '1px solid #e5e7eb'
+                borderBottom: '1px solid rgba(79, 70, 229, 0.25)'
               }}>
                 <h6 style={{
                   margin: 0,
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: 'white',
+                  color: '#4338CA',
                   letterSpacing: '0.5px'
                 }}>
                   PERSONAL INFORMATION
@@ -286,15 +280,16 @@ const Profile = () => {
                 <div style={{
                   width: '120px',
                   height: '120px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  borderRadius: '20px',
+                  background: 'rgba(79, 70, 229, 0.12)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 1.5rem',
-                  boxShadow: '0 8px 16px rgba(102, 126, 234, 0.3)'
+                  border: '2px solid rgba(79, 70, 229, 0.25)',
+                  boxShadow: '0 2px 8px rgba(79, 70, 229, 0.1)'
                 }}>
-                  <FaUser style={{ fontSize: '3rem', color: 'white' }} />
+                  <FaUser style={{ fontSize: '3rem', color: '#4338CA' }} />
                 </div>
 
                 <h3 style={{
@@ -324,24 +319,46 @@ const Profile = () => {
                 <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1.5rem' }}>
                   <div style={{ marginBottom: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                      <FaEnvelope style={{ color: '#7c3aed', fontSize: '1.125rem' }} />
+                      <div style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        background: 'rgba(79, 70, 229, 0.12)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(79, 70, 229, 0.25)'
+                      }}>
+                        <FaEnvelope style={{ color: '#4338CA', fontSize: '0.875rem' }} />
+                      </div>
                       <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Email
                       </span>
                     </div>
-                    <p style={{ margin: 0, color: '#111827', fontWeight: '500', fontSize: '0.875rem', paddingLeft: '2rem', wordBreak: 'break-word' }}>
+                    <p style={{ margin: 0, color: '#111827', fontWeight: '500', fontSize: '0.875rem', paddingLeft: '2.75rem', wordBreak: 'break-word' }}>
                       {user?.email}
                     </p>
                   </div>
 
                   <div style={{ marginBottom: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                      <FaPhone style={{ color: '#7c3aed', fontSize: '1.125rem' }} />
+                      <div style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        background: 'rgba(79, 70, 229, 0.12)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(79, 70, 229, 0.25)'
+                      }}>
+                        <FaPhone style={{ color: '#4338CA', fontSize: '0.875rem' }} />
+                      </div>
                       <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Phone
                       </span>
                     </div>
-                    <p style={{ margin: 0, color: '#111827', fontWeight: '500', fontSize: '0.875rem', paddingLeft: '2rem' }}>
+                    <p style={{ margin: 0, color: '#111827', fontWeight: '500', fontSize: '0.875rem', paddingLeft: '2.75rem' }}>
                       {user?.phoneNumber || '—'}
                     </p>
                   </div>
@@ -349,12 +366,23 @@ const Profile = () => {
                   {user?.instituteName && (
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                        <FaIdCard style={{ color: '#7c3aed', fontSize: '1.125rem' }} />
+                        <div style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: 'rgba(79, 70, 229, 0.12)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '1px solid rgba(79, 70, 229, 0.25)'
+                        }}>
+                          <FaIdCard style={{ color: '#4338CA', fontSize: '0.875rem' }} />
+                        </div>
                         <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           Institute
                         </span>
                       </div>
-                      <p style={{ margin: 0, color: '#111827', fontWeight: '500', fontSize: '0.875rem', paddingLeft: '2rem' }}>
+                      <p style={{ margin: 0, color: '#111827', fontWeight: '500', fontSize: '0.875rem', paddingLeft: '2.75rem' }}>
                         {user.instituteName}
                       </p>
                     </div>
@@ -381,15 +409,15 @@ const Profile = () => {
                   }}
                 >
                   <div style={{
-                    background: '#7c3aed',
+                    background: 'rgba(79, 70, 229, 0.12)',
                     padding: '0.75rem 1.5rem',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid rgba(79, 70, 229, 0.25)'
                   }}>
                     <h6 style={{
                       margin: 0,
                       fontSize: '14px',
                       fontWeight: '600',
-                      color: 'white',
+                      color: '#4338CA',
                       letterSpacing: '0.5px'
                     }}>
                       INSTITUTE INFORMATION
@@ -516,15 +544,15 @@ const Profile = () => {
                   }}
                 >
                   <div style={{
-                    background: '#7c3aed',
+                    background: 'rgba(79, 70, 229, 0.12)',
                     padding: '0.75rem 1.5rem',
-                    borderBottom: '1px solid #e5e7eb'
+                    borderBottom: '1px solid rgba(79, 70, 229, 0.25)'
                   }}>
                     <h6 style={{
                       margin: 0,
                       fontSize: '14px',
                       fontWeight: '600',
-                      color: 'white',
+                      color: '#4338CA',
                       letterSpacing: '0.5px'
                     }}>
                       BILLING & SUBSCRIPTION
@@ -664,9 +692,9 @@ const Profile = () => {
                               width: '100%',
                               padding: '1rem',
                               borderRadius: '12px',
-                              border: '2px solid #7c3aed',
+                              border: '2px solid #6941db',
                               background: 'white',
-                              color: '#7c3aed',
+                              color: '#6941db',
                               fontWeight: '700',
                               fontSize: '1rem'
                             }}
@@ -686,7 +714,7 @@ const Profile = () => {
                               padding: '1rem',
                               borderRadius: '12px',
                               border: 'none',
-                              background: '#7c3aed',
+                              background: '#6941db',
                               color: 'white',
                               fontWeight: '700',
                               fontSize: '1rem',

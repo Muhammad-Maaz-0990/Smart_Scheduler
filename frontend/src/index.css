@@ -2,13 +2,32 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  
+  /* ACTIVE FONT - Inter (Best for dashboards & data-heavy layouts) */
+  /* font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; */
+  
+  /* ALTERNATIVE FONTS - Uncomment one to try:*/
+  
+  /* font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; */
+  /* (More rounded & friendly, great balance of professional & approachable) */
+  
+  /* font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; */
+  /* (Very clean & contemporary, excellent readability) */
+  
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  /* (Slightly more traditional, professional & reliable) */
+  
+  /* font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; */
+  /* (Versatile with personality, good for modern UIs) */
+  
+  
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+    sans-serif !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #f5f5f5;
@@ -37,3 +56,62 @@ code {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.5);
 }
+
+/* Custom Select/Dropdown Styles - Matching Classes Modal Style */
+.custom-select,
+select.form-select,
+select.form-control {
+  background: white !important;
+  border-radius: 10px !important;
+  border: 2px solid rgba(105, 65, 219, 0.2) !important;
+  padding: 0.75rem 1rem !important;
+  fontSize: 0.875rem !important;
+  fontWeight: 500 !important;
+  color: #1f2937 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.custom-select:hover,
+select.form-select:hover,
+select.form-control:hover {
+  border-color: #6941db !important;
+  background: white !important;
+}
+
+.custom-select:focus,
+select.form-select:focus,
+select.form-control:focus {
+  border-color: #6941db !important;
+  background: white !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.custom-select option,
+select.form-select option,
+select.form-control option {
+  background: white !important;
+  color: #1f2937 !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-select option:hover,
+select.form-select option:hover,
+select.form-control option:hover {
+  background: #6941db !important;
+  color: white !important;
+}
+
+.custom-select option:checked,
+select.form-select option:checked,
+select.form-control option:checked {
+  background: rgba(105, 65, 219, 0.08) !important;
+  color: #6941db !important;
+  font-weight: 600 !important;
+}
+

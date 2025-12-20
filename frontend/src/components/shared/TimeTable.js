@@ -6,6 +6,82 @@ import { fadeInUp, fadeIn, scaleIn } from './animation_variants';
 import { FaPrint, FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen, FaEdit, FaSave, FaTimes, FaExchangeAlt } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 
+// Function to expand common abbreviations to full names
+const expandCourseName = (courseName) => {
+  if (!courseName) return courseName;
+  
+  const abbreviations = {
+    // Programming & Software
+    'OOP': 'Object Oriented Programming',
+    'DSA': 'Data Structures and Algorithms',
+    'DAA': 'Design and Analysis of Algorithms',
+    'OS': 'Operating Systems',
+    'DBMS': 'Database Management Systems',
+    'SE': 'Software Engineering',
+    'AI': 'Artificial Intelligence',
+    'ML': 'Machine Learning',
+    'DL': 'Deep Learning',
+    'NLP': 'Natural Language Processing',
+    'CV': 'Computer Vision',
+    'CN': 'Computer Networks',
+    'DC': 'Data Communications',
+    'DIP': 'Digital Image Processing',
+    'CC': 'Cloud Computing',
+    'BD': 'Big Data',
+    'IoT': 'Internet of Things',
+    'HCI': 'Human Computer Interaction',
+    'IR': 'Information Retrieval',
+    'IS': 'Information Security',
+    'CG': 'Computer Graphics',
+    'TOA': 'Theory of Automata',
+    'DLD': 'Digital Logic Design',
+    'CA': 'Computer Architecture',
+    'COA': 'Computer Organization and Architecture',
+    'PF': 'Programming Fundamentals',
+    'DS': 'Data Science',
+    'WD': 'Web Development',
+    'MD': 'Mobile Development',
+    'GD': 'Game Development',
+    'VP': 'Visual Programming',
+    
+    // Mathematics & Science
+    'LA': 'Linear Algebra',
+    'DM': 'Discrete Mathematics',
+    'PS': 'Probability and Statistics',
+    'CAL': 'Calculus',
+    'DE': 'Differential Equations',
+    'NM': 'Numerical Methods',
+    
+    // Business & Management
+    'PM': 'Project Management',
+    'BPR': 'Business Process Reengineering',
+    'ITM': 'IT Management',
+    'MIS': 'Management Information Systems',
+    
+    // General
+    'ICT': 'Information and Communication Technology',
+    'IT': 'Information Technology',
+    'CS': 'Computer Science',
+    'TA': 'Technical Writing',
+    'CE': 'Communication and Presentation Skills'
+  };
+  
+  // Try exact match first
+  if (abbreviations[courseName.trim()]) {
+    return abbreviations[courseName.trim()];
+  }
+  
+  // Try to expand abbreviations within the course name
+  let expanded = courseName;
+  Object.keys(abbreviations).forEach(abbr => {
+    // Match whole words only (with word boundaries)
+    const regex = new RegExp(`\\b${abbr}\\b`, 'g');
+    expanded = expanded.replace(regex, abbreviations[abbr]);
+  });
+  
+  return expanded;
+};
+
 function TimeTable({ isAdmin = false }) {
   const navigate = useNavigate();
   const { user, instituteObjectId } = useAuth();
@@ -977,54 +1053,51 @@ function TimeTable({ isAdmin = false }) {
   }, [timeSettings, editDetails, allClasses, selected]);
 
   return (
-    <Container fluid className="p-3 p-md-4" style={{ minHeight: '100vh' }}>
+    <Container fluid style={{ minHeight: '100vh', maxWidth: '1600px' }}>
       {/* Header Section */}
       <motion.div
         initial="hidden"
         animate="visible"
         variants={fadeInUp}
-        className="mb-4"
+        className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
+        style={{ paddingTop: '1rem' }}
       >
-        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4" style={{ paddingTop: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
-            }}>
-              <FaCalendarAlt style={{ fontSize: '1.5rem', color: 'white' }} />
-            </div>
-            <div>
-              <h2 style={{ 
-                fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
-                fontWeight: '800',
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '0.5rem'
-              }}>
-                Time Tables Management
-              </h2>
-              <p style={{ 
-                fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                margin: 0,
-                fontWeight: '600'
-              }}>
-                Explore all timetables of your institute
-              </p>
-            </div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            borderRadius: '12px',
+            background: '#6941db',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <FaCalendarAlt style={{ fontSize: '1.5rem', color: 'white' }} />
           </div>
+          <div>
+            <h2 style={{ 
+              fontSize: '1.5rem',
+              fontWeight: '800',
+              color: '#6941db',
+              lineHeight: '1.2',
+              margin: 0
+            }}>
+              Time Tables Management
+            </h2>
+            <p style={{ 
+              fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
+              color: '#6941db',
+              margin: 0,
+              fontWeight: '600'
+            }}>
+              Explore all timetables of your institute
+            </p>
+          </div>
+        </div>
 
-          <div className="d-flex flex-wrap gap-2 no-print">
-            {selected && !isEditMode && (
+        <div className="d-flex flex-wrap gap-2 no-print">
+          {selected && !isEditMode && (
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   variant="success"
@@ -1053,13 +1126,13 @@ function TimeTable({ isAdmin = false }) {
                       disabled={loading}
                       className="d-flex align-items-center gap-2"
                       style={{
-                        background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                        background: '#6941db',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '10px',
                         fontWeight: 600,
                         fontSize: '0.875rem',
-                        boxShadow: '0 2px 8px rgba(126, 34, 206, 0.25)',
+                        boxShadow: '0 2px 8px rgba(105, 65, 219, 0.25)',
                         opacity: loading ? 0.6 : 1
                       }}
                     >
@@ -1094,13 +1167,13 @@ function TimeTable({ isAdmin = false }) {
                         disabled={loading}
                         className="d-flex align-items-center gap-2"
                         style={{
-                          background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                          background: '#6941db',
                           border: 'none',
                           padding: '8px 16px',
                           borderRadius: '10px',
                           fontWeight: 600,
                           fontSize: '0.875rem',
-                          boxShadow: '0 2px 8px rgba(139, 92, 246, 0.25)',
+                          boxShadow: '0 2px 8px rgba(105, 65, 219, 0.25)',
                           opacity: loading ? 0.6 : 1
                         }}
                       >
@@ -1207,7 +1280,6 @@ function TimeTable({ isAdmin = false }) {
               </>
             )}
           </div>
-        </div>
       </motion.div>
 
       {/* Error Alert */}
@@ -1270,7 +1342,7 @@ function TimeTable({ isAdmin = false }) {
             <Card.Body className="p-3 p-md-4">
               <Form.Group>
                 <Form.Label className="mb-2 d-flex align-items-center gap-2" style={{ fontWeight: 600, color: '#374151', fontSize: '0.9rem' }}>
-                  <FaCalendarAlt style={{ color: '#7e22ce', fontSize: '0.875rem' }} />
+                  <FaCalendarAlt style={{ color: '#6941db', fontSize: '0.875rem' }} />
                   Select Timetable
                 </Form.Label>
                 <Form.Select
@@ -1292,8 +1364,8 @@ function TimeTable({ isAdmin = false }) {
                     transition: 'all 0.3s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#7e22ce';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(126, 34, 206, 0.1)';
+                    e.target.style.borderColor = '#6941db';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = '#e5e7eb';
@@ -1322,7 +1394,7 @@ function TimeTable({ isAdmin = false }) {
           className="no-print"
         >
           <Card className="text-center glass-effect" style={{
-            border: '2px dashed rgba(126, 34, 206, 0.3)',
+            border: '2px dashed rgba(105, 65, 219, 0.3)',
             borderRadius: '16px',
             padding: '2.5rem 1.5rem',
             background: 'rgba(255, 255, 255, 0.9)',
@@ -1339,13 +1411,13 @@ function TimeTable({ isAdmin = false }) {
                   <Button
                     onClick={generateTimetable}
                     style={{
-                      background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                      background: '#6941db',
                       border: 'none',
                       padding: '10px 24px',
                       borderRadius: '10px',
                       fontWeight: 600,
                       fontSize: '0.9rem',
-                      boxShadow: '0 2px 8px rgba(126, 34, 206, 0.25)'
+                      boxShadow: '0 2px 8px rgba(105, 65, 219, 0.25)'
                     }}
                   >
                     <FaPlus className="me-2" style={{ fontSize: '0.875rem' }} />
@@ -1410,7 +1482,7 @@ function TimeTable({ isAdmin = false }) {
 
             {/* Card Header */}
             <Card.Header className="no-print" style={{
-              background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+              background: '#6941db',
               border: 'none',
               padding: '1.25rem 1.5rem'
             }}>
@@ -1491,7 +1563,7 @@ function TimeTable({ isAdmin = false }) {
             <Card.Body className="p-3 p-md-4">
               {loading ? (
                 <div className="text-center py-5">
-                  <div className="spinner-border" style={{ color: '#7e22ce', width: '2.5rem', height: '2.5rem' }} role="status">
+                  <div className="spinner-border" style={{ color: '#6941db', width: '2.5rem', height: '2.5rem' }} role="status">
                     <span className="visually-hidden">Loading...</span>
                   </div>
                   <p className="mt-3" style={{ color: '#6b7280', fontWeight: 500, fontSize: '0.9rem' }}>Loading timetable details...</p>
@@ -1649,12 +1721,14 @@ function TimeTable({ isAdmin = false }) {
                                           ×
                                         </button>
                                         <div style={{
-                                          fontSize: '0.75rem',
+                                          fontSize: '0.8rem',
                                           fontWeight: 700,
                                           color: '#111827',
-                                          marginBottom: '4px'
+                                          marginBottom: '6px',
+                                          lineHeight: '1.3',
+                                          wordBreak: 'break-word'
                                         }}>
-                                          {cell.course}
+                                          {expandCourseName(cell.course)}
                                         </div>
                                         <div style={{
                                           fontSize: '0.65rem',
@@ -1980,7 +2054,7 @@ function TimeTable({ isAdmin = false }) {
             >
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
-                  <FaPlus style={{ marginRight: '8px', color: '#8b5cf6' }} />
+                  <FaPlus style={{ marginRight: '8px', color: '#6941db' }} />
                   Add New Class
                 </h4>
                 <button
@@ -2000,7 +2074,7 @@ function TimeTable({ isAdmin = false }) {
               <Form>
                 <Form.Group className="mb-3">
                   <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaDoorOpen color="#8b5cf6" />
+                    <FaDoorOpen color="#6941db" />
                     Class Name *
                   </Form.Label>
                   <Form.Control
@@ -2045,7 +2119,7 @@ function TimeTable({ isAdmin = false }) {
                       justifyContent: 'center',
                       gap: '8px',
                       fontWeight: 600,
-                      background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                      background: '#6941db',
                       border: 'none',
                       opacity: (!newClassName || !newClassName.trim()) ? 0.5 : 1
                     }}
@@ -2141,7 +2215,7 @@ function TimeTable({ isAdmin = false }) {
               <Form>
                 <Form.Group className="mb-3">
                   <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaGraduationCap color="#7e22ce" />
+                    <FaGraduationCap color="#6941db" />
                     Course * ({allCourses.length} available)
                   </Form.Label>
                   <Form.Select
@@ -2329,9 +2403,9 @@ function TimetableTables({
         animate={{ opacity: 1 }}
         className="text-center py-5"
         style={{
-          background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%)',
+          background: 'linear-gradient(135deg, rgba(105, 65, 219, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%)',
           borderRadius: '14px',
-          border: '2px dashed rgba(126, 34, 206, 0.2)'
+          border: '2px dashed rgba(105, 65, 219, 0.2)'
         }}
       >
         <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: 0.3 }}>📋</div>
@@ -2448,7 +2522,7 @@ function TimetableTables({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: classIndex * 0.1 }}
             style={{
-              border: '1px solid rgba(126, 34, 206, 0.15)',
+              border: '1px solid rgba(105, 65, 219, 0.15)',
               borderRadius: '16px',
               overflow: 'hidden',
               background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%)',
@@ -2458,8 +2532,8 @@ function TimetableTables({
             {/* Class Title Header */}
             <div style={{
               padding: '14px 18px',
-              background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
-              borderBottom: '1px solid rgba(126, 34, 206, 0.2)',
+              background: 'linear-gradient(135deg, #6941db 0%, #a855f7 100%)',
+              borderBottom: '1px solid rgba(105, 65, 219, 0.2)',
               display: 'flex',
               alignItems: 'center',
               gap: '10px'
@@ -2491,7 +2565,7 @@ function TimetableTables({
             <div className="table-responsive">
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: `minmax(100px, 160px) repeat(${allTimes.length}, minmax(140px, 1fr))`,
+                gridTemplateColumns: `minmax(70px, 100px) repeat(${allTimes.length}, minmax(140px, 1fr))`,
                 minWidth: 'fit-content'
               }}>
                 {/* Header Row */}
@@ -2502,7 +2576,7 @@ function TimetableTables({
                   color: '#374151',
                   fontSize: '0.8rem',
                   borderRight: '1px solid #e5e7eb',
-                  borderBottom: '2px solid #7e22ce',
+                  borderBottom: '2px solid #6941db',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -2511,7 +2585,7 @@ function TimetableTables({
                   zIndex: 2,
                   boxShadow: '2px 0 4px rgba(0, 0, 0, 0.05)'
                 }}>
-                  <FaClock className="me-2" style={{ color: '#7e22ce', fontSize: '0.75rem' }} />
+                  <FaClock className="me-2" style={{ color: '#6941db', fontSize: '0.75rem' }} />
                   Day / Time
                 </div>
 
@@ -2528,7 +2602,7 @@ function TimetableTables({
                       fontSize: '0.75rem',
                       textAlign: 'center',
                       borderRight: '1px solid #e5e7eb',
-                      borderBottom: '2px solid #7e22ce',
+                      borderBottom: '2px solid #6941db',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -2552,7 +2626,7 @@ function TimetableTables({
                       color: '#374151',
                       fontSize: '0.85rem',
                       borderRight: '1px solid #e5e7eb',
-                      borderBottom: di === days.length - 1 ? 'none' : '1px solid #e5e7eb',
+                      borderBottom: '2px solid rgba(105, 65, 219, 0.3)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
@@ -2561,7 +2635,7 @@ function TimetableTables({
                       zIndex: 1,
                       boxShadow: '2px 0 4px rgba(0, 0, 0, 0.03)'
                     }}>
-                      <FaCalendarAlt style={{ color: '#7e22ce', fontSize: '0.75rem' }} />
+                      <FaCalendarAlt style={{ color: '#6941db', fontSize: '0.75rem' }} />
                       {day}
                     </div>
 
@@ -2646,7 +2720,7 @@ function TimetableTables({
                           }}
                           onDragLeave={(e) => {
                             if (isEditMode && isEmpty) {
-                              e.currentTarget.style.background = di % 2 === 0 ? '#ffffff' : '#fafafa';
+                              e.currentTarget.style.background = '#f3f4f6';
                               e.currentTarget.style.border = 'none';
                             }
                           }}
@@ -2654,21 +2728,27 @@ function TimetableTables({
                             if (isEditMode && isEmpty && onDropToCell) {
                               e.preventDefault();
                               onDropToCell(e, cellIndex, klass);
-                              e.currentTarget.style.background = di % 2 === 0 ? '#ffffff' : '#fafafa';
+                              e.currentTarget.style.background = '#f3f4f6';
                               e.currentTarget.style.border = 'none';
                             }
                           }}
                           style={{
-                            padding: isEmpty ? '16px' : '12px',
+                            padding: isEmpty ? '16px' : '14px',
                             background: isSelected 
                               ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%)'
                               : isSwapping
                               ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%)'
+                              : isEmpty
+                              ? '#f3f4f6'
                               : di % 2 === 0 ? '#ffffff' : '#fafafa',
                             borderRight: '1px solid #e5e7eb',
-                            borderBottom: di === days.length - 1 ? 'none' : '1px solid #e5e7eb',
-                            border: isSelected ? '2px solid #f59e0b' : isSwapping ? '2px solid #10b981' : undefined,
-                            minHeight: isEmpty ? '80px' : '100px',
+                            borderBottom: '2px solid rgba(105, 65, 219, 0.3)',
+                            borderBottomWidth: '2px',
+                            borderBottomColor: isSelected ? '#f59e0b' : isSwapping ? '#10b981' : 'rgba(105, 65, 219, 0.3)',
+                            border: isSelected ? '2px solid #f59e0b' : isSwapping ? '2px solid #10b981' : `1px solid #e5e7eb`,
+                            borderBottomWidth: '2px',
+                            borderBottomColor: isSelected ? '#f59e0b' : isSwapping ? '#10b981' : 'rgba(105, 65, 219, 0.3)',
+                            minHeight: isEmpty ? '80px' : '120px',
                             transition: 'all 0.3s ease',
                             cursor: isEditMode && !isEmpty ? 'pointer' : 'default',
                             position: 'relative',
@@ -2680,9 +2760,9 @@ function TimetableTables({
                               setHoveredCell(cellIndex);
                             }
                             if (!isEmpty && !isSelected) {
-                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(126, 34, 206, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)';
+                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(105, 65, 219, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)';
                               e.currentTarget.style.transform = 'scale(1.02)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(126, 34, 206, 0.15)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(105, 65, 219, 0.15)';
                               e.currentTarget.style.zIndex = '3';
                             }
                           }}
@@ -2693,6 +2773,8 @@ function TimetableTables({
                               e.currentTarget.style.transform = 'scale(1)';
                               e.currentTarget.style.boxShadow = 'none';
                               e.currentTarget.style.zIndex = '0';
+                            } else if (isEmpty && !isSelected) {
+                              e.currentTarget.style.background = '#f3f4f6';
                             }
                           }}
                         >
@@ -2902,8 +2984,8 @@ function TimetableTables({
                                 gap: '4px',
                                 fontSize: '0.7rem',
                                 fontWeight: 600,
-                                color: '#7e22ce',
-                                background: 'rgba(126, 34, 206, 0.1)',
+                                color: '#6941db',
+                                background: 'rgba(105, 65, 219, 0.1)',
                                 padding: '3px 6px',
                                 borderRadius: '5px',
                                 width: 'fit-content'
@@ -2912,9 +2994,9 @@ function TimetableTables({
                                 {row.roomNumber}
                               </div>
 
-                              {/* Course Name */}
+                              {/* Course Name - Full Title */}
                               <div style={{
-                                fontSize: '0.8rem',
+                                fontSize: '0.85rem',
                                 fontWeight: 700,
                                 color: '#111827',
                                 textAlign: 'center',
@@ -2922,10 +3004,12 @@ function TimetableTables({
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                lineHeight: '1.2',
-                                padding: '2px 0'
+                                lineHeight: '1.3',
+                                padding: '4px 8px',
+                                wordBreak: 'break-word',
+                                hyphens: 'auto'
                               }}>
-                                {row.course}
+                                {expandCourseName(row.course)}
                               </div>
 
                               {/* Instructor Name */}

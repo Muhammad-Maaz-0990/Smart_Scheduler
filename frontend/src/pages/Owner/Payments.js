@@ -88,8 +88,8 @@ const Payments = () => {
               background: 'rgba(255, 255, 255, 0.95)'
             }}>
               <Card.Header style={{
-                background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
-                color: '#fff',
+                background: 'rgba(79, 70, 229, 0.12)',
+                color: '#4338CA',
                 fontWeight: 700,
                 fontSize: '1.1rem',
                 borderTopLeftRadius: '16px',

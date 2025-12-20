@@ -10,8 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
-const MotionCard = motion(Card);
-const MotionButton = motion(Button);
+const MotionCard = motion.create(Card);
+const MotionButton = motion.create(Button);
 const MotionTr = motion.tr;
 
 const Users = () => {
@@ -84,6 +84,10 @@ const Users = () => {
     setMode('add');
     setCurrent({ userName: '', email: '', password: '', designation: 'Student', phoneNumber: '', cnic: '' });
     setCountry('PK');
+    // Remove focus from button immediately when opening modal
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
     setShowModal(true);
     setError('');
     setSuccess('');
@@ -102,6 +106,10 @@ const Users = () => {
     });
     // derive country from phone (fallback to PK)
     setCountry(getCountryFromPhone(u.phoneNumber === 'N/A' ? '' : (u.phoneNumber || '')));
+    // Remove focus from button immediately when opening modal
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
     setShowModal(true);
     setError('');
     setSuccess('');
@@ -109,6 +117,12 @@ const Users = () => {
 
   const closeModal = () => {
     setShowModal(false);
+    // Remove focus from button to reset hover state
+    setTimeout(() => {
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+    }, 0);
   };
 
   // ---- Validations copied from Register page ----
@@ -316,7 +330,7 @@ const Users = () => {
       <Sidebar activeMenu="users" />
       <div className="dashboard-page">
         {/* Animated Background */}
-        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(126, 34, 206, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(105, 65, 219, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
         <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%)', animation: 'float 15s ease-in-out infinite reverse' }}></div>
 
         <Container fluid className="dashboard-content">
@@ -325,96 +339,64 @@ const Users = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
+            style={{ paddingTop: '1rem' }}
           >
-            <div>
-              <h2 style={{
-                fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-                fontWeight: '800',
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '0.5rem',
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '12px',
+                background: '#6941db',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.75rem'
+                justifyContent: 'center',
+                boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
+                flexShrink: 0
               }}>
-                Users Management
-              </h2>
-              <p style={{
-                fontSize: 'clamp(0.9rem, 2vw, 1rem)',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                margin: 0,
-                fontWeight: '600'
-              }}>
-                Manage users in your institute
-              </p>
+                <FaUserShield style={{ fontSize: '1.5rem', color: 'white' }} />
+              </div>
+              <div>
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '800',
+                  color: '#6941db',
+                  lineHeight: '1.2',
+                  margin: 0
+                }}>
+                  Users Management
+                </h2>
+                <p style={{
+                  fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
+                  color: '#6941db',
+                  margin: 0,
+                  fontWeight: '600'
+                }}>
+                  Manage users in your institute
+                </p>
+              </div>
             </div>
 
             <div className="d-flex gap-2 flex-wrap">
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={openAdd}
-                style={{
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(126, 34, 206, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-purple"
               >
                 <FaPlus /> Add User
-              </MotionButton>
+              </Button>
 
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={onImportClick}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-green"
               >
                 <FaFileImport /> Import
-              </MotionButton>
+              </Button>
 
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={exportCSV}
-                style={{
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-blue"
               >
                 <FaFileExport /> Export
-              </MotionButton>
+              </Button>
 
               <input
                 type="file"
@@ -426,31 +408,23 @@ const Users = () => {
             </div>
           </motion.div>
 
-          {/* Search and Filter Card */}
-          <Card
-            style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              border: 'none',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(126, 34, 206, 0.1)',
-              marginBottom: '1.5rem',
-              padding: '1.5rem',
-              position: 'relative',
-              zIndex: 100
-            }}
+          {/* Search and Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-4"
+            style={{ position: 'relative', zIndex: 100 }}
           >
-            <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
-              <InputGroup style={{ flex: 1, maxWidth: '100%' }}>
-                <InputGroup.Text
-                  style={{
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    border: 'none',
-                    borderRadius: '12px 0 0 12px',
-                    color: 'white',
-                    padding: '0.75rem 1rem'
-                  }}
-                >
+            <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 mb-3">
+              <InputGroup style={{ flex: 1 }}>
+                <InputGroup.Text style={{
+                  background: 'rgba(79, 70, 229, 0.12)',
+                  border: '1px solid rgba(79, 70, 229, 0.25)',
+                  borderRadius: '12px 0 0 12px',
+                  color: '#4338CA',
+                  padding: '0.75rem 1rem'
+                }}>
                   <FaSearch />
                 </InputGroup.Text>
                 <Form.Control
@@ -458,151 +432,165 @@ const Users = () => {
                   placeholder="Search by name..."
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
+                  className="search-input-gradient"
                   style={{
-                    border: '1px solid #e5e7eb',
-                    borderLeft: 'none',
+                    border: '2px solid rgba(105, 65, 219, 0.2)',
                     borderRadius: '0 12px 12px 0',
                     padding: '0.75rem 1rem',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.border = '2px solid transparent';
+                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #6941db 0%, #3b82f6 100%)';
+                    e.target.style.backgroundOrigin = 'border-box';
+                    e.target.style.backgroundClip = 'padding-box, border-box';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.border = '2px solid rgba(105, 65, 219, 0.2)';
+                    e.target.style.backgroundImage = 'none';
                   }}
                 />
               </InputGroup>
-
-              <div className="position-relative">
-                <MotionButton
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowFilterMenu(s => !s)}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.1), rgba(59, 130, 246, 0.1))',
-                    border: '1px solid rgba(126, 34, 206, 0.2)',
-                    borderRadius: '12px',
-                    padding: '0.75rem 1.5rem',
-                    fontWeight: '600',
-                    color: '#7e22ce',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    minWidth: '140px',
-                    justifyContent: 'center',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  <FaFilter /> Filter
-                </MotionButton>
-
-                <AnimatePresence>
-                  {showFilterMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Card
-                        style={{
-                          position: 'absolute',
-                          right: 0,
-                          top: 'calc(100% + 0.5rem)',
-                          zIndex: 9999,
-                          minWidth: '280px',
-                          background: 'rgba(255, 255, 255, 0.95)',
-                          backdropFilter: 'blur(20px)',
-                          border: '1px solid rgba(139, 92, 246, 0.2)',
-                          borderRadius: '16px',
-                          boxShadow: '0 10px 40px rgba(126, 34, 206, 0.2)'
-                        }}
-                      >
-                        <Card.Body className="p-3">
-                          <h6 style={{
-                            fontSize: '0.875rem',
-                            fontWeight: '700',
-                            background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            marginBottom: '1rem'
-                          }}>
-                            Filter Users
-                          </h6>
-
-                          <Form.Group className="mb-2">
-                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>National ID</Form.Label>
-                            <Form.Control
-                              size="sm"
-                              type="text"
-                              placeholder="CNIC/SSN"
-                              value={filterCNIC}
-                              onChange={(e) => setFilterCNIC(e.target.value)}
-                              style={{
-                                borderRadius: '8px',
-                                border: '1px solid rgba(139, 92, 246, 0.2)',
-                                fontSize: '0.875rem',
-                                padding: '0.5rem'
-                              }}
-                            />
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Designation</Form.Label>
-                            <Form.Select
-                              size="sm"
-                              value={filterDesignation}
-                              onChange={(e) => {setFilterDesignation({type:e.target.value});e.target.blur();}}
-                              style={{
-                                borderRadius: '8px',
-                                border: '1px solid rgba(139, 92, 246, 0.2)',
-                                fontSize: '0.875rem',
-                                padding: '0.5rem'
-                              }}
-                            >
-                              <option value="All">All</option>
-                              <option value="Teacher">Teacher</option>
-                              <option value="Student">Student</option>
-                            </Form.Select>
-                          </Form.Group>
-
-                          <div className="d-flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => { setFilterCNIC(''); setFilterDesignation('All'); }}
-                              style={{
-                                flex: 1,
-                                borderRadius: '8px',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                padding: '0.5rem',
-                                background: 'rgba(239, 68, 68, 0.1)',
-                                border: '1px solid rgba(239, 68, 68, 0.3)',
-                                color: '#dc2626'
-                              }}
-                            >
-                              Clear
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => setShowFilterMenu(false)}
-                              style={{
-                                flex: 1,
-                                borderRadius: '8px',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                padding: '0.5rem',
-                                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                border: 'none',
-                                color: 'white'
-                              }}
-                            >
-                              Apply
-                            </Button>
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <MotionButton
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowFilterMenu(s => !s)}
+                style={{
+                  background: showFilterMenu ? '#6941db' : 'linear-gradient(135deg, rgba(105, 65, 219, 0.1), rgba(59, 130, 246, 0.1))',
+                  border: '2px solid rgba(105, 65, 219, 0.2)',
+                  borderRadius: '12px',
+                  padding: '0.75rem 1.5rem',
+                  fontWeight: 400,
+                  color: showFilterMenu ? 'white' : '#6941db',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <FaFilter /> Filter
+              </MotionButton>
             </div>
-          </Card>
+
+            <AnimatePresence>
+              {showFilterMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                >
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '12px',
+                    border: '2px solid rgba(105, 65, 219, 0.2)',
+                    padding: '1.25rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <label style={{ 
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#6941db',
+                          marginBottom: '0.5rem',
+                          display: 'block'
+                        }}>
+                          National ID
+                        </label>
+                        <Form.Control
+                          type="text"
+                          placeholder="CNIC/SSN"
+                          value={filterCNIC}
+                          onChange={(e) => setFilterCNIC(e.target.value)}
+                          style={{
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            transition: 'all 0.3s ease',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6941db';
+                            e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        />
+                      </div>
+
+                      <div className="col-md-4">
+                        <label style={{ 
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#6941db',
+                          marginBottom: '0.5rem',
+                          display: 'block'
+                        }}>
+                          Designation
+                        </label>
+                        <Form.Select
+                          value={filterDesignation}
+                          onChange={(e) => setFilterDesignation(e.target.value)}
+                          style={{
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6941db';
+                            e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
+                          <option value="All">All</option>
+                          <option value="Teacher">Teacher</option>
+                          <option value="Student">Student</option>
+                        </Form.Select>
+                      </div>
+
+                      <div className="col-md-4 d-flex align-items-end">
+                        <MotionButton 
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => { setFilterCNIC(''); setFilterDesignation('All'); }}
+                          style={{
+                            background: 'transparent',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            color: '#6941db',
+                            borderRadius: '12px',
+                            fontWeight: 400,
+                            padding: '0.75rem 0.875rem',
+                            fontSize: '0.875rem',
+                            width: '100%'
+                          }}
+                        >
+                          Reset
+                        </MotionButton>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Alerts */}
           <AnimatePresence>
@@ -694,9 +682,9 @@ const Users = () => {
                 style={{
                   background: 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                  border: '1px solid rgba(105, 65, 219, 0.2)',
                   borderRadius: '16px',
-                  boxShadow: '0 10px 40px rgba(126, 34, 206, 0.15)',
+                  boxShadow: '0 10px 40px rgba(105, 65, 219, 0.15)',
                   marginBottom: '1.5rem',
                   overflow: 'hidden'
                 }}
@@ -705,9 +693,8 @@ const Users = () => {
                   <h5 style={{
                     fontSize: '1.125rem',
                     fontWeight: '700',
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    background: '#6941db',
+                    color: '#6941db',
                     marginBottom: '1rem'
                   }}>
                     Import Preview ({importPreview.length} users)
@@ -717,14 +704,14 @@ const Users = () => {
                       <thead>
                         <tr style={{
                           background: 'rgba(255, 255, 255, 0.5)',
-                          borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
+                          borderBottom: '2px solid rgba(105, 65, 219, 0.2)'
                         }}>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>#</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Name</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Email</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Designation</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Phone</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>National ID</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>#</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Name</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Email</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Designation</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Phone</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>National ID</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -797,24 +784,21 @@ const Users = () => {
               backdropFilter: 'blur(20px)',
               border: 'none',
               borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(126, 34, 206, 0.1)',
+              boxShadow: '0 4px 20px rgba(105, 65, 219, 0.1)',
               overflow: 'hidden'
             }}
           >
             <div style={{ overflowX: 'auto' }}>
               <Table hover responsive style={{ marginBottom: 0 }}>
                 <thead>
-                  <tr style={{
-                    background: 'rgba(255, 255, 255, 0.5)',
-                    borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
-                  }}>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>#</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Name</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Email</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Designation</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>National ID</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Phone</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce', textAlign: 'center' }}>Actions</th>
+                  <tr>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>#</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Name</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Email</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Designation</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>National ID</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Phone</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', textAlign: 'center', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -854,83 +838,38 @@ const Users = () => {
                             }}
                           >
                             <td style={{ padding: '1rem', fontWeight: '500', color: '#6b7280' }}>{index + 1}</td>
-                            <td style={{ padding: '1rem', fontWeight: '700', color: '#374151' }}>{u.userName}</td>
-                            <td style={{ padding: '1rem', color: '#374151' }}>{u.email}</td>
-                            <td style={{ padding: '1rem' }}>
-                              <Badge
-                                style={{
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600',
-                                  padding: '0.4rem 0.8rem',
-                                  borderRadius: '8px',
-                                  background: u.designation === 'Admin' ? '#dc2626' : u.designation === 'Teacher' ? '#3b82f6' : '#10b981',
-                                  color: 'white'
-                                }}
-                              >
-                                {u.designation}
-                              </Badge>
-                            </td>
-                            <td style={{ padding: '1rem', fontWeight: '600', color: '#374151' }}>{u.cnic === 'N/A' ? '-' : u.cnic}</td>
+                            <td style={{ padding: '1rem', fontWeight: '400', color: '#374151' }}>{u.userName}</td>
+                            <td style={{ padding: '1rem', color: '#374151', fontWeight: '400' }}>{u.email}</td>
+                            <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>{u.designation}</td>
+                            <td style={{ padding: '1rem', fontWeight: '500', color: '#374151' }}>{u.cnic === 'N/A' ? '-' : u.cnic}</td>
                             <td style={{ padding: '1rem', fontWeight: '500', color: '#374151' }}>{u.phoneNumber === 'N/A' ? '-' : u.phoneNumber}</td>
                             <td style={{ padding: '1rem' }}>
                               <div className="d-flex gap-2 justify-content-center">
-                                <MotionButton
-                                  whileHover={{
-                                    scale: u.designation === 'Admin' ? 1 : 1.05, background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                    color: 'white',
-                                    borderColor: '#7e22ce',
-                                    y: -2
-                                  }}
-                                  whileTap={{ scale: u.designation === 'Admin' ? 1 : 0.95 }}
-                                  size="sm"
+                                <Button
                                   onClick={() => openEdit(u)}
                                   disabled={u.designation === 'Admin'}
+                                  className="table-action-btn table-action-edit"
                                   style={{
-                                    background: 'transparent',
-                                    border: '2px solid #7e22ce',
-                                    borderRadius: '10px',
-                                    padding: '0.5rem 1rem',
-                                    color: '#7e22ce',
-                                    fontWeight: 600,
-                                    fontSize: '0.875rem',
-                                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    transition: 'all 0.2s'
+                                    opacity: u.designation === 'Admin' ? 0.5 : 1,
+                                    cursor: u.designation === 'Admin' ? 'not-allowed' : 'pointer',
+                                    pointerEvents: u.designation === 'Admin' ? 'none' : 'auto'
                                   }}
                                 >
                                   <FaEdit /> Edit
-                                </MotionButton>
+                                </Button>
 
-                                <MotionButton
-                                  whileHover={{
-                                    scale: u.designation === 'Admin' ? 1 : 1.05, background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
-                                    color: 'white',
-                                    borderColor: '#942f04',
-                                    y: -2
-                                  }}
-                                  whileTap={{ scale: u.designation === 'Admin' ? 1 : 0.95 }}
-                                  size="sm"
+                                <Button
                                   onClick={() => handleDelete(u._id)}
                                   disabled={u.designation === 'Admin'}
+                                  className="table-action-btn table-action-delete"
                                   style={{
-                                    background: 'transparent',
-                                    border: '2px solid #942f04',
-                                    borderRadius: '10px',
-                                    padding: '0.5rem 1rem',
-                                    color: '#942f04',
-                                    fontWeight: 600,
-                                    fontSize: '0.875rem',
-                                    boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    transition: 'all 0.2s'
+                                    opacity: u.designation === 'Admin' ? 0.5 : 1,
+                                    cursor: u.designation === 'Admin' ? 'not-allowed' : 'pointer',
+                                    pointerEvents: u.designation === 'Admin' ? 'none' : 'auto'
                                   }}
                                 >
                                   <FaTrash /> Delete
-                                </MotionButton>
+                                </Button>
                               </div>
                             </td>
                           </MotionTr>
@@ -951,22 +890,32 @@ const Users = () => {
         centered
         backdrop="static"
       >
+        <style>{`
+          .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 1;
+          }
+          .modal-header .btn-close:hover {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+          }
+        `}</style>
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
         >
           <Modal.Header
             closeButton
             style={{
-              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+              background: '#6941db',
               color: 'white',
               border: 'none',
-              padding: '1.5rem'
+              padding: '0.75rem 1rem'
             }}
           >
-            <Modal.Title style={{ fontWeight: '700', fontSize: '1.5rem' }}>
+            <Modal.Title style={{ fontWeight: '700', fontSize: '1.25rem' }}>
               {mode === 'add' ? 'Add New User' : 'Edit User'}
             </Modal.Title>
           </Modal.Header>
@@ -1007,7 +956,7 @@ const Users = () => {
                 transition={{ delay: 0.1 }}
               >
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: '600', color: '#7e22ce', fontSize: '0.875rem' }}>Full Name</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Full Name</Form.Label>
                   <Form.Control
                     type="text"
                     value={current.userName}
@@ -1034,7 +983,7 @@ const Users = () => {
                 transition={{ delay: 0.15 }}
               >
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: '600', color: '#7e22ce', fontSize: '0.875rem' }}>Email</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Email</Form.Label>
                   <Form.Control
                     type="email"
                     value={current.email}
@@ -1062,7 +1011,7 @@ const Users = () => {
                   transition={{ delay: 0.2 }}
                 >
                   <Form.Group className="mb-3">
-                    <Form.Label style={{ fontWeight: '600', color: '#7e22ce', fontSize: '0.875rem' }}>Password</Form.Label>
+                    <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Password</Form.Label>
                     <Form.Control
                       type="password"
                       value={current.password}
@@ -1091,7 +1040,7 @@ const Users = () => {
                 transition={{ delay: mode === 'add' ? 0.25 : 0.2 }}
               >
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: '600', color: '#7e22ce', fontSize: '0.875rem' }}>Designation</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Designation</Form.Label>
                   <Form.Select
                     value={current.designation}
                     onChange={e => { setCurrent({ ...current, designation: e.target.value }); e.target.blur(); }}
@@ -1119,7 +1068,7 @@ const Users = () => {
                 transition={{ delay: mode === 'add' ? 0.3 : 0.25 }}
               >
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: '600', color: '#7e22ce', fontSize: '0.875rem' }}>Phone</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Phone</Form.Label>
                   <PhoneInput
                     international
                     defaultCountry="PK"
@@ -1145,7 +1094,7 @@ const Users = () => {
                 transition={{ delay: mode === 'add' ? 0.35 : 0.3 }}
               >
                 <Form.Group className="mb-4">
-                  <Form.Label style={{ fontWeight: '600', color: '#7e22ce', fontSize: '0.875rem' }}>{getCNICLabel(country)}</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>{getCNICLabel(country)}</Form.Label>
                   <Form.Control
                     type="text"
                     value={current.cnic}
@@ -1179,19 +1128,24 @@ const Users = () => {
                 style={{ marginTop: '1.5rem' }}
               >
                 <MotionButton
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ 
+                    background: '#ffffff',
+                    color: '#6b7280',
+                    borderColor: '#6b7280'
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
                   type="button"
                   onClick={closeModal}
                   disabled={submitting}
                   style={{
-                    background: 'transparent',
-                    border: 'none',
+                    background: submitting ? '#9ca3af' : '#6b7280',
+                    border: submitting ? '2px solid #9ca3af' : '2px solid #6b7280',
                     borderRadius: '12px',
-                    padding: '0.875rem 2rem',
-                    color: '#7e22ce',
-                    fontWeight: '600',
-                    fontSize: '1rem',
+                    padding: '0.5rem 1rem',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
                     cursor: submitting ? 'not-allowed' : 'pointer',
                     opacity: submitting ? 0.6 : 1
                   }}
@@ -1200,34 +1154,37 @@ const Users = () => {
                 </MotionButton>
 
                 <MotionButton
-                  whileHover={{ scale: submitting ? 1 : 1.02 }}
+                  whileHover={{ 
+                    background: submitting ? undefined : '#fff',
+                    color: submitting ? undefined : '#6941db',
+                    border: submitting ? undefined : '2px solid #6941db'
+                  }}
                   whileTap={{ scale: submitting ? 1 : 0.98 }}
+                  transition={{ duration: 0.15 }}
                   type="submit"
                   disabled={submitting}
                   style={{
-                    background: submitting
-                      ? 'linear-gradient(135deg, rgba(126, 34, 206, 0.6) 0%, rgba(59, 130, 246, 0.6) 100%)'
-                      : 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    border: 'none',
+                    background: submitting ? 'rgba(105, 65, 219, 0.6)' : '#6941db',
+                    border: '2px solid #6941db',
                     borderRadius: '12px',
-                    padding: '0.875rem 2.5rem',
+                    padding: '0.5rem 1rem',
                     color: 'white',
-                    fontWeight: '600',
-                    fontSize: '1rem',
-                    boxShadow: submitting ? 'none' : '0 4px 15px rgba(126, 34, 206, 0.4)',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    boxShadow: submitting ? 'none' : '0 2px 8px rgba(105, 65, 219, 0.08)',
                     cursor: submitting ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem',
-                    minWidth: '180px',
+                    gap: '0.5rem',
+                    minWidth: '120px',
                     justifyContent: 'center'
                   }}
                 >
                   {submitting ? (
                     <>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '14px',
+                        height: '14px',
                         border: '2px solid rgba(255, 255, 255, 0.3)',
                         borderTop: '2px solid white',
                         borderRadius: '50%',
@@ -1256,8 +1213,8 @@ const Users = () => {
           border-radius: 12px !important;
           background: 
             linear-gradient(white, white) padding-box,
-            linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%) border-box !important;
-          box-shadow: 0 0 0 3px rgba(126, 34, 206, 0.15) !important;
+            linear-gradient(135deg, #6941db 0%, #3b82f6 100%) border-box !important;
+          box-shadow: 0 0 0 3px rgba(105, 65, 219, 0.15) !important;
           outline: none !important;
         }
         
@@ -1273,8 +1230,8 @@ const Users = () => {
           border-radius: 12px !important;
           background: 
             linear-gradient(white, white) padding-box,
-            linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%) border-box !important;
-          box-shadow: 0 0 0 3px rgba(126, 34, 206, 0.15) !important;
+            linear-gradient(135deg, #6941db 0%, #3b82f6 100%) border-box !important;
+          box-shadow: 0 0 0 3px rgba(105, 65, 219, 0.15) !important;
           outline: none !important;
         }
       `}</style>

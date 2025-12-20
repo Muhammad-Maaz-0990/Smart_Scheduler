@@ -8,8 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
-const MotionCard = motion(Card);
-const MotionButton = motion(Button);
+const MotionCard = motion.create(Card);
+const MotionButton = motion.create(Button);
 const MotionTr = motion.tr;
 
 const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -130,6 +130,10 @@ const TimeSlots = () => {
     setMode('add');
     const firstAvailable = DAY_ORDER.find(d => !usedDays.has(d)) || 'Monday';
     setCurrent({ days: firstAvailable, startTime: '08:00', endTime: '14:00' });
+    // Remove focus from button immediately when opening modal
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
     setShow(true);
     setError(''); setSuccess('');
   };
@@ -141,7 +145,15 @@ const TimeSlots = () => {
     setError(''); setSuccess('');
   };
 
-  const close = () => setShow(false);
+  const close = () => {
+    setShow(false);
+    // Remove focus from button to reset hover state
+    setTimeout(() => {
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+    }, 0);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -192,7 +204,7 @@ const TimeSlots = () => {
       <Sidebar activeMenu="timeslots" />
       <div className="dashboard-page">
         {/* Animated Background */}
-        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(126, 34, 206, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(105, 65, 219, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
         <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%)', animation: 'float 15s ease-in-out infinite reverse' }}></div>
 
         <Container fluid className="dashboard-content">
@@ -203,35 +215,33 @@ const TimeSlots = () => {
             className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
             style={{ paddingTop: '1rem' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
               <div style={{
                 width: '50px',
                 height: '50px',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                background: '#6941db',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
+                boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
+                flexShrink: 0
               }}>
                 <FaClock style={{ fontSize: '1.5rem', color: 'white' }} />
               </div>
               <div>
                 <h2 style={{
-                  fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+                  fontSize: '1.5rem',
                   fontWeight: '800',
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  marginBottom: '0.5rem'
+                  color: '#6941db',
+                  lineHeight: '1.2',
+                  margin: 0
                 }}>
                   Time Slots Management
                 </h2>
                 <p style={{
                   fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  color: '#6941db',
                   margin: 0,
                   fontWeight: '600'
                 }}>
@@ -241,73 +251,32 @@ const TimeSlots = () => {
             </div>
 
             <div className="d-flex gap-2 flex-wrap">
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={openAdd}
                 disabled={isFullWeek}
+                className={`action-btn action-btn-purple ${isFullWeek ? 'disabled' : ''}`}
                 style={{
-                  background: isFullWeek
-                    ? 'linear-gradient(135deg, rgba(126, 34, 206, 0.5) 0%, rgba(59, 130, 246, 0.5) 100%)'
-                    : 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: isFullWeek ? 'none' : '0 4px 15px rgba(126, 34, 206, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
+                  opacity: isFullWeek ? 0.5 : 1,
                   cursor: isFullWeek ? 'not-allowed' : 'pointer',
-                  opacity: isFullWeek ? 0.6 : 1
+                  pointerEvents: isFullWeek ? 'none' : 'auto'
                 }}
               >
                 <FaPlus /> Add TimeSlot
-              </MotionButton>
+              </Button>
 
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={onImportClick}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-green"
               >
                 <FaFileImport /> Import
-              </MotionButton>
+              </Button>
 
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={exportCSV}
-                style={{
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-blue"
               >
                 <FaFileExport /> Export
-              </MotionButton>
+              </Button>
 
               <input
                 type="file"
@@ -319,28 +288,22 @@ const TimeSlots = () => {
             </div>
           </motion.div>
 
-          {/* Search Card */}
-          <Card
-            style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              border: 'none',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(126, 34, 206, 0.1)',
-              marginBottom: '1.5rem',
-              padding: '1.5rem'
-            }}
+          {/* Search */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-4"
+            style={{ position: 'relative', zIndex: 100 }}
           >
             <InputGroup>
-              <InputGroup.Text
-                style={{
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  border: 'none',
-                  borderRadius: '12px 0 0 12px',
-                  color: 'white',
-                  padding: '0.75rem 1rem'
-                }}
-              >
+              <InputGroup.Text style={{
+                background: 'rgba(79, 70, 229, 0.12)',
+                border: '1px solid rgba(79, 70, 229, 0.25)',
+                borderRadius: '12px 0 0 12px',
+                color: '#4338CA',
+                padding: '0.75rem 1rem'
+              }}>
                 <FaSearch />
               </InputGroup.Text>
               <Form.Control
@@ -348,26 +311,28 @@ const TimeSlots = () => {
                 placeholder="Search by day..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input-gradient"
                 style={{
-                  border: '2px solid #e5e7eb',
-                  borderLeft: 'none',
+                  border: '2px solid rgba(105, 65, 219, 0.2)',
                   borderRadius: '0 12px 12px 0',
                   padding: '0.75rem 1rem',
                   fontSize: '0.9rem',
+                  outline: 'none',
                   transition: 'all 0.3s ease'
                 }}
                 onFocus={(e) => {
-                  e.target.style.border = '2px solid';
-                  e.target.style.borderImage = 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%) 1';
-                  e.target.style.borderLeft = 'none';
+                  e.target.style.border = '2px solid transparent';
+                  e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #6941db 0%, #3b82f6 100%)';
+                  e.target.style.backgroundOrigin = 'border-box';
+                  e.target.style.backgroundClip = 'padding-box, border-box';
                 }}
                 onBlur={(e) => {
-                  e.target.style.border = '2px solid #e5e7eb';
-                  e.target.style.borderImage = 'none';
+                  e.target.style.border = '2px solid rgba(105, 65, 219, 0.2)';
+                  e.target.style.backgroundImage = 'none';
                 }}
               />
             </InputGroup>
-          </Card>
+          </motion.div>
 
           {/* Alerts */}
           <AnimatePresence>
@@ -459,9 +424,9 @@ const TimeSlots = () => {
                 style={{
                   background: 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                  border: '1px solid rgba(105, 65, 219, 0.2)',
                   borderRadius: '16px',
-                  boxShadow: '0 10px 40px rgba(126, 34, 206, 0.15)',
+                  boxShadow: '0 10px 40px rgba(105, 65, 219, 0.15)',
                   marginBottom: '1.5rem',
                   overflow: 'hidden'
                 }}
@@ -470,9 +435,8 @@ const TimeSlots = () => {
                   <h5 style={{
                     fontSize: '1.125rem',
                     fontWeight: '700',
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    background: '#6941db',
+                    color: '#6941db',
                     marginBottom: '1rem'
                   }}>
                     Import Preview ({importPreview.length} time slots)
@@ -482,11 +446,11 @@ const TimeSlots = () => {
                       <thead>
                         <tr style={{
                           background: 'rgba(255, 255, 255, 0.5)',
-                          borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
+                          borderBottom: '2px solid rgba(105, 65, 219, 0.2)'
                         }}>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Day</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Start Time</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>End Time</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Day</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Start Time</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>End Time</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -556,22 +520,19 @@ const TimeSlots = () => {
               backdropFilter: 'blur(20px)',
               border: 'none',
               borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(126, 34, 206, 0.1)',
+              boxShadow: '0 4px 20px rgba(105, 65, 219, 0.1)',
               overflow: 'hidden'
             }}
           >
             <div style={{ overflowX: 'auto' }}>
               <Table hover responsive style={{ marginBottom: 0 }}>
                 <thead>
-                  <tr style={{
-                    background: 'rgba(255, 255, 255, 0.5)',
-                    borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
-                  }}>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>#</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Day</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Start Time</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>End Time</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce', textAlign: 'center' }}>Actions</th>
+                  <tr>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>#</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Day</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Start Time</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>End Time</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', textAlign: 'center', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -610,79 +571,24 @@ const TimeSlots = () => {
                             }}
                           >
                             <td style={{ padding: '1rem', fontWeight: '500', color: '#6b7280' }}>{index + 1}</td>
-                            <td style={{ padding: '1rem' }}>
-                              <Badge
-                                style={{
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600',
-                                  padding: '0.4rem 0.8rem',
-                                  borderRadius: '8px',
-                                  background: '#8b5cf6',
-                                  color: 'white'
-                                }}
-                              >
-                                {row.days}
-                              </Badge>
-                            </td>
-                            <td style={{ padding: '1rem', fontWeight: '600', color: '#374151' }}>{row.startTime}</td>
-                            <td style={{ padding: '1rem', fontWeight: '600', color: '#374151' }}>{row.endTime}</td>
+                            <td style={{ padding: '1rem', fontWeight: '400', color: '#374151' }}>{row.days}</td>
+                            <td style={{ padding: '1rem', fontWeight: '500', color: '#374151' }}>{row.startTime}</td>
+                            <td style={{ padding: '1rem', fontWeight: '500', color: '#374151' }}>{row.endTime}</td>
                             <td style={{ padding: '1rem' }}>
                               <div className="d-flex gap-2 justify-content-center">
-                                <MotionButton
-                                  whileHover={{
-                                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                    color: 'white',
-                                    borderColor: '#7e22ce',
-                                    scale: 1.1, y: -2
-                                  }}
-                                  whileTap={{ scale: 0.95 }}
-                                  size="sm"
+                                <Button
                                   onClick={() => openEdit(row)}
-                                  style={{
-                                    background: 'transparent',
-                                    border: '2px solid #7e22ce',
-                                    borderRadius: '10px',
-                                    padding: '0.5rem 1rem',
-                                    color: '#7e22ce',
-                                    fontWeight: 600,
-                                    fontSize: '0.875rem',
-                                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    transition: 'all 0.2s'
-                                  }}
+                                  className="table-action-btn table-action-edit"
                                 >
                                   <FaEdit /> Edit
-                                </MotionButton>
+                                </Button>
 
-                                <MotionButton
-                                  whileHover={{
-                                    background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
-                                    color: 'white',
-                                    borderColor: '#942f04',
-                                    scale: 1.1, y: -2
-                                  }}
-                                  whileTap={{ scale: 0.95 }}
-                                  size="sm"
+                                <Button
                                   onClick={() => handleDelete(row._id)}
-                                  style={{
-                                    background: 'transparent',
-                                    border: '2px solid #942f04',
-                                    borderRadius: '10px',
-                                    padding: '0.5rem 1rem',
-                                    color: '#942f04',
-                                    fontWeight: 600,
-                                    fontSize: '0.875rem',
-                                    boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    transition: 'all 0.2s'
-                                  }}
+                                  className="table-action-btn table-action-delete"
                                 >
                                   <FaTrash /> Delete
-                                </MotionButton>
+                                </Button>
                               </div>
                             </td>
                           </MotionTr>
@@ -703,22 +609,32 @@ const TimeSlots = () => {
         centered
         backdrop="static"
       >
+        <style>{`
+          .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 1;
+          }
+          .modal-header .btn-close:hover {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+          }
+        `}</style>
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
         >
           <Modal.Header
             closeButton
             style={{
-              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+              background: '#6941db',
               color: 'white',
               border: 'none',
-              padding: '1.5rem'
+              padding: '0.75rem 1rem'
             }}
           >
-            <Modal.Title style={{ fontWeight: '700', fontSize: '1.5rem' }}>
+            <Modal.Title style={{ fontWeight: '700', fontSize: '1.25rem' }}>
               {mode === 'add' ? 'Add Time Slot' : 'Edit Time Slot'}
             </Modal.Title>
           </Modal.Header>
@@ -762,7 +678,7 @@ const TimeSlots = () => {
                   <Form.Label style={{
                     fontWeight: 600,
                     marginBottom: '0.75rem',
-                    color: '#7e22ce',
+                    color: '#6941db',
                     fontSize: '0.8rem',
                     letterSpacing: '0.01em',
                     lineHeight: 1.2
@@ -785,8 +701,8 @@ const TimeSlots = () => {
                       cursor: 'pointer'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = '#7e22ce';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(126, 34, 206, 0.1)';
+                      e.target.style.borderColor = '#6941db';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = '#e0e0e0';
@@ -812,7 +728,7 @@ const TimeSlots = () => {
                   <Form.Label style={{
                     fontWeight: 600,
                     marginBottom: '0.75rem',
-                    color: '#7e22ce',
+                    color: '#6941db',
                     fontSize: '0.8rem',
                     letterSpacing: '0.01em',
                     lineHeight: 1.2
@@ -836,8 +752,8 @@ const TimeSlots = () => {
                       boxShadow: 'none'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = '#7e22ce';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(126, 34, 206, 0.1)';
+                      e.target.style.borderColor = '#6941db';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = '#e0e0e0';
@@ -856,7 +772,7 @@ const TimeSlots = () => {
                   <Form.Label style={{
                     fontWeight: 600,
                     marginBottom: '0.75rem',
-                    color: '#7e22ce',
+                    color: '#6941db',
                     fontSize: '0.8rem',
                     letterSpacing: '0.01em',
                     lineHeight: 1.2
@@ -880,8 +796,8 @@ const TimeSlots = () => {
                       boxShadow: 'none'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = '#7e22ce';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(126, 34, 206, 0.1)';
+                      e.target.style.borderColor = '#6941db';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = '#e0e0e0';
@@ -899,19 +815,24 @@ const TimeSlots = () => {
                 style={{ marginTop: '1.5rem' }}
               >
                 <MotionButton
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ 
+                    background: '#ffffff',
+                    color: '#6b7280',
+                    borderColor: '#6b7280'
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
                   type="button"
                   onClick={close}
                   disabled={submitting}
                   style={{
-                    background: 'transparent',
-                    border: 'none',
+                    background: submitting ? '#9ca3af' : '#6b7280',
+                    border: submitting ? '2px solid #9ca3af' : '2px solid #6b7280',
                     borderRadius: '12px',
-                    padding: '0.875rem 2rem',
-                    color: '#7e22ce',
-                    fontWeight: '600',
-                    fontSize: '1rem',
+                    padding: '0.5rem 1rem',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
                     cursor: submitting ? 'not-allowed' : 'pointer',
                     opacity: submitting ? 0.6 : 1
                   }}
@@ -920,34 +841,37 @@ const TimeSlots = () => {
                 </MotionButton>
 
                 <MotionButton
-                  whileHover={{ scale: submitting ? 1 : 1.02 }}
+                  whileHover={{ 
+                    background: submitting ? undefined : '#fff',
+                    color: submitting ? undefined : '#6941db',
+                    border: submitting ? undefined : '2px solid #6941db'
+                  }}
                   whileTap={{ scale: submitting ? 1 : 0.98 }}
+                  transition={{ duration: 0.15 }}
                   type="submit"
                   disabled={submitting}
                   style={{
-                    background: submitting
-                      ? 'linear-gradient(135deg, rgba(126, 34, 206, 0.6) 0%, rgba(59, 130, 246, 0.6) 100%)'
-                      : 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    border: 'none',
+                    background: submitting ? 'rgba(105, 65, 219, 0.6)' : '#6941db',
+                    border: '2px solid #6941db',
                     borderRadius: '12px',
-                    padding: '0.875rem 2.5rem',
+                    padding: '0.5rem 1rem',
                     color: 'white',
-                    fontWeight: '600',
-                    fontSize: '1rem',
-                    boxShadow: submitting ? 'none' : '0 4px 15px rgba(126, 34, 206, 0.4)',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    boxShadow: submitting ? 'none' : '0 2px 8px rgba(105, 65, 219, 0.08)',
                     cursor: submitting ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem',
-                    minWidth: '150px',
+                    gap: '0.5rem',
+                    minWidth: '120px',
                     justifyContent: 'center'
                   }}
                 >
                   {submitting ? (
                     <>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '14px',
+                        height: '14px',
                         border: '2px solid rgba(255, 255, 255, 0.3)',
                         borderTop: '2px solid white',
                         borderRadius: '50%',

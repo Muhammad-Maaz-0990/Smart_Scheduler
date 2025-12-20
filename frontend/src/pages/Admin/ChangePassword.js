@@ -7,8 +7,8 @@ import { FaLock, FaKey, FaCheckCircle, FaEye, FaEyeSlash, FaArrowLeft } from 're
 import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
-const MotionCard = motion(Card);
-const MotionButton = motion(Button);
+const MotionCard = motion.create(Card);
+const MotionButton = motion.create(Button);
 
 const ChangePassword = () => {
   const navigate = useNavigate();

@@ -11,7 +11,7 @@ import {
 } from '../components/shared/animation_variants';
 import { useAuth } from '../context/AuthContext';
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 const Login = () => {
   const [email, setEmail] = useState('');

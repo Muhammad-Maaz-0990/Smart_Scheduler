@@ -3,13 +3,13 @@ import { Container, Row, Col, Card, Button, Table, Modal, Form, Alert, Badge, In
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
-import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUsers } from 'react-icons/fa';
+import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUsers, FaLeaf, FaSnowflake, FaSeedling, FaBan } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
-const MotionCard = motion(Card);
-const MotionButton = motion(Button);
+const MotionCard = motion.create(Card);
+const MotionButton = motion.create(Button);
 const MotionTr = motion.tr;
 
 const Classes = () => {
@@ -33,6 +33,8 @@ const Classes = () => {
   const [importError, setImportError] = useState('');
   const [loading, setLoading] = useState(false);
   const fileInputRef = React.useRef(null);
+  const [sessionDropdownOpen, setSessionDropdownOpen] = useState(false);
+  const [sectionDropdownOpen, setSectionDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (instituteObjectId) {
@@ -67,6 +69,10 @@ const Classes = () => {
     } else {
       setCurrentClass({ degree: '', session: 'Fall', section: '', year: '', rank: 1 });
     }
+    // Remove focus from button immediately when opening modal
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
     setShowModal(true);
     setError('');
     setSuccess('');
@@ -76,6 +82,12 @@ const Classes = () => {
     setShowModal(false);
     setCurrentClass({ degree: '', session: 'Fall', section: '', year: '', rank: 1 });
     setError('');
+    // Remove focus from button to reset hover state
+    setTimeout(() => {
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+    }, 0);
   };
 
   const handleSubmit = async (e) => {
@@ -171,7 +183,7 @@ const Classes = () => {
       <Sidebar activeMenu="classes" />
       <div className="dashboard-page">
         {/* Animated Background */}
-        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(126, 34, 206, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(105, 65, 219, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
         <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%)', animation: 'float 15s ease-in-out infinite reverse' }}></div>
 
         <Container fluid className="dashboard-content">
@@ -182,35 +194,33 @@ const Classes = () => {
             className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
             style={{ paddingTop: '1rem' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
               <div style={{
                 width: '50px',
                 height: '50px',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                background: '#6941db',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
+                boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
+                flexShrink: 0
               }}>
                 <FaUsers style={{ fontSize: '1.5rem', color: 'white' }} />
               </div>
               <div>
                 <h2 style={{
-                  fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+                  fontSize: '1.5rem',
                   fontWeight: '800',
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  marginBottom: '0.5rem'
+                  color: '#6941db',
+                  lineHeight: '1.2',
+                  margin: 0
                 }}>
                   Classes Management
                 </h2>
                 <p style={{
                   fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  color: '#6941db',
                   margin: 0,
                   fontWeight: '600'
                 }}>
@@ -220,68 +230,26 @@ const Classes = () => {
             </div>
 
             <div className="d-flex gap-2 flex-wrap">
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={() => handleShowModal('add')}
-                style={{
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(126, 34, 206, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-purple"
               >
                 <FaPlus /> Add Class
-              </MotionButton>
+              </Button>
 
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={onImportClick}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-green"
               >
                 <FaFileImport /> Import
-              </MotionButton>
+              </Button>
 
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={exportCSV}
-                style={{
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-blue"
               >
                 <FaFileExport /> Export
-              </MotionButton>
+              </Button>
 
               <input
                 type="file"
@@ -293,31 +261,23 @@ const Classes = () => {
             </div>
           </motion.div>
 
-          {/* Search and Filter Card */}
-          <Card
-            style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              border: 'none',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(126, 34, 206, 0.1)',
-              marginBottom: '1.5rem',
-              padding: '1.5rem',
-              position: 'relative',
-              zIndex: 100
-            }}
+          {/* Search and Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-4"
+            style={{ position: 'relative', zIndex: 100 }}
           >
-            <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
-              <InputGroup style={{ flex: 1, maxWidth: '100%' }}>
-                <InputGroup.Text
-                  style={{
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    border: 'none',
-                    borderRadius: '12px 0 0 12px',
-                    color: 'white',
-                    padding: '0.75rem 1rem'
-                  }}
-                >
+            <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 mb-3">
+              <InputGroup style={{ flex: 1 }}>
+                <InputGroup.Text style={{
+                  background: 'rgba(79, 70, 229, 0.12)',
+                  border: '1px solid rgba(79, 70, 229, 0.25)',
+                  borderRadius: '12px 0 0 12px',
+                  color: '#4338CA',
+                  padding: '0.75rem 1rem'
+                }}>
                   <FaSearch />
                 </InputGroup.Text>
                 <Form.Control
@@ -325,198 +285,243 @@ const Classes = () => {
                   placeholder="Search by degree/program..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input-gradient"
                   style={{
-                    border: '2px solid #e5e7eb',
-                    borderLeft: 'none',
+                    border: '2px solid rgba(105, 65, 219, 0.2)',
                     borderRadius: '0 12px 12px 0',
                     padding: '0.75rem 1rem',
                     fontSize: '0.9rem',
+                    outline: 'none',
                     transition: 'all 0.3s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.border = '2px solid';
-                    e.target.style.borderImage = 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%) 1';
-                    e.target.style.borderLeft = 'none';
+                    e.target.style.border = '2px solid transparent';
+                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #6941db 0%, #3b82f6 100%)';
+                    e.target.style.backgroundOrigin = 'border-box';
+                    e.target.style.backgroundClip = 'padding-box, border-box';
                   }}
                   onBlur={(e) => {
-                    e.target.style.border = '2px solid #e5e7eb';
-                    e.target.style.borderImage = 'none';
+                    e.target.style.border = '2px solid rgba(105, 65, 219, 0.2)';
+                    e.target.style.backgroundImage = 'none';
                   }}
                 />
               </InputGroup>
-
-              <div className="position-relative">
-                <MotionButton
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowFilterMenu(s => !s)}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.1), rgba(59, 130, 246, 0.1))',
-                    border: '1px solid rgba(126, 34, 206, 0.2)',
-                    borderRadius: '12px',
-                    padding: '0.75rem 1.5rem',
-                    fontWeight: '600',
-                    color: '#7e22ce',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    minWidth: '140px',
-                    justifyContent: 'center',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  <FaFilter /> Filter
-                </MotionButton>
-
-                <AnimatePresence>
-                  {showFilterMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Card
-                        style={{
-                          position: 'absolute',
-                          right: 0,
-                          top: 'calc(100% + 0.5rem)',
-                          zIndex: 9999,
-                          minWidth: '280px',
-                          background: 'rgba(255, 255, 255, 0.95)',
-                          backdropFilter: 'blur(20px)',
-                          border: '1px solid rgba(139, 92, 246, 0.2)',
-                          borderRadius: '16px',
-                          boxShadow: '0 10px 40px rgba(126, 34, 206, 0.2)'
-                        }}
-                      >
-                        <Card.Body className="p-3">
-                          <h6 style={{
-                            fontSize: '0.875rem',
-                            fontWeight: '700',
-                            background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            marginBottom: '1rem'
-                          }}>
-                            Filter Classes
-                          </h6>
-
-                          <Form.Group className="mb-2">
-                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Session</Form.Label>
-                            <Form.Select
-                              size="sm"
-                              value={filters.session}
-                              onChange={(e) => setFilters({ ...filters, session: e.target.value })}
-                              style={{
-                                borderRadius: '8px',
-                                border: '1px solid rgba(139, 92, 246, 0.2)',
-                                fontSize: '0.875rem',
-                                padding: '0.5rem'
-                              }}
-                            >
-                              <option value="All">All Sessions</option>
-                              <option value="Fall">Fall</option>
-                              <option value="Spring">Spring</option>
-                            </Form.Select>
-                          </Form.Group>
-
-                          <Form.Group className="mb-2">
-                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Section</Form.Label>
-                            <Form.Select
-                              size="sm"
-                              value={filters.section}
-                              onChange={(e) => setFilters({ ...filters, section: e.target.value })}
-                              style={{
-                                borderRadius: '8px',
-                                border: '1px solid rgba(139, 92, 246, 0.2)',
-                                fontSize: '0.875rem',
-                                padding: '0.5rem'
-                              }}
-                            >
-                              <option value="All">All Sections</option>
-                              <option value="">None</option>
-                              <option value="A">A</option>
-                              <option value="B">B</option>
-                            </Form.Select>
-                          </Form.Group>
-
-                          <Form.Group className="mb-2">
-                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Year</Form.Label>
-                            <Form.Control
-                              size="sm"
-                              type="text"
-                              placeholder="e.g., 2024"
-                              value={filters.year}
-                              onChange={(e) => setFilters({ ...filters, year: e.target.value })}
-                              style={{
-                                borderRadius: '8px',
-                                border: '1px solid rgba(139, 92, 246, 0.2)',
-                                fontSize: '0.875rem',
-                                padding: '0.5rem'
-                              }}
-                            />
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Semester/Rank</Form.Label>
-                            <Form.Control
-                              size="sm"
-                              type="text"
-                              placeholder="e.g., 1, 2, 3..."
-                              value={filters.rank}
-                              onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
-                              style={{
-                                borderRadius: '8px',
-                                border: '1px solid rgba(139, 92, 246, 0.2)',
-                                fontSize: '0.875rem',
-                                padding: '0.5rem'
-                              }}
-                            />
-                          </Form.Group>
-
-                          <div className="d-flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => setFilters({ session: 'All', section: 'All', year: '', rank: '' })}
-                              style={{
-                                flex: 1,
-                                borderRadius: '8px',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                padding: '0.5rem',
-                                background: 'rgba(239, 68, 68, 0.1)',
-                                border: '1px solid rgba(239, 68, 68, 0.3)',
-                                color: '#dc2626'
-                              }}
-                            >
-                              Clear
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => setShowFilterMenu(false)}
-                              style={{
-                                flex: 1,
-                                borderRadius: '8px',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                padding: '0.5rem',
-                                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                border: 'none',
-                                color: 'white'
-                              }}
-                            >
-                              Apply
-                            </Button>
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <MotionButton
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowFilterMenu(s => !s)}
+                style={{
+                  background: showFilterMenu ? '#6941db' : 'linear-gradient(135deg, rgba(105, 65, 219, 0.1), rgba(59, 130, 246, 0.1))',
+                  border: '2px solid rgba(105, 65, 219, 0.2)',
+                  borderRadius: '12px',
+                  padding: '0.75rem 1.5rem',
+                  fontWeight: 400,
+                  color: showFilterMenu ? 'white' : '#6941db',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <FaFilter /> Filter
+              </MotionButton>
             </div>
-          </Card>
+
+            <AnimatePresence>
+              {showFilterMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                >
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '12px',
+                    border: '2px solid rgba(105, 65, 219, 0.2)',
+                    padding: '1.25rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <div className="row g-3">
+                      <div className="col-md-3">
+                        <label style={{ 
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#6941db',
+                          marginBottom: '0.5rem',
+                          display: 'block'
+                        }}>
+                          Session
+                        </label>
+                        <Form.Select
+                          value={filters.session}
+                          onChange={(e) => setFilters({ ...filters, session: e.target.value })}
+                          style={{
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6941db';
+                            e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
+                          <option value="All">All Sessions</option>
+                          <option value="Fall">Fall</option>
+                          <option value="Spring">Spring</option>
+                        </Form.Select>
+                      </div>
+
+                      <div className="col-md-3">
+                        <label style={{ 
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#6941db',
+                          marginBottom: '0.5rem',
+                          display: 'block'
+                        }}>
+                          Section
+                        </label>
+                        <Form.Select
+                          value={filters.section}
+                          onChange={(e) => setFilters({ ...filters, section: e.target.value })}
+                          style={{
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6941db';
+                            e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
+                          <option value="All">All Sections</option>
+                          <option value="">None</option>
+                          <option value="A">A</option>
+                          <option value="B">B</option>
+                        </Form.Select>
+                      </div>
+
+                      <div className="col-md-2">
+                        <label style={{ 
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#6941db',
+                          marginBottom: '0.5rem',
+                          display: 'block'
+                        }}>
+                          Year
+                        </label>
+                        <Form.Control
+                          type="text"
+                          placeholder="e.g., 2024"
+                          value={filters.year}
+                          onChange={(e) => setFilters({ ...filters, year: e.target.value })}
+                          style={{
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            transition: 'all 0.3s ease',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6941db';
+                            e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        />
+                      </div>
+
+                      <div className="col-md-2">
+                        <label style={{ 
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#6941db',
+                          marginBottom: '0.5rem',
+                          display: 'block'
+                        }}>
+                          Semester
+                        </label>
+                        <Form.Control
+                          type="text"
+                          placeholder="e.g., 1, 2..."
+                          value={filters.rank}
+                          onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
+                          style={{
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            transition: 'all 0.3s ease',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6941db';
+                            e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        />
+                      </div>
+
+                      <div className="col-md-2 d-flex align-items-end">
+                        <MotionButton 
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setFilters({ session: 'All', section: 'All', year: '', rank: '' })}
+                          style={{
+                            background: 'transparent',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            color: '#6941db',
+                            borderRadius: '12px',
+                            fontWeight: 400,
+                            padding: '0.75rem 0.875rem',
+                            fontSize: '0.875rem',
+                            width: '100%'
+                          }}
+                        >
+                          Reset
+                        </MotionButton>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Alerts */}
           <AnimatePresence>
@@ -608,9 +613,9 @@ const Classes = () => {
                 style={{
                   background: 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                  border: '1px solid rgba(105, 65, 219, 0.2)',
                   borderRadius: '16px',
-                  boxShadow: '0 10px 40px rgba(126, 34, 206, 0.15)',
+                  boxShadow: '0 10px 40px rgba(105, 65, 219, 0.15)',
                   marginBottom: '1.5rem',
                   overflow: 'hidden'
                 }}
@@ -619,9 +624,8 @@ const Classes = () => {
                   <h5 style={{
                     fontSize: '1.125rem',
                     fontWeight: '700',
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    background: '#6941db',
+                    color: '#6941db',
                     marginBottom: '1rem'
                   }}>
                     Import Preview ({importPreview.length} classes)
@@ -631,14 +635,14 @@ const Classes = () => {
                       <thead>
                         <tr style={{
                           background: 'rgba(255, 255, 255, 0.5)',
-                          borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
+                          borderBottom: '2px solid rgba(105, 65, 219, 0.2)'
                         }}>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>#</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Degree</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Session</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Section</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Year</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Rank</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>#</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Degree</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Session</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Section</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Year</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Rank</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -741,24 +745,21 @@ const Classes = () => {
               backdropFilter: 'blur(20px)',
               border: 'none',
               borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(126, 34, 206, 0.1)',
+              boxShadow: '0 4px 20px rgba(105, 65, 219, 0.1)',
               overflow: 'hidden'
             }}
           >
             <div style={{ overflowX: 'auto' }}>
               <Table hover responsive style={{ marginBottom: 0 }}>
                 <thead>
-                  <tr style={{
-                    background: 'rgba(255, 255, 255, 0.5)',
-                    borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
-                  }}>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>#</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Degree</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Session</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Section</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Year</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Rank</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce', textAlign: 'center' }}>Actions</th>
+                  <tr>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>#</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Degree</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Session</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Section</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Year</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Rank</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', textAlign: 'center', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -800,92 +801,57 @@ const Classes = () => {
                             }}
                           >
                             <td style={{ padding: '1rem', fontWeight: '500', color: '#6b7280' }}>{index + 1}</td>
-                            <td style={{ padding: '1rem', fontWeight: '600', color: '#374151' }}>{classItem.degree}</td>
+                            <td style={{ padding: '1rem', fontWeight: '400', color: '#374151' }}>{classItem.degree}</td>
                             <td style={{ padding: '1rem' }}>
-                              <Badge
-                                style={{
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600',
-                                  padding: '0.4rem 0.8rem',
-                                  borderRadius: '8px',
-                                  background: classItem.session === 'Fall' ? '#fbbf24' : '#3b82f6',
-                                  color: 'white'
-                                }}
-                              >
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                color: '#374151',
+                                fontWeight: '500'
+                              }}>
+                                {classItem.session === 'Fall' ? (
+                                  <FaLeaf style={{ color: '#000000', fontSize: '1.1rem' }} />
+                                ) : classItem.session === 'Spring' ? (
+                                  <FaSeedling style={{ color: '#000000', fontSize: '1.1rem' }} />
+                                ) : classItem.session === 'Winter' ? (
+                                  <FaSnowflake style={{ color: '#000000', fontSize: '1.1rem' }} />
+                                ) : null}
                                 {classItem.session}
-                              </Badge>
+                              </span>
                             </td>
-                            <td style={{ padding: '1rem' }}>
-                              <Badge
-                                style={{
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600',
-                                  padding: '0.4rem 0.8rem',
-                                  borderRadius: '8px',
-                                  background: classItem.section ? '#6b7280' : '#94a3b8',
-                                  color: 'white'
-                                }}
-                              >
-                                {classItem.section || 'None'}
-                              </Badge>
+                            <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>
+                              {classItem.section ? classItem.section : <FaBan style={{ color: '#000000', fontSize: '1rem' }} />}
                             </td>
                             <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>{classItem.year}</td>
-                            <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>{classItem.rank}</td>
+                            <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>
+                              {classItem.rank}{(() => {
+                                const rank = parseInt(classItem.rank);
+                                if (isNaN(rank)) return '';
+                                const lastDigit = rank % 10;
+                                const lastTwoDigits = rank % 100;
+                                if (lastTwoDigits >= 11 && lastTwoDigits <= 13) return 'th';
+                                if (lastDigit === 1) return 'st';
+                                if (lastDigit === 2) return 'nd';
+                                if (lastDigit === 3) return 'rd';
+                                return 'th';
+                              })()}
+                            </td>
                             <td style={{ padding: '1rem' }}>
                               <div className="d-flex gap-2 justify-content-center">
-                                <MotionButton
-                                  whileHover={{
-                                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                    color: 'white',
-                                    borderColor: '#7e22ce',
-                                    scale: 1.1, y: -2
-                                  }}
-                                  whileTap={{ scale: 0.95 }}
+                                <Button
                                   onClick={() => handleShowModal('edit', classItem)}
-                                  style={{
-                                    background: 'transparent',
-                                    border: '2px solid #7e22ce',
-                                    borderRadius: '10px',
-                                    padding: '0.5rem 1rem',
-                                    color: '#7e22ce',
-                                    fontWeight: 600,
-                                    fontSize: '0.875rem',
-                                    boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    transition: 'all 0.2s'
-                                  }}
+                                  className="table-action-btn table-action-edit"
                                 >
                                   <FaEdit /> Edit
-                                </MotionButton>
+                                </Button>
 
-                                <MotionButton
-                                  whileHover={{
-                                    background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
-                                    color: 'white',
-                                    borderColor: '#942f04',
-                                    scale: 1.1, y: -2
-                                  }}
-                                  whileTap={{ scale: 0.95 }}
+                                <Button
                                   onClick={() => handleDelete(classItem._id)}
-                                  style={{
-                                    background: 'transparent',
-                                    border: '2px solid #942f04',
-                                    borderRadius: '10px',
-                                    padding: '0.5rem 1rem',
-                                    color: '#942f04',
-                                    fontWeight: 600,
-                                    fontSize: '0.875rem',
-                                    boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    transition: 'all 0.2s'
-                                  }}
+                                  className="table-action-btn table-action-delete"
                                 >
                                   <FaTrash /> Delete
-                                </MotionButton>
+                                </Button>
                               </div>
                             </td>
                           </MotionTr>
@@ -906,12 +872,29 @@ const Classes = () => {
         centered
         style={{ zIndex: 10000 }}
       >
+        <style>{`
+          .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 1;
+          }
+          .modal-header .btn-close:hover {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+          }
+        `}</style>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
+        >
         <Modal.Header
           closeButton
           style={{
-            background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+            background: '#6941db',
             border: 'none',
-            borderRadius: '16px 16px 0 0'
+            borderRadius: '16px 16px 0 0',
+            padding: '0.75rem 1rem'
           }}
         >
           <Modal.Title style={{ color: 'white', fontWeight: '700', fontSize: '1.25rem' }}>
@@ -922,7 +905,8 @@ const Classes = () => {
           style={{
             background: 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(20px)',
-            padding: '2rem'
+            padding: '2rem',
+            overflow: 'visible'
           }}
         >
           <AnimatePresence>
@@ -987,13 +971,13 @@ const Classes = () => {
                 required
                 style={{
                   borderRadius: '10px',
-                  border: '2px solid rgba(139, 92, 246, 0.2)',
+                  border: '2px solid rgba(105, 65, 219, 0.2)',
                   padding: '0.75rem 1rem',
                   fontSize: '0.875rem',
                   transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(139, 92, 246, 0.2)'}
+                onFocus={(e) => e.target.style.borderColor = '#6941db'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)'}
               />
             </Form.Group>
 
@@ -1003,24 +987,74 @@ const Classes = () => {
                   <Form.Label style={{ fontWeight: '600', color: '#374151', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
                     Session
                   </Form.Label>
-                  <Form.Select
-                    value={currentClass.session}
-                    onChange={(e) => setCurrentClass({ ...currentClass, session: e.target.value })}
-                    required
-                    style={{
-                      borderRadius: '10px',
-                      border: '2px solid rgba(139, 92, 246, 0.2)',
-                      padding: '0.75rem 1rem',
-                      fontSize: '0.875rem',
-                      transition: 'all 0.3s ease',
-                      color: '#000'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(139, 92, 246, 0.2)'}
-                  >
-                    <option value="Fall">Fall</option>
-                    <option value="Spring">Spring</option>
-                  </Form.Select>
+                  <div style={{ position: 'relative' }}>
+                    <motion.div
+                      whileHover={{ borderColor: '#6941db' }}
+                      onClick={() => setSessionDropdownOpen(!sessionDropdownOpen)}
+                      style={{
+                        background: 'white',
+                        borderRadius: '10px',
+                        border: '2px solid rgba(105, 65, 219, 0.2)',
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#1f2937',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      <span>{currentClass.session}</span>
+                      <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>▼</span>
+                    </motion.div>
+                    <AnimatePresence>
+                      {sessionDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 0.5rem)',
+                            left: 0,
+                            right: 0,
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                            zIndex: 1000,
+                            maxHeight: '200px',
+                            overflowY: 'auto'
+                          }}
+                        >
+                          {['Fall', 'Spring'].map((session) => (
+                            <motion.div
+                              key={session}
+                              whileHover={{ background: 'linear-gradient(135deg, rgba(105, 65, 219, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)', color: '#6941db' }}
+                              onClick={() => {
+                                setCurrentClass({ ...currentClass, session });
+                                setSessionDropdownOpen(false);
+                              }}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                color: currentClass.session === session ? '#6941db' : '#1f2937',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                background: currentClass.session === session ? 'rgba(105, 65, 219, 0.05)' : 'transparent'
+                              }}
+                            >
+                              {session}
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </Form.Group>
               </Col>
               <Col md={6}>
@@ -1028,24 +1062,74 @@ const Classes = () => {
                   <Form.Label style={{ fontWeight: '600', color: '#374151', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
                     Section
                   </Form.Label>
-                  <Form.Select
-                    value={currentClass.section}
-                    onChange={(e) => setCurrentClass({ ...currentClass, section: e.target.value })}
-                    style={{
-                      borderRadius: '10px',
-                      border: '2px solid rgba(139, 92, 246, 0.2)',
-                      padding: '0.75rem 1rem',
-                      fontSize: '0.875rem',
-                      transition: 'all 0.3s ease',
-                      color: '#000'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(139, 92, 246, 0.2)'}
-                  >
-                    <option value="">None (Single Section)</option>
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                  </Form.Select>
+                  <div style={{ position: 'relative' }}>
+                    <motion.div
+                      whileHover={{ borderColor: '#6941db' }}
+                      onClick={() => setSectionDropdownOpen(!sectionDropdownOpen)}
+                      style={{
+                        background: 'white',
+                        borderRadius: '10px',
+                        border: '2px solid rgba(105, 65, 219, 0.2)',
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#1f2937',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      <span>{currentClass.section || 'None (Single Section)'}</span>
+                      <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>▼</span>
+                    </motion.div>
+                    <AnimatePresence>
+                      {sectionDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 0.5rem)',
+                            left: 0,
+                            right: 0,
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                            zIndex: 1000,
+                            maxHeight: '200px',
+                            overflowY: 'auto'
+                          }}
+                        >
+                          {[{ value: '', label: 'None (Single Section)' }, { value: 'A', label: 'A' }, { value: 'B', label: 'B' }, { value: 'C', label: 'C' }, { value: 'D', label: 'D' }].map((section) => (
+                            <motion.div
+                              key={section.value}
+                              whileHover={{ background: 'linear-gradient(135deg, rgba(105, 65, 219, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)', color: '#6941db' }}
+                              onClick={() => {
+                                setCurrentClass({ ...currentClass, section: section.value });
+                                setSectionDropdownOpen(false);
+                              }}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                color: currentClass.section === section.value ? '#6941db' : '#1f2937',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                background: currentClass.section === section.value ? 'rgba(105, 65, 219, 0.05)' : 'transparent'
+                              }}
+                            >
+                              {section.label}
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </Form.Group>
               </Col>
             </Row>
@@ -1064,13 +1148,13 @@ const Classes = () => {
                     required
                     style={{
                       borderRadius: '10px',
-                      border: '2px solid rgba(139, 92, 246, 0.2)',
+                      border: '2px solid rgba(105, 65, 219, 0.2)',
                       padding: '0.75rem 1rem',
                       fontSize: '0.875rem',
                       transition: 'all 0.3s ease'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(139, 92, 246, 0.2)'}
+                    onFocus={(e) => e.target.style.borderColor = '#6941db'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)'}
                   />
                 </Form.Group>
               </Col>
@@ -1089,13 +1173,13 @@ const Classes = () => {
                     required
                     style={{
                       borderRadius: '10px',
-                      border: '2px solid rgba(139, 92, 246, 0.2)',
+                      border: '2px solid rgba(105, 65, 219, 0.2)',
                       padding: '0.75rem 1rem',
                       fontSize: '0.875rem',
                       transition: 'all 0.3s ease'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(139, 92, 246, 0.2)'}
+                    onFocus={(e) => e.target.style.borderColor = '#6941db'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)'}
                   />
                 </Form.Group>
               </Col>
@@ -1103,35 +1187,45 @@ const Classes = () => {
 
             <div className="d-flex justify-content-end gap-2 mt-4">
               <MotionButton
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ 
+                  background: '#ffffff',
+                  color: '#6b7280',
+                  borderColor: '#6b7280'
+                }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.15 }}
                 type="button"
                 onClick={handleCloseModal}
                 style={{
-                  background: 'rgba(107, 114, 128, 0.1)',
-                  border: '1px solid rgba(107, 114, 128, 0.3)',
-                  borderRadius: '10px',
-                  padding: '0.625rem 1.5rem',
-                  color: '#6b7280',
-                  fontWeight: '600',
+                  background: '#6b7280',
+                  border: '2px solid #6b7280',
+                  borderRadius: '12px',
+                  padding: '0.5rem 1rem',
+                  color: '#ffffff',
+                  fontWeight: 600,
                   fontSize: '0.875rem'
                 }}
               >
                 Cancel
               </MotionButton>
               <MotionButton
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ 
+                  background: '#fff',
+                  color: '#6941db',
+                  border: '2px solid #6941db'
+                }}
                 whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.15 }}
                 type="submit"
                 style={{
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '0.625rem 1.5rem',
+                  background: '#6941db',
+                  border: '2px solid #6941db',
+                  borderRadius: '12px',
+                  padding: '0.5rem 1rem',
                   color: 'white',
-                  fontWeight: '600',
+                  fontWeight: 600,
                   fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
+                  boxShadow: '0 2px 8px rgba(105, 65, 219, 0.08)'
                 }}
               >
                 {modalMode === 'add' ? 'Add Class' : 'Update Class'}
@@ -1139,6 +1233,7 @@ const Classes = () => {
             </div>
           </Form>
         </Modal.Body>
+        </motion.div>
       </Modal>
     </>
   );

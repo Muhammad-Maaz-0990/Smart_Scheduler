@@ -65,22 +65,42 @@ const Sidebar = ({ activeMenu }) => {
           ? (instituteRef._id || instituteRef.instituteID || instituteRef)
           : instituteRef;
         if (!instituteParam) return;
+        
+        // Check cache first
+        const cacheKey = `institute_${instituteParam}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            setInstituteInfo(JSON.parse(cached));
+            return;
+          } catch {}
+        }
+        
         const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(instituteParam)}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
           const data = await response.json();
           setInstituteInfo(data);
+          // Cache the result
+          try {
+            sessionStorage.setItem(cacheKey, JSON.stringify(data));
+          } catch {}
         }
       } catch (err) {
         console.error('Failed to fetch institute info:', err);
       }
     };
 
-    if (user?.instituteID) {
+    const instituteRef = user?.instituteID;
+    const instituteParam = typeof instituteRef === 'object'
+      ? (instituteRef._id || instituteRef.instituteID || instituteRef)
+      : instituteRef;
+    
+    if (instituteParam) {
       fetchInstituteInfo();
     }
-  }, [user]);
+  }, [user?.instituteID]);
 
   useEffect(() => {
     const body = document.body;
@@ -238,11 +258,7 @@ const Sidebar = ({ activeMenu }) => {
                     <FaClockIcon style={{ fontSize: 28, color: 'white' }} />
                   </motion.div>
                   {showLabels && (
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
+                    <div>
                       <div style={{ fontWeight: 800, fontSize: 18, color: '#111827', letterSpacing: '-0.5px' }}>
                         Smart Scheduler
                       </div>
@@ -256,7 +272,7 @@ const Sidebar = ({ activeMenu }) => {
                       }}>
                         Owner Panel
                       </div>
-                    </motion.div>
+                    </div>
                   )}
                 </div>
               ) : (
@@ -293,11 +309,7 @@ const Sidebar = ({ activeMenu }) => {
                     )}
                   </motion.div>
                   {showLabels && (
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
+                    <div>
                       <div style={{
                         fontWeight: 800,
                         fontSize: 18,
@@ -320,7 +332,7 @@ const Sidebar = ({ activeMenu }) => {
                       }}>
                         {role}
                       </div>
-                    </motion.div>
+                    </div>
                   )}
                 </div>
               )}

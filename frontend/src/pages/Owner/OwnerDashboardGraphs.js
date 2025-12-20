@@ -100,8 +100,8 @@ const OwnerDashboardGraphs = () => {
             backdropFilter: 'blur(10px)'
           }}>
             <Card.Header style={{
-              background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
-              color: '#fff',
+              background: 'rgba(79, 70, 229, 0.12)',
+              color: '#4338CA',
               fontWeight: 700,
               fontSize: '0.95rem',
               padding: '14px 20px',
@@ -133,8 +133,8 @@ const OwnerDashboardGraphs = () => {
             backdropFilter: 'blur(10px)'
           }}>
             <Card.Header style={{
-              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-              color: '#fff',
+              background: 'rgba(79, 70, 229, 0.12)',
+              color: '#4338CA',
               fontWeight: 700,
               fontSize: '0.95rem',
               padding: '14px 20px',
@@ -166,8 +166,8 @@ const OwnerDashboardGraphs = () => {
             backdropFilter: 'blur(10px)'
           }}>
             <Card.Header style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: '#fff',
+              background: 'rgba(79, 70, 229, 0.12)',
+              color: '#4338CA',
               fontWeight: 700,
               fontSize: '0.95rem',
               padding: '14px 20px',

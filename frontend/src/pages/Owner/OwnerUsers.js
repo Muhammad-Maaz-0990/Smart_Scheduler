@@ -14,7 +14,7 @@ import {
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 const OwnerUsers = () => {
   const { user } = useAuth();
@@ -621,8 +621,8 @@ const OwnerUsers = () => {
                   backdropFilter: 'blur(10px)'
                 }}>
                   <Card.Header style={{
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                    color: '#fff',
+                    background: 'rgba(79, 70, 229, 0.12)',
+                    color: '#4338CA',
                     fontWeight: 700,
                     fontSize: '0.95rem',
                     borderTopLeftRadius: '12px',

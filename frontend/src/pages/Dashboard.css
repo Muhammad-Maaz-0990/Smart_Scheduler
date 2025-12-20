@@ -887,6 +887,8 @@ div[style*="marginLeft: '250px'"] {
 .modal-content {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px !important;
+  overflow: hidden;
 }
 
 .modal-header, .modal-body, .modal-footer {
@@ -959,4 +961,128 @@ div[style*="marginLeft: '250px'"] {
     font-size: 0.875rem;
     padding: 0.75rem;
   }
+}
+/* Optimized Action Buttons with CSS Hover for Better Performance */
+.action-btn {
+  padding: 0.625rem 1.25rem !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  will-change: background-color, color, border-color, transform;
+  backface-visibility: hidden;
+  box-shadow: none !important;
+}
+
+.action-btn-purple {
+  background: #6941db !important;
+  border: 2px solid #6941db !important;
+  color: #fff !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+}
+
+.action-btn-purple:hover,
+.action-btn-purple:focus,
+.action-btn-purple:active {
+  background: #fff !important;
+  color: #6941db !important;
+  border-color: #6941db !important;
+  box-shadow: none !important;
+  transform: scale(1.05);
+}
+
+.action-btn-green {
+  background: #10b981 !important;
+  border: 2px solid #10b981 !important;
+  color: #fff !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+}
+
+.action-btn-green:hover,
+.action-btn-green:focus,
+.action-btn-green:active {
+  background: #fff !important;
+  color: #10b981 !important;
+  border-color: #10b981 !important;
+  box-shadow: none !important;
+  transform: scale(1.05);
+}
+
+.action-btn-blue {
+  background: #3b82f6 !important;
+  border: 2px solid #3b82f6 !important;
+  color: #fff !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+}
+
+.action-btn-blue:hover,
+.action-btn-blue:focus,
+.action-btn-blue:active {
+  background: #fff !important;
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  box-shadow: none !important;
+  transform: scale(1.05);
+}
+
+.action-btn:active {
+  transform: scale(0.97) !important;
+}
+
+/* Table Action Buttons (Edit/Delete) */
+.table-action-btn {
+  border-radius: 12px !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  will-change: background-color, color, border-color, transform;
+  backface-visibility: hidden;
+}
+
+.table-action-edit {
+  background: rgba(0, 0, 0, 0) !important;
+  border: 2px solid #6941db !important;
+  color: #6941db !important;
+  box-shadow: none !important;
+}
+
+.table-action-edit:hover,
+.table-action-edit:focus,
+.table-action-edit:active {
+  background: #6941db !important;
+  color: #ffffff !important;
+  border-color: #6941db !important;
+  box-shadow: none !important;
+  transform: scale(1.05);
+}
+
+.table-action-delete {
+  background: rgba(0, 0, 0, 0) !important;
+  border: 2px solid #ef4444 !important;
+  color: #ef4444 !important;
+  box-shadow: none !important;
+}
+
+.table-action-delete:hover,
+.table-action-delete:focus,
+.table-action-delete:active {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+  box-shadow: none !important;
+  transform: scale(1.05);
+}
+
+.table-action-btn:active {
+  transform: scale(0.97) !important;
 }

@@ -8,8 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
-const MotionCard = motion(Card);
-const MotionButton = motion(Button);
+const MotionCard = motion.create(Card);
+const MotionButton = motion.create(Button);
 const MotionTr = motion.tr;
 
 const Courses = () => {
@@ -70,6 +70,10 @@ const Courses = () => {
     } else {
       setCurrentCourse({ courseCode: '', courseTitle: '', courseType: 'Theory', creditHours: 3 });
     }
+    // Remove focus from button immediately when opening modal
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
     setShowModal(true);
     setError('');
     setSuccess('');
@@ -79,6 +83,12 @@ const Courses = () => {
     setShowModal(false);
     setCurrentCourse({ courseCode: '', courseTitle: '', courseType: 'Theory', creditHours: 3 });
     setError('');
+    // Remove focus from button to reset hover state
+    setTimeout(() => {
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+    }, 0);
   };
 
   const handleSubmit = async (e) => {
@@ -177,7 +187,7 @@ const Courses = () => {
       <Sidebar activeMenu="courses" />
       <div className="dashboard-page">
         {/* Animated Background */}
-        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(126, 34, 206, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(105, 65, 219, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
         <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%)', animation: 'float 15s ease-in-out infinite reverse' }}></div>
 
         <Container fluid className="dashboard-content">
@@ -188,35 +198,33 @@ const Courses = () => {
             className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
             style={{ paddingTop: '1rem' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
               <div style={{
                 width: '50px',
                 height: '50px',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                background: '#6941db',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
+                boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
+                flexShrink: 0
               }}>
                 <FaBook style={{ fontSize: '1.5rem', color: 'white' }} />
               </div>
               <div>
                 <h2 style={{
-                  fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+                  fontSize: '1.5rem',
                   fontWeight: '800',
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  marginBottom: '0.5rem'
+                  color: '#6941db',
+                  lineHeight: '1.2',
+                  margin: 0
                 }}>
                   Courses Management
                 </h2>
                 <p style={{
                   fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  color: '#6941db',
                   margin: 0,
                   fontWeight: '600'
                 }}>
@@ -226,68 +234,26 @@ const Courses = () => {
             </div>
             
             <div className="d-flex gap-2 flex-wrap">
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={() => handleShowModal('add')}
-                style={{
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(126, 34, 206, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-purple"
               >
                 <FaPlus /> Add Course
-              </MotionButton>
+              </Button>
               
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={onImportClick}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-green"
               >
                 <FaFileImport /> Import
-              </MotionButton>
+              </Button>
               
-              <MotionButton
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
                 onClick={exportCSV}
-                style={{
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  border: 'none',
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="action-btn action-btn-blue"
               >
                 <FaFileExport /> Export
-              </MotionButton>
+              </Button>
               
               <input 
                 type="file" 
@@ -299,31 +265,23 @@ const Courses = () => {
             </div>
           </motion.div>
 
-          {/* Search and Filter Card */}
-          <Card
-            style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              border: 'none',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(126, 34, 206, 0.1)',
-              marginBottom: '1.5rem',
-              padding: '1.5rem',
-              position: 'relative',
-              zIndex: 100
-            }}
+          {/* Search and Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-4"
+            style={{ position: 'relative', zIndex: 100 }}
           >
-            <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
-              <InputGroup style={{ flex: 1, maxWidth: '100%' }}>
-                <InputGroup.Text 
-                  style={{
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    border: 'none',
-                    borderRadius: '12px 0 0 12px',
-                    color: 'white',
-                    padding: '0.75rem 1rem'
-                  }}
-                >
+            <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 mb-3">
+              <InputGroup style={{ flex: 1 }}>
+                <InputGroup.Text style={{
+                  background: 'rgba(79, 70, 229, 0.12)',
+                  border: '1px solid rgba(79, 70, 229, 0.25)',
+                  borderRadius: '12px 0 0 12px',
+                  color: '#4338CA',
+                  padding: '0.75rem 1rem'
+                }}>
                   <FaSearch />
                 </InputGroup.Text>
                 <Form.Control
@@ -331,161 +289,165 @@ const Courses = () => {
                   placeholder="Search by course code or title..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input-gradient"
                   style={{
-                    border: '2px solid #e5e7eb',
-                    borderLeft: 'none',
+                    border: '2px solid rgba(105, 65, 219, 0.2)',
                     borderRadius: '0 12px 12px 0',
                     padding: '0.75rem 1rem',
                     fontSize: '0.9rem',
+                    outline: 'none',
                     transition: 'all 0.3s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.border = '2px solid';
-                    e.target.style.borderImage = 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%) 1';
-                    e.target.style.borderLeft = 'none';
+                    e.target.style.border = '2px solid transparent';
+                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #6941db 0%, #3b82f6 100%)';
+                    e.target.style.backgroundOrigin = 'border-box';
+                    e.target.style.backgroundClip = 'padding-box, border-box';
                   }}
                   onBlur={(e) => {
-                    e.target.style.border = '2px solid #e5e7eb';
-                    e.target.style.borderImage = 'none';
+                    e.target.style.border = '2px solid rgba(105, 65, 219, 0.2)';
+                    e.target.style.backgroundImage = 'none';
                   }}
                 />
               </InputGroup>
-
-              <div className="position-relative">
-                <MotionButton
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowFilterMenu(s => !s)}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.1), rgba(59, 130, 246, 0.1))',
-                    border: '1px solid rgba(126, 34, 206, 0.2)',
-                    borderRadius: '12px',
-                    padding: '0.75rem 1.5rem',
-                    fontWeight: '600',
-                    color: '#7e22ce',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    minWidth: '140px',
-                    justifyContent: 'center',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  <FaFilter /> Filter
-                </MotionButton>
-                
-                <AnimatePresence>
-                  {showFilterMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Card
-                        style={{
-                          position: 'absolute',
-                          right: 0,
-                          top: 'calc(100% + 0.5rem)',
-                          zIndex: 9999,
-                          minWidth: '280px',
-                          background: 'rgba(255, 255, 255, 0.95)',
-                          backdropFilter: 'blur(20px)',
-                          border: '1px solid rgba(139, 92, 246, 0.2)',
-                          borderRadius: '16px',
-                          boxShadow: '0 10px 40px rgba(126, 34, 206, 0.2)'
-                        }}
-                      >
-                        <Card.Body className="p-3">
-                          <h6 style={{
-                            fontSize: '0.875rem',
-                            fontWeight: '700',
-                            background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            marginBottom: '1rem'
-                          }}>
-                            Filter Courses
-                          </h6>
-                          
-                          <Form.Group className="mb-2">
-                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Type</Form.Label>
-                            <Form.Select
-                              size="sm"
-                              value={filters.type || ''}
-                              onChange={e => { setFilters({ ...filters, type: e.target.value }); e.target.blur(); }}
-                              style={{
-                                borderRadius: '8px',
-                                border: '1px solid rgba(139, 92, 246, 0.2)',
-                                fontSize: '0.875rem',
-                                padding: '0.5rem'
-                              }}
-                            >
-                              <option value="All">All Types</option>
-                              <option value="Theory">Theory</option>
-                              <option value="Lab">Lab</option>
-                            </Form.Select>
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', marginBottom: '0.25rem' }}>Credit Hours</Form.Label>
-                            <Form.Control
-                              size="sm"
-                              type="text"
-                              placeholder="e.g., 3"
-                              value={filters.creditHours}
-                              onChange={(e) => setFilters({ ...filters, creditHours: e.target.value })}
-                              style={{
-                                borderRadius: '8px',
-                                border: '1px solid rgba(139, 92, 246, 0.2)',
-                                fontSize: '0.875rem',
-                                padding: '0.5rem'
-                              }}
-                            />
-                          </Form.Group>
-
-                          <div className="d-flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => setFilters({ type: 'All', creditHours: '' })}
-                              style={{
-                                flex: 1,
-                                borderRadius: '8px',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                padding: '0.5rem',
-                                background: 'rgba(239, 68, 68, 0.1)',
-                                border: '1px solid rgba(239, 68, 68, 0.3)',
-                                color: '#dc2626'
-                              }}
-                            >
-                              Clear
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => setShowFilterMenu(false)}
-                              style={{
-                                flex: 1,
-                                borderRadius: '8px',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                padding: '0.5rem',
-                                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                border: 'none',
-                                color: 'white'
-                              }}
-                            >
-                              Apply
-                            </Button>
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <MotionButton
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowFilterMenu(s => !s)}
+                style={{
+                  background: showFilterMenu ? '#6941db' : 'linear-gradient(135deg, rgba(105, 65, 219, 0.1), rgba(59, 130, 246, 0.1))',
+                  border: '2px solid rgba(105, 65, 219, 0.2)',
+                  borderRadius: '12px',
+                  padding: '0.75rem 1.5rem',
+                  fontWeight: 400,
+                  color: showFilterMenu ? 'white' : '#6941db',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <FaFilter /> Filter
+              </MotionButton>
             </div>
-          </Card>
+
+            <AnimatePresence>
+              {showFilterMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                >
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '12px',
+                    border: '2px solid rgba(105, 65, 219, 0.2)',
+                    padding: '1.25rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <label style={{ 
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#6941db',
+                          marginBottom: '0.5rem',
+                          display: 'block'
+                        }}>
+                          Course Type
+                        </label>
+                        <Form.Select
+                          value={filters.type || ''}
+                          onChange={e => { setFilters({ ...filters, type: e.target.value }); }}
+                          style={{
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6941db';
+                            e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
+                          <option value="All">All Types</option>
+                          <option value="Theory">Theory</option>
+                          <option value="Lab">Lab</option>
+                        </Form.Select>
+                      </div>
+
+                      <div className="col-md-4">
+                        <label style={{ 
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#6941db',
+                          marginBottom: '0.5rem',
+                          display: 'block'
+                        }}>
+                          Credit Hours
+                        </label>
+                        <Form.Control
+                          type="text"
+                          placeholder="e.g., 3"
+                          value={filters.creditHours}
+                          onChange={(e) => setFilters({ ...filters, creditHours: e.target.value })}
+                          style={{
+                            background: 'white',
+                            borderRadius: '10px',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            transition: 'all 0.3s ease',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#6941db';
+                            e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'rgba(105, 65, 219, 0.2)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        />
+                      </div>
+
+                      <div className="col-md-4 d-flex align-items-end">
+                        <MotionButton 
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setFilters({ type: 'All', creditHours: '' })}
+                          style={{
+                            background: 'transparent',
+                            border: '2px solid rgba(105, 65, 219, 0.2)',
+                            color: '#6941db',
+                            borderRadius: '12px',
+                            fontWeight: 400,
+                            padding: '0.75rem 0.875rem',
+                            fontSize: '0.875rem',
+                            width: '100%'
+                          }}
+                        >
+                          Reset
+                        </MotionButton>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Alerts */}
           <AnimatePresence>
@@ -577,9 +539,9 @@ const Courses = () => {
                 style={{
                   background: 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                  border: '1px solid rgba(105, 65, 219, 0.2)',
                   borderRadius: '16px',
-                  boxShadow: '0 10px 40px rgba(126, 34, 206, 0.15)',
+                  boxShadow: '0 10px 40px rgba(105, 65, 219, 0.15)',
                   marginBottom: '1.5rem',
                   overflow: 'hidden'
                 }}
@@ -588,9 +550,8 @@ const Courses = () => {
                   <h5 style={{
                     fontSize: '1.125rem',
                     fontWeight: '700',
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    background: '#6941db',
+                    color: '#6941db',
                     marginBottom: '1rem'
                   }}>
                     Import Preview ({importPreview.length} courses)
@@ -600,13 +561,13 @@ const Courses = () => {
                       <thead>
                         <tr style={{ 
                           background: 'rgba(255, 255, 255, 0.5)',
-                          borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
+                          borderBottom: '2px solid rgba(105, 65, 219, 0.2)'
                         }}>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>#</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Course Code</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Course Title</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Type</th>
-                          <th style={{ color: '#7e22ce', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Credit Hours</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>#</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Course Code</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Course Title</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Type</th>
+                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Credit Hours</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -637,7 +598,7 @@ const Courses = () => {
                                   fontWeight: '600',
                                   padding: '0.4rem 0.8rem',
                                   borderRadius: '8px',
-                                  background: r.courseType === 'Lab' ? '#3b82f6' : '#8b5cf6',
+                                  background: r.courseType === 'Lab' ? '#3b82f6' : '#6941db',
                                   color: 'white'
                                 }}>
                                   {r.courseType}
@@ -697,23 +658,20 @@ const Courses = () => {
               backdropFilter: 'blur(20px)',
               border: 'none',
               borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(126, 34, 206, 0.1)',
+              boxShadow: '0 4px 20px rgba(105, 65, 219, 0.1)',
               overflow: 'hidden'
             }}
           >
             <div style={{ overflowX: 'auto' }}>
               <Table hover responsive style={{ marginBottom: 0 }}>
                 <thead>
-                  <tr style={{ 
-                    background: 'rgba(255, 255, 255, 0.5)',
-                    borderBottom: '2px solid rgba(126, 34, 206, 0.2)'
-                  }}>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>#</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Course Code</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Course Title</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Type</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce' }}>Credit Hours</th>
-                    <th style={{ padding: '1rem', fontWeight: 700, color: '#7e22ce', textAlign: 'center' }}>Actions</th>
+                  <tr>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>#</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Course Code</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Course Title</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Type</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Credit Hours</th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', textAlign: 'center', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -756,76 +714,25 @@ const Courses = () => {
                             }}
                           >
                             <td style={{ padding: '1rem', fontWeight: '500', color: '#6b7280' }}>{index + 1}</td>
-                            <td style={{ padding: '1rem', fontWeight: '700', color: '#374151' }}>{course.courseCode}</td>
-                            <td style={{ padding: '1rem', fontWeight: '600', color: '#374151' }}>{course.courseTitle}</td>
-                            <td style={{ padding: '1rem' }}>
-                              <Badge 
-                                style={{ 
-                                  fontSize: '0.75rem',
-                                  fontWeight: '600',
-                                  padding: '0.4rem 0.8rem',
-                                  borderRadius: '8px',
-                                  background: course.courseType === 'Lab' ? '#3b82f6' : '#8b5cf6',
-                                  color: 'white'
-                                }}
-                              >
-                                {course.courseType}
-                              </Badge>
-                            </td>
+                            <td style={{ padding: '1rem', fontWeight: '400', color: '#374151' }}>{course.courseCode}</td>
+                            <td style={{ padding: '1rem', fontWeight: '400', color: '#374151' }}>{course.courseTitle}</td>
+                            <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>{course.courseType}</td>
                             <td style={{ padding: '1rem', color: '#374151', fontWeight: '500' }}>{course.creditHours}</td>
                             <td style={{ padding: '1rem' }}>
                               <div className="d-flex gap-2 justify-content-center">
-                                <MotionButton
-                                  whileHover={{ background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                        color: 'white',
-                                        borderColor: '#7e22ce',
-                                        scale: 1.1, y: -2
-                                      }}
-                                  whileTap={{ scale: 0.95 }}
+                                <Button
                                   onClick={() => handleShowModal('edit', course)}
-                                  style={{
-                                    background: 'transparent',
-                                        border: '2px solid #7e22ce',
-                                        borderRadius: '10px',
-                                        padding: '0.5rem 1rem',
-                                        color: '#7e22ce',
-                                        fontWeight: 600,
-                                        fontSize: '0.875rem',
-                                        boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        transition: 'all 0.2s'
-                                  }}
+                                  className="table-action-btn table-action-edit"
                                 >
                                   <FaEdit /> Edit
-                                </MotionButton>
-                                
-                                <MotionButton
-                                  whileHover={{ background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
-                                        color: 'white',
-                                        borderColor: '#942f04',
-                                        scale: 1.1, y: -2
-                                      }}
-                                  whileTap={{ scale: 0.95 }}
+                                </Button>
+
+                                <Button
                                   onClick={() => handleDelete(course._id)}
-                                  style={{
-                                    background: 'transparent',
-                                        border: '2px solid #942f04',
-                                        borderRadius: '10px',
-                                        padding: '0.5rem 1rem',
-                                        color: '#942f04',
-                                        fontWeight: 600,
-                                        fontSize: '0.875rem',
-                                        boxShadow: '0 4px 12px rgba(236, 72, 153, 0.1)',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        transition: 'all 0.2s'
-                                  }}
+                                  className="table-action-btn table-action-delete"
                                 >
                                   <FaTrash /> Delete
-                                </MotionButton>
+                                </Button>
                               </div>
                             </td>
                           </MotionTr>
@@ -846,22 +753,32 @@ const Courses = () => {
         centered
         backdrop="static"
       >
+        <style>{`
+          .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 1;
+          }
+          .modal-header .btn-close:hover {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+          }
+        `}</style>
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
         >
           <Modal.Header 
             closeButton
             style={{
-              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+              background: '#6941db',
               color: 'white',
               border: 'none',
-              padding: '1.5rem'
+              padding: '0.75rem 1rem'
             }}
           >
-            <Modal.Title style={{ fontWeight: '700', fontSize: '1.5rem' }}>
+            <Modal.Title style={{ fontWeight: '700', fontSize: '1.25rem' }}>
               {modalMode === 'add' ? 'Add New Course' : 'Edit Course'}
             </Modal.Title>
           </Modal.Header>
@@ -905,7 +822,7 @@ const Courses = () => {
                   <Form.Label style={{
                     fontWeight: 600,
                     marginBottom: '0.75rem',
-                    color: '#7e22ce',
+                    color: '#6941db',
                     fontSize: '0.8rem',
                     letterSpacing: '0.01em',
                     lineHeight: 1.2
@@ -929,8 +846,8 @@ const Courses = () => {
                       boxShadow: 'none'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = '#7e22ce';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(126, 34, 206, 0.1)';
+                      e.target.style.borderColor = '#6941db';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = '#e0e0e0';
@@ -949,7 +866,7 @@ const Courses = () => {
                   <Form.Label style={{
                     fontWeight: 600,
                     marginBottom: '0.75rem',
-                    color: '#7e22ce',
+                    color: '#6941db',
                     fontSize: '0.8rem',
                     letterSpacing: '0.01em',
                     lineHeight: 1.2
@@ -973,8 +890,8 @@ const Courses = () => {
                       boxShadow: 'none'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = '#7e22ce';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(126, 34, 206, 0.1)';
+                      e.target.style.borderColor = '#6941db';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = '#e0e0e0';
@@ -995,7 +912,7 @@ const Courses = () => {
                       <Form.Label style={{
                         fontWeight: 600,
                         marginBottom: '0.75rem',
-                        color: '#7e22ce',
+                        color: '#6941db',
                         fontSize: '0.8rem',
                         letterSpacing: '0.01em',
                         lineHeight: 1.2
@@ -1020,8 +937,8 @@ const Courses = () => {
                           border: '1px solid #e0e0e0',
                         }}
                         onFocus={(e) => {
-                          e.target.style.borderColor = '#7e22ce';
-                          e.target.style.boxShadow = '0 0 0 3px rgba(126, 34, 206, 0.1)';
+                          e.target.style.borderColor = '#6941db';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
                         }}
                         onBlur={(e) => {
                           e.target.style.borderColor = '#e0e0e0';
@@ -1044,7 +961,7 @@ const Courses = () => {
                       <Form.Label style={{
                         fontWeight: 600,
                         marginBottom: '0.75rem',
-                        color: '#7e22ce',
+                        color: '#6941db',
                         fontSize: '0.8rem',
                         letterSpacing: '0.01em',
                         lineHeight: 1.2
@@ -1071,8 +988,8 @@ const Courses = () => {
                         }}
                         onFocus={(e) => {
                           if (currentCourse.courseType !== 'Lab') {
-                            e.target.style.borderColor = '#7e22ce';
-                            e.target.style.boxShadow = '0 0 0 3px rgba(126, 34, 206, 0.1)';
+                            e.target.style.borderColor = '#6941db';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
                           }
                         }}
                         onBlur={(e) => {
@@ -1093,19 +1010,24 @@ const Courses = () => {
                 style={{ marginTop: '1.5rem' }}
               >
                 <MotionButton
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ 
+                    background: '#ffffff',
+                    color: '#6b7280',
+                    borderColor: '#6b7280'
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
                   type="button"
                   onClick={handleCloseModal}
                   disabled={submitting}
                   style={{
-                    background: 'transparent',
-                    border: 'none',
+                    background: submitting ? '#9ca3af' : '#6b7280',
+                    border: submitting ? '2px solid #9ca3af' : '2px solid #6b7280',
                     borderRadius: '12px',
-                    padding: '0.875rem 2rem',
-                    color: '#7e22ce',
-                    fontWeight: '600',
-                    fontSize: '1rem',
+                    padding: '0.5rem 1rem',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
                     cursor: submitting ? 'not-allowed' : 'pointer',
                     opacity: submitting ? 0.6 : 1
                   }}
@@ -1113,34 +1035,37 @@ const Courses = () => {
                   Cancel
                 </MotionButton>
                 <MotionButton
-                  whileHover={{ scale: submitting ? 1 : 1.02 }}
+                  whileHover={{ 
+                    background: submitting ? undefined : '#fff',
+                    color: submitting ? undefined : '#6941db',
+                    border: submitting ? undefined : '2px solid #6941db'
+                  }}
                   whileTap={{ scale: submitting ? 1 : 0.98 }}
+                  transition={{ duration: 0.15 }}
                   type="submit"
                   disabled={submitting}
                   style={{
-                    background: submitting 
-                      ? 'linear-gradient(135deg, rgba(126, 34, 206, 0.6) 0%, rgba(59, 130, 246, 0.6) 100%)'
-                      : 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    border: 'none',
+                    background: submitting ? 'rgba(105, 65, 219, 0.6)' : '#6941db',
+                    border: '2px solid #6941db',
                     borderRadius: '12px',
-                    padding: '0.875rem 2.5rem',
+                    padding: '0.5rem 1rem',
                     color: 'white',
-                    fontWeight: '600',
-                    fontSize: '1rem',
-                    boxShadow: submitting ? 'none' : '0 4px 15px rgba(126, 34, 206, 0.4)',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    boxShadow: submitting ? 'none' : '0 2px 8px rgba(105, 65, 219, 0.08)',
                     cursor: submitting ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem',
-                    minWidth: '150px',
+                    gap: '0.5rem',
+                    minWidth: '120px',
                     justifyContent: 'center'
                   }}
                 >
                   {submitting ? (
                     <>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '14px',
+                        height: '14px',
                         border: '2px solid rgba(255, 255, 255, 0.3)',
                         borderTop: '2px solid white',
                         borderRadius: '50%',
