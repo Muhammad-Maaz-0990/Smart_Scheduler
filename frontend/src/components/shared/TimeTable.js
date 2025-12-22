@@ -1317,7 +1317,12 @@ function TimeTable({ isAdmin = false }) {
               boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)'
             }}>
               <Card.Body className="p-3">
-                <p className="mb-0" style={{ color: '#059669', fontWeight: 600 }}>✅ {successMessage}</p>
+                <p className="mb-0" style={{ color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {successMessage}
+                </p>
               </Card.Body>
             </Card>
           </motion.div>
@@ -1401,7 +1406,14 @@ function TimeTable({ isAdmin = false }) {
             backdropFilter: 'blur(10px)'
           }}>
             <Card.Body>
-              <div style={{ fontSize: '3rem', marginBottom: '0.75rem', opacity: 0.3 }}>📅</div>
+              <div style={{ marginBottom: '0.75rem', opacity: 0.3 }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
               <h3 style={{ color: '#6b7280', fontWeight: 600, fontSize: '1.125rem', marginBottom: '0.5rem' }}>No Timetables Found</h3>
               <p style={{ color: '#9ca3af', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
                 {isAdmin ? 'Click Generate to create your first timetable' : 'No timetables available yet'}
@@ -1499,7 +1511,10 @@ function TimeTable({ isAdmin = false }) {
                       justifyContent: 'center',
                       fontSize: '20px'
                     }}>
-                      📚
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                      </svg>
                     </div>
                     <div>
                       <h4 className="mb-1" style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>
@@ -2408,7 +2423,12 @@ function TimetableTables({
           border: '2px dashed rgba(105, 65, 219, 0.2)'
         }}
       >
-        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: 0.3 }}>📋</div>
+        <div style={{ marginBottom: '0.75rem', opacity: 0.3 }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+          </svg>
+        </div>
         <p style={{ color: '#6b7280', fontWeight: 500, fontSize: '0.95rem' }}>No schedule data available</p>
       </motion.div>
     );
