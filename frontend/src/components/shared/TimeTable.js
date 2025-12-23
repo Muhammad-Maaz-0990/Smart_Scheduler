@@ -118,6 +118,7 @@ function TimeTable({ isAdmin = false }) {
     breakAfterLecture: 3,
     breakDuration: 30
   });
+  const [searchQuery, setSearchQuery] = useState(''); // search across course/instructor
 
   // Auto-scroll during drag
   useEffect(() => {
@@ -1390,6 +1391,61 @@ function TimeTable({ isAdmin = false }) {
         </motion.div>
       )}
 
+      {/* Search Box - Show when timetable is selected and not in edit mode */}
+      {selected && !isEditMode && (
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
+          className="mb-4 no-print"
+        >
+          <Card className="glass-effect" style={{
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '16px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <Card.Body className="p-3 p-md-4">
+              <Form.Group>
+                <Form.Label className="mb-2 d-flex align-items-center gap-2" style={{ fontWeight: 600, color: '#374151', fontSize: '0.9rem' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6941db" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                  </svg>
+                  Search Timetable
+                </Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Search by course name or instructor name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    padding: '10px 14px',
+                    fontSize: '0.9rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    backgroundColor: '#fff',
+                    color: '#111827',
+                    fontWeight: 500,
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6941db';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                  }}
+                />
+              </Form.Group>
+            </Card.Body>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Empty State */}
       {items.length === 0 && (
         <motion.div
@@ -1799,6 +1855,7 @@ function TimeTable({ isAdmin = false }) {
                     hoveredCell={hoveredCell}
                     setHoveredCell={setHoveredCell}
                     handleOpenCellModal={handleOpenCellModal}
+                    searchQuery={searchQuery}
                     setEditDetails={(newDetails) => {
                       setEditDetails(newDetails);
                       setRenderKey(prev => prev + 1);
@@ -2409,7 +2466,8 @@ function TimetableTables({
   setSwappingCells = null,
   hoveredCell = null,
   setHoveredCell = null,
-  handleOpenCellModal = null
+  handleOpenCellModal = null,
+  searchQuery = ''
 }) {
   if (!Array.isArray(details) || details.length === 0) {
     return (
@@ -2693,6 +2751,15 @@ function TimetableTables({
                       const row = byKey.get(`${day}|${t}`);
                       const isEmpty = !row || !row.course;
                       
+                      // Check if this cell matches search query
+                      const normalizedSearchQuery = searchQuery.toLowerCase().trim();
+                      const matchesSearch = !isEmpty && normalizedSearchQuery && (
+                        (row.course && row.course.toLowerCase().includes(normalizedSearchQuery)) ||
+                        (row.instructorName && row.instructorName.toLowerCase().includes(normalizedSearchQuery)) ||
+                        (row.teacher && row.teacher.toLowerCase().includes(normalizedSearchQuery)) ||
+                        (expandCourseName(row.course) && expandCourseName(row.course).toLowerCase().includes(normalizedSearchQuery))
+                      );
+                      
                       // Build cell key - for empty cells use trailing |, for filled include course
                       const cellKey = isEmpty 
                         ? `${klass}|${day}|${t}|`
@@ -2754,7 +2821,9 @@ function TimetableTables({
                           }}
                           style={{
                             padding: isEmpty ? '16px' : '14px',
-                            background: isSelected 
+                            background: matchesSearch
+                              ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)'
+                              : isSelected 
                               ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%)'
                               : isSwapping
                               ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%)'
@@ -2764,22 +2833,23 @@ function TimetableTables({
                             borderRight: '1px solid #e5e7eb',
                             borderBottom: '2px solid rgba(105, 65, 219, 0.3)',
                             borderBottomWidth: '2px',
-                            borderBottomColor: isSelected ? '#f59e0b' : isSwapping ? '#10b981' : 'rgba(105, 65, 219, 0.3)',
-                            border: isSelected ? '2px solid #f59e0b' : isSwapping ? '2px solid #10b981' : `1px solid #e5e7eb`,
+                            borderBottomColor: matchesSearch ? '#fbbf24' : isSelected ? '#f59e0b' : isSwapping ? '#10b981' : 'rgba(105, 65, 219, 0.3)',
+                            border: matchesSearch ? '2px solid #fbbf24' : isSelected ? '2px solid #f59e0b' : isSwapping ? '2px solid #10b981' : `1px solid #e5e7eb`,
                             borderBottomWidth: '2px',
-                            borderBottomColor: isSelected ? '#f59e0b' : isSwapping ? '#10b981' : 'rgba(105, 65, 219, 0.3)',
+                            borderBottomColor: matchesSearch ? '#fbbf24' : isSelected ? '#f59e0b' : isSwapping ? '#10b981' : 'rgba(105, 65, 219, 0.3)',
+                            boxShadow: matchesSearch ? '0 0 0 3px rgba(251, 191, 36, 0.2)' : undefined,
                             minHeight: isEmpty ? '80px' : '120px',
                             transition: 'all 0.3s ease',
                             cursor: isEditMode && !isEmpty ? 'pointer' : 'default',
                             position: 'relative',
                             userSelect: 'none',
-                            zIndex: isSwapping ? 999 : isSelected ? 10 : 0
+                            zIndex: isSwapping ? 999 : isSelected ? 10 : matchesSearch ? 8 : 0
                           }}
                           onMouseEnter={(e) => {
                             if (isEditMode) {
                               setHoveredCell(cellIndex);
                             }
-                            if (!isEmpty && !isSelected) {
+                            if (!isEmpty && !isSelected && !matchesSearch) {
                               e.currentTarget.style.background = 'linear-gradient(135deg, rgba(105, 65, 219, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)';
                               e.currentTarget.style.transform = 'scale(1.02)';
                               e.currentTarget.style.boxShadow = '0 4px 12px rgba(105, 65, 219, 0.15)';
@@ -2788,7 +2858,7 @@ function TimetableTables({
                           }}
                           onMouseLeave={(e) => {
                             setHoveredCell(null);
-                            if (!isEmpty && !isSelected) {
+                            if (!isEmpty && !isSelected && !matchesSearch) {
                               e.currentTarget.style.background = di % 2 === 0 ? '#ffffff' : '#fafafa';
                               e.currentTarget.style.transform = 'scale(1)';
                               e.currentTarget.style.boxShadow = 'none';
