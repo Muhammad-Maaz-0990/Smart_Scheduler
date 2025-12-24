@@ -2835,8 +2835,6 @@ function TimetableTables({
                             borderBottomWidth: '2px',
                             borderBottomColor: matchesSearch ? '#fbbf24' : isSelected ? '#f59e0b' : isSwapping ? '#10b981' : 'rgba(105, 65, 219, 0.3)',
                             border: matchesSearch ? '2px solid #fbbf24' : isSelected ? '2px solid #f59e0b' : isSwapping ? '2px solid #10b981' : `1px solid #e5e7eb`,
-                            borderBottomWidth: '2px',
-                            borderBottomColor: matchesSearch ? '#fbbf24' : isSelected ? '#f59e0b' : isSwapping ? '#10b981' : 'rgba(105, 65, 219, 0.3)',
                             boxShadow: matchesSearch ? '0 0 0 3px rgba(251, 191, 36, 0.2)' : undefined,
                             minHeight: isEmpty ? '80px' : '120px',
                             transition: 'all 0.3s ease',

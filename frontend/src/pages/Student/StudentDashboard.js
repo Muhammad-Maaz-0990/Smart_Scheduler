@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { FaGraduationCap, FaChalkboardTeacher, FaBookOpen, FaDoorOpen, FaClock, FaCalendarDay, FaUserTie, FaTrophy } from 'react-icons/fa';
+import { FaDoorOpen, FaCalendarDay, FaTrophy, FaRegClock } from 'react-icons/fa';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import DailyTimetableGrid from '../../components/shared/DailyTimetableGrid';
 import '../Dashboard.css';
@@ -211,10 +211,52 @@ const StudentDashboard = () => {
                   padding: '1.5rem',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
                   gap: '10px'
                 }}>
-                  <FaCalendarDay style={{ color: '#4338CA' }} />
-                  Today's Schedule
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FaCalendarDay style={{ color: '#4338CA' }} />
+                    Today's Schedule
+                  </div>
+
+                  {todaySlot && todaySlot.startTime ? (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.65rem 0.9rem',
+                      background: '#ffffff',
+                      border: '1px solid rgba(79, 70, 229, 0.25)',
+                      borderRadius: '12px',
+                      color: '#111827'
+                    }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <FaCalendarDay style={{ fontSize: '1.05rem', color: '#4338CA', flexShrink: 0 }} />
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#6b7280',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.025em'
+                          }}>
+                            {todayFull}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <FaRegClock style={{ fontSize: '1.1rem', color: '#4338CA', flexShrink: 0 }} />
+                          <span style={{
+                            fontSize: '0.9rem',
+                            fontWeight: 700,
+                            color: '#111827'
+                          }}>
+                            {to12hAmpm(todaySlot.startTime)} - {to12hAmpm(todaySlot.endTime)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                 </Card.Header>
                 <Card.Body className="p-0">
                   {/* Filters */}
@@ -223,8 +265,8 @@ const StudentDashboard = () => {
                     borderBottom: '1px solid #e5e7eb',
                     background: '#fafafa'
                   }}>
-                    <Row className="align-items-center g-3">
-                      <Col lg={3} md={6} sm={12}>
+                    <Row className="align-items-start g-3">
+                      <Col lg={4} md={6} sm={12}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           <label style={{ 
                             fontSize: '0.875rem', 
@@ -255,7 +297,7 @@ const StudentDashboard = () => {
                         </div>
                       </Col>
                       
-                      <Col lg={3} md={6} sm={12}>
+                      <Col lg={4} md={6} sm={12}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           <label style={{ 
                             fontSize: '0.875rem', 
@@ -283,116 +325,76 @@ const StudentDashboard = () => {
                         </div>
                       </Col>
                       
-                      <Col lg={4} md={6} sm={12}>
-                        {todaySlot && todaySlot.startTime ? (
+                      <Col lg={4} md={12} sm={12}>
+                        {currentLecture && (
                           <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '0.75rem'
+                            padding: '0.75rem 1rem',
+                            background: '#ecfdf5',
+                            border: '1px solid #10b981',
+                            borderRadius: '8px'
                           }}>
-                            {/* Today and Time Slot */}
                             <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.5rem',
-                              padding: '0.75rem 1rem',
-                              background: '#ffffff',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '8px'
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              color: '#059669',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.025em',
+                              marginBottom: '0.25rem'
                             }}>
-                              <FaClock style={{ fontSize: '1rem', color: '#4338CA', flexShrink: 0 }} />
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-                                <span style={{ 
-                                  fontSize: '0.75rem', 
-                                  fontWeight: 500, 
-                                  color: '#6b7280',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.025em'
-                                }}>
-                                  {todayFull}
-                                </span>
-                                <span style={{ 
-                                  fontSize: '0.875rem', 
-                                  fontWeight: 600, 
-                                  color: '#111827'
-                                }}>
-                                  {to12hAmpm(todaySlot.startTime)} - {to12hAmpm(todaySlot.endTime)}
-                                </span>
-                              </div>
+                              Current Lecture
                             </div>
-
-                            {/* Current Lecture */}
-                            {currentLecture && (
-                              <div style={{
-                                padding: '0.75rem 1rem',
-                                background: '#ecfdf5',
-                                border: '1px solid #10b981',
-                                borderRadius: '8px'
-                              }}>
-                                <div style={{ 
-                                  fontSize: '0.75rem', 
-                                  fontWeight: 600, 
-                                  color: '#059669',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.025em',
-                                  marginBottom: '0.25rem'
-                                }}>
-                                  Current Lecture
-                                </div>
-                                <div style={{ 
-                                  fontSize: '0.875rem', 
-                                  fontWeight: 600, 
-                                  color: '#111827',
-                                  marginBottom: '0.25rem'
-                                }}>
-                                  {currentLecture.course}
-                                </div>
-                                <div style={{ 
-                                  fontSize: '0.75rem', 
-                                  color: '#6b7280',
-                                  display: 'flex',
-                                  gap: '0.5rem'
-                                }}>
-                                  <span><FaDoorOpen style={{ fontSize: '0.7rem' }} /> {currentLecture.roomNumber}</span>
-                                  <span>•</span>
-                                  <span>{formatTimeText(currentLecture.time)}</span>
-                                </div>
-                              </div>
-                            )}
+                            <div style={{
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: '#111827',
+                              marginBottom: '0.25rem'
+                            }}>
+                              {currentLecture.course}
+                            </div>
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: '#6b7280',
+                              display: 'flex',
+                              gap: '0.5rem'
+                            }}>
+                              <span><FaDoorOpen style={{ fontSize: '0.7rem' }} /> {currentLecture.roomNumber}</span>
+                              <span>•</span>
+                              <span>{formatTimeText(currentLecture.time)}</span>
+                            </div>
                           </div>
-                        ) : null}
-                      </Col>
-                      
-                      <Col lg={4} md={12} sm={12} className="text-lg-end">
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedClass(''); fetchForFilters(''); }}
-                          style={{ 
-                            fontWeight: 600,
-                            borderRadius: '8px',
-                            padding: '0.625rem 1.5rem',
-                            border: '1px solid #d1d5db',
-                            background: '#ffffff',
-                            color: '#374151',
-                            fontSize: '0.875rem',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            width: '100%',
-                            maxWidth: '150px'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#f3f4f6';
-                            e.currentTarget.style.borderColor = '#9ca3af';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#ffffff';
-                            e.currentTarget.style.borderColor = '#d1d5db';
-                          }}
-                        >
-                          Reset Filter
-                        </button>
+                        )}
                       </Col>
                     </Row>
+
+                    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedClass(''); fetchForFilters(''); }}
+                        style={{
+                          fontWeight: 600,
+                          borderRadius: '8px',
+                          padding: '0.625rem 1.5rem',
+                          border: '1px solid #d1d5db',
+                          background: '#ffffff',
+                          color: '#374151',
+                          fontSize: '0.875rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          width: '100%',
+                          maxWidth: '170px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#f3f4f6';
+                          e.currentTarget.style.borderColor = '#9ca3af';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#ffffff';
+                          e.currentTarget.style.borderColor = '#d1d5db';
+                        }}
+                      >
+                        Reset Filter
+                      </button>
+                    </div>
                   </div>
                   <div style={{ padding: '1.5rem' }}>
                     {filteredDetails.length > 0 ? (
