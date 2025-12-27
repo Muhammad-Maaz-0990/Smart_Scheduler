@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Card, ListGroup, Modal, Form, Overlay } from 'react-bootstrap';
 import { motion } from 'framer-motion';
 import axios from 'axios';
@@ -107,23 +107,84 @@ const Feedback = () => {
     fetchUsers();
   }, [isAdmin]);
 
+  // Resolve active user's email for header
+  const activeUserEmail = useMemo(() => {
+    if (!activeThread) return '';
+    if (isAdmin) {
+      const u = usersList.find(u => u.userID === activeThread.userID);
+      return u?.email || '';
+    }
+    return user?.email || '';
+  }, [isAdmin, usersList, activeThread, user]);
+
+  // ===== Simple chat helpers =====
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    // Disabled to prevent initial scroll jump
+    // try {
+    //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // } catch {}
+  };
+
+  // Disabled auto-scroll to prevent page jump on load
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages, active]);
+
+  const formatDateLabel = (d) => {
+    const date = new Date(d);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const isSameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    if (isSameDay(date, today)) return 'Today';
+    if (isSameDay(date, yesterday)) return 'Yesterday';
+    return date.toLocaleDateString();
+  };
+
+  const groupByDate = (list) => {
+    const groups = {};
+    list.forEach(m => {
+      const key = new Date(m.date || m.createdAt).toDateString();
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(m);
+    });
+    return Object.entries(groups)
+      .sort((a, b) => new Date(a[0]) - new Date(b[0]));
+  };
+
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div style={{ marginBottom: isMobile ? '1rem' : '2rem', paddingTop: '1rem' }}>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+        style={{ 
+          marginBottom: isMobile ? '0.5rem' : '1rem', 
+          padding: '1rem 0',
+          minHeight: '82px',
+          borderBottom: '1px solid rgba(17, 24, 39, 0.08)',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center'
+        }}
+      >
         <div style={{
           display: 'flex',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           gap: isMobile ? '0.75rem' : '1rem'
         }}>
           <div style={{
             width: isMobile ? '40px' : '50px',
             height: isMobile ? '40px' : '50px',
             borderRadius: '12px',
-            background: '#6941db',
+            background: 'var(--theme-color)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
             flexShrink: 0
           }}>
             <FaComments style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', color: 'white' }} />
@@ -132,34 +193,34 @@ const Feedback = () => {
             <h1 style={{
               fontSize: '1.5rem',
               fontWeight: '700',
-              color: '#6941db',
+              color: 'var(--theme-color)',
               lineHeight: '1.2',
               margin: 0
             }}>Feedback & Messages</h1>
-            <p style={{ color: '#6941db', fontSize: isMobile ? '0.75rem' : 'clamp(0.85rem, 1.8vw, 0.95rem)', margin: 0, fontWeight: '600' }}>
+            <p style={{ color: 'var(--theme-color)', fontSize: isMobile ? '0.75rem' : 'clamp(0.85rem, 1.8vw, 0.95rem)', margin: 0, fontWeight: '600' }}>
               Manage conversations with your team
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="d-flex flex-column flex-lg-row gap-3" style={{ minHeight: isMobile ? 'auto' : 600 }}>
+      <div className="d-flex flex-column flex-lg-row gap-3" style={{ minHeight: 'auto', flex: 1, overflow: 'hidden' }}>
         {/* Threads list */}
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-          style={{ width: isMobile ? '100%' : 380, maxWidth: '100%' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+          style={{ width: isMobile ? '100%' : 450, maxWidth: '100%' }}
         >
           {/* Search and New Button */}
-          <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.75rem' }}>
+          <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.75rem', alignItems: 'stretch' }}>
             <div style={{ flex: 1, position: 'relative' }}>
               <FaSearch style={{
                 position: 'absolute',
                 left: '12px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                color: '#6941db',
+                color: 'var(--theme-color)',
                 fontSize: '0.875rem'
               }} />
               <Form.Control
@@ -168,6 +229,7 @@ const Feedback = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
+                  height: '44px',
                   paddingLeft: '2.5rem',
                   borderRadius: '10px',
                   border: '2px solid #e5e7eb',
@@ -184,11 +246,12 @@ const Feedback = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNew(true)}
                 style={{
-                  background: '#6941db',
+                  background: 'var(--theme-color)',
                   border: 'none',
                   color: 'white',
                   borderRadius: '10px',
-                  padding: '0.6rem 0.9rem',
+                  height: '44px',
+                  padding: '0 1rem',
                   cursor: 'pointer',
                   fontSize: '1rem',
                   fontWeight: '600',
@@ -245,7 +308,7 @@ const Feedback = () => {
                       padding: '1rem',
                       borderBottom: '1px solid #e5e7eb',
                       fontWeight: 600,
-                      color: '#6941db',
+                      color: 'var(--theme-color)',
                       fontSize: '0.875rem'
                     }}>Filter by Month</div>
                     <div style={{ padding: '1rem' }}>
@@ -298,7 +361,7 @@ const Feedback = () => {
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setShowFilterMenu(false)}
                           style={{
-                            background: '#6941db',
+                            background: 'var(--theme-color)',
                             border: 'none',
                             color: 'white',
                             borderRadius: '8px',
@@ -321,18 +384,26 @@ const Feedback = () => {
 
           {/* Threads List */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
           >
             <Card style={{
               borderRadius: '16px',
               border: '2px solid #e5e7eb',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-              overflow: 'hidden',
-              background: '#ffffff'
+              background: '#ffffff',
+              height: 'calc(100vh - 200px)',
+              maxHeight: '650px',
+              minHeight: '350px',
+              display: 'flex',
+              flexDirection: 'column'
             }}>
-              <ListGroup variant="flush" style={{ background: 'transparent' }}>
+              <ListGroup variant="flush" style={{ 
+                background: 'transparent',
+                overflowY: 'auto',
+                flex: 1
+              }}>
                 {error ? (
                   <ListGroup.Item style={{
                     padding: '2rem',
@@ -350,7 +421,7 @@ const Feedback = () => {
                   <ListGroup.Item style={{
                     padding: '2rem',
                     textAlign: 'center',
-                    color: '#6941db',
+                    color: 'var(--theme-color)',
                     fontWeight: '600',
                     background: 'transparent',
                     border: 'none'
@@ -387,74 +458,103 @@ const Feedback = () => {
                     .map((t, idx) => (
                       <motion.div
                         key={t.feedbackID}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.2, delay: idx * 0.05 }}
-                        style={{ padding: isMobile ? '0.5rem' : '0.5rem 0.75rem' }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.15 }}
                       >
                         <ListGroup.Item
                           action
                           onClick={() => setActive(t.feedbackID)}
                           style={{
-                            background: t.feedbackID === active 
-                              ? 'rgba(105, 65, 219, 0.12)'
-                              : 'white',
-                            border: t.feedbackID === active
-                              ? '2px solid #6941db'
-                              : '2px solid #e5e7eb',
-                            borderRadius: '14px',
-                            padding: isMobile ? '0.875rem' : '1rem',
+                            background: t.feedbackID === active ? 'var(--theme-color-light)' : 'white',
+                            border: t.feedbackID === active ? '2px solid var(--theme-color)' : '1px solid #e9ecef',
+                            borderRadius: t.feedbackID === active ? '12px' : 0,
+                            padding: '1rem',
                             margin: 0,
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
-                            boxShadow: t.feedbackID === active
-                              ? '0 6px 16px rgba(124, 58, 237, 0.25)'
-                              : '0 2px 4px rgba(0, 0, 0, 0.05)',
                             position: 'relative',
-                            overflow: 'hidden'
+                            boxShadow: t.feedbackID === active ? '0 2px 8px rgba(105, 65, 219, 0.15)' : 'none'
                           }}
                           onMouseEnter={(e) => {
                             if (t.feedbackID !== active) {
                               e.currentTarget.style.background = '#f9fafb';
-                              e.currentTarget.style.borderColor = '#d1d5db';
-                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.08)';
                             }
                           }}
                           onMouseLeave={(e) => {
                             if (t.feedbackID !== active) {
                               e.currentTarget.style.background = 'white';
-                              e.currentTarget.style.borderColor = '#e5e7eb';
-                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
                             }
                           }}
                         >
-                          <div style={{
-                            fontWeight: 700,
-                            color: t.feedbackID === active ? '#6941db' : '#111827',
-                            marginBottom: '0.5rem',
-                            fontSize: isMobile ? '0.875rem' : '0.95rem',
-                            lineHeight: 1.4
-                          }}>
-                            {t.title}
-                          </div>
-                          <div style={{
-                            fontSize: isMobile ? '0.7rem' : '0.75rem',
-                            color: '#6b7280',
-                            display: 'flex',
-                            gap: '0.5rem',
-                            flexWrap: 'wrap',
-                            alignItems: 'center'
-                          }}>
-                            <span style={{ 
-                              fontWeight: 600,
-                              color: t.feedbackID === active ? '#6941db' : '#374151'
+                          {/* WhatsApp-style layout: avatar left, content middle, time right */}
+                          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                            {/* Avatar */}
+                            <div style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, var(--theme-color) 0%, var(--theme-color) 100%)',
+                              color: 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: '1.1rem',
+                              flexShrink: 0
                             }}>
-                              {t.user?.userName || 'User'}
-                            </span>
-                            <span style={{ opacity: 0.4 }}>•</span>
-                            <span>{t.user?.designation || ''}</span>
-                            <span style={{ opacity: 0.4 }}>•</span>
-                            <span>{new Date(t.issueDate).toLocaleDateString()}</span>
+                              {(t.user?.userName || 'U').slice(0, 1).toUpperCase()}
+                            </div>
+
+                            {/* Middle: name and message preview */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{
+                                fontWeight: 600,
+                                color: '#111827',
+                                fontSize: '0.95rem',
+                                marginBottom: '0.25rem',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}>
+                                {t.user?.userName || 'User'}
+                              </div>
+                              <div style={{
+                                fontSize: '0.85rem',
+                                color: '#9ca3af',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}>
+                                {t.title}
+                              </div>
+                            </div>
+
+                            {/* Right: date and designation stacked */}
+                            <div style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'flex-end',
+                              gap: '0.25rem',
+                              flexShrink: 0,
+                              minWidth: '70px'
+                            }}>
+                              <div style={{
+                                fontSize: '0.75rem',
+                                color: '#6b7280',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {new Date(t.issueDate).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })}
+                              </div>
+                              <div style={{
+                                fontSize: '0.8rem',
+                                color: 'var(--theme-color)',
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {t.user?.designation || ''}
+                              </div>
+                            </div>
                           </div>
                         </ListGroup.Item>
                       </motion.div>
@@ -467,90 +567,137 @@ const Feedback = () => {
 
         {/* Chat Area */}
         <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
           className="flex-grow-1"
         >
           {/* Chat Header */}
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
             style={{
-              marginBottom: '1.5rem',
-              padding: isMobile ? '1rem' : '1.5rem',
+              marginBottom: '0.75rem',
+              padding: isMobile ? '0.75rem' : '1rem',
               borderRadius: '16px',
               background: 'white',
-              border: '2px solid #e5e7eb',
-              boxShadow: '0 4px 12px rgba(124, 58, 237, 0.08)'
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 4px 10px rgba(0, 0, 0, 0.08)'
             }}
           >
-            <div style={{
-              fontWeight: 800,
-              fontSize: isMobile ? '1.125rem' : '1.375rem',
-              color: '#6941db',
-              marginBottom: '0.75rem'
-            }}>
-              {activeThread?.title || 'Select a conversation'}
-            </div>
+            {/* Top row removed to reduce header height */}
+
+            {/* Second row: whose conversation */}
             {activeThread && (
               <div style={{
-                fontSize: isMobile ? '0.75rem' : '0.875rem',
-                color: '#6b7280',
                 display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 gap: '0.75rem',
-                flexWrap: 'wrap',
-                alignItems: 'center'
+                flexWrap: 'wrap'
               }}>
-                <span style={{
-                  fontWeight: 700,
-                  color: '#6941db',
-                  background: 'rgba(105, 65, 219, 0.1)',
-                  padding: '0.25rem 0.75rem',
-                  borderRadius: '8px',
-                  fontSize: isMobile ? '0.7rem' : '0.875rem'
-                }}>
-                  {activeThread.user?.userName || 'User'}
-                </span>
-                <span style={{ opacity: 0.5 }}>•</span>
-                <span style={{
-                  background: '#f3f4f6',
-                  padding: '0.25rem 0.75rem',
-                  borderRadius: '8px',
-                  fontSize: isMobile ? '0.7rem' : '0.8rem'
-                }}>
-                  {activeThread.user?.designation || ''}
-                </span>
-                <span style={{ opacity: 0.5 }}>•</span>
-                <span style={{
-                  color: '#9ca3af',
-                  fontSize: isMobile ? '0.7rem' : '0.8rem'
-                }}>
-                  {new Date(activeThread.issueDate).toLocaleDateString()}
-                </span>
+                {/* Left: circular profile + name/email */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
+                  <div style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    background: 'white',
+                    color: 'var(--theme-color)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    flexShrink: 0,
+                    border: '2px solid var(--theme-color)'
+                  }}>
+                    {(activeThread.user?.userName || 'U').slice(0,1).toUpperCase()}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <div style={{
+                      fontWeight: 800,
+                      color: '#111827',
+                      fontSize: isMobile ? '0.9rem' : '1rem',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {activeThread.user?.userName || 'User'}
+                    </div>
+                    <div style={{
+                      fontSize: isMobile ? '0.7rem' : '0.75rem',
+                      color: '#6b7280',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {activeUserEmail || '—'}
+                    </div>
+                    {/* Title below profile and email */}
+                    <div style={{
+                      marginTop: '2px',
+                      fontSize: isMobile ? '0.8rem' : '0.9rem',
+                      color: '#111827',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      <span style={{ fontWeight: 800 }}>Title: </span>
+                      <span style={{ fontWeight: 400 }}>{activeThread.title || ''}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Center title removed per request; title shown on left */}
+
+                {/* Right: identifier (role) top-right and first interaction time bottom-right */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+                  <span style={{
+                    background: 'white',
+                    border: '1px solid #e5e7eb',
+                    color: 'var(--theme-color)',
+                    fontWeight: 700,
+                    padding: '0.2rem 0.5rem',
+                    borderRadius: 8,
+                    fontSize: isMobile ? '0.7rem' : '0.8rem'
+                  }}>
+                    {activeThread.user?.designation || ''}
+                  </span>
+                  <span style={{
+                    color: '#6b7280',
+                    fontSize: isMobile ? '0.7rem' : '0.8rem'
+                  }}>
+                    First interacted {new Date(activeThread.issueDate).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
               </div>
             )}
+
+            {/* Removed quick stats row per request */}
           </motion.div>
 
           {/* Messages Area */}
           <Card style={{
             display: 'flex',
             flexDirection: 'column',
-            height: isMobile ? 400 : 520,
+            height: 'calc(100vh - 200px)',
+            maxHeight: '650px',
+            minHeight: '350px',
             borderRadius: '16px',
             border: '2px solid #e5e7eb',
-            boxShadow: '0 8px 16px rgba(124, 58, 237, 0.08)',
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.06)',
             overflow: 'hidden',
             background: 'white'
           }}>
             <Card.Body style={{
               overflowY: 'auto',
-              padding: isMobile ? '1rem' : '1.5rem',
+              padding: isMobile ? '1rem' : '1.25rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '1rem',
-              background: 'linear-gradient(180deg, #fafbfc 0%, #ffffff 100%)',
+              gap: '0.75rem',
+              background: '#ffffff',
               flex: 1
             }}>
               {(!messages || messages.length === 0) ? (
@@ -563,67 +710,81 @@ const Feedback = () => {
                   textAlign: 'center'
                 }}>
                   <div>
-                    <FaComments style={{ fontSize: '2.5rem', marginBottom: '0.75rem', opacity: 0.4 }} />
-                    <div style={{ fontSize: '0.875rem' }}>No messages yet. Start the conversation!</div>
+                    <FaComments style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.4 }} />
+                    <div style={{ fontSize: '0.9rem' }}>No messages yet. Start the conversation.</div>
                   </div>
                 </div>
               ) : (
-                messages.map((m, idx) => {
-                  const mine = (isAdmin && m.sender === 'Admin') || (!isAdmin && m.sender !== 'Admin');
-                  return (
-                    <motion.div
-                      key={m.messageID}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, delay: idx * 0.05 }}
-                      className={`d-flex flex-column ${mine ? 'align-items-end' : 'align-items-start'}`}
-                    >
-                      {/* Sender Name Above Bubble */}
+                groupByDate(messages).map(([dateKey, items]) => (
+                  <div key={dateKey}>
+                    {/* Date separator */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      margin: '0.25rem 0 0.5rem'
+                    }}>
+                      <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
                       <div style={{
-                        fontSize: '0.7rem',
+                        fontSize: '0.75rem',
                         color: '#6b7280',
-                        fontWeight: 600,
-                        marginBottom: '0.25rem',
-                        paddingLeft: mine ? '0' : '0.5rem',
-                        paddingRight: mine ? '0.5rem' : '0'
-                      }}>
-                        {m.sender === 'Admin' ? 'Admin' : (activeThread?.user?.userName || 'User')}
-                      </div>
-                      
-                      {/* Message Bubble */}
-                      <div style={{
-                        background: mine
-                          ? '#6941db'
-                          : '#ffffff',
-                        color: mine ? 'white' : '#111827',
-                        borderRadius: mine ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
-                        padding: '0.875rem 1.25rem',
-                        maxWidth: '70%',
-                        boxShadow: mine
-                          ? '0 6px 20px rgba(124, 58, 237, 0.35)'
-                          : '0 2px 8px rgba(0, 0, 0, 0.08)',
-                        border: !mine ? '1.5px solid #e5e7eb' : 'none'
-                      }}>
-                        <div style={{
-                          fontSize: '0.95rem',
-                          lineHeight: 1.5,
-                          wordWrap: 'break-word'
-                        }}>
-                          {m.message}
-                        </div>
-                        <div style={{
-                          fontSize: '0.7rem',
-                          opacity: mine ? 0.8 : 0.6,
-                          marginTop: '0.5rem',
-                          fontWeight: 500
-                        }}>
-                          {new Date(m.date || m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })
+                        fontWeight: 600
+                      }}>{formatDateLabel(dateKey)}</div>
+                      <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+                    </div>
+
+                    {items.map((m) => {
+                      const mine = (isAdmin && m.sender === 'Admin') || (!isAdmin && m.sender !== 'Admin');
+                      const senderLabel = m.sender === 'Admin' ? 'Admin' : (activeThread?.user?.userName || 'User');
+                      const timeLabel = new Date(m.date || m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      return (
+                        <motion.div
+                          key={m.messageID}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.12 }}
+                          className={`d-flex ${mine ? 'justify-content-end' : 'justify-content-start'}`}
+                          style={{ margin: '0.15rem 0' }}
+                        >
+                          <div style={{
+                            maxWidth: '72%',
+                            background: mine ? 'var(--theme-color)' : '#f9fafb',
+                            color: mine ? 'white' : '#111827',
+                            borderRadius: 12,
+                            padding: '0.6rem 0.75rem',
+                            border: mine ? 'none' : '1px solid #e5e7eb'
+                          }}>
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: mine ? '#e5e7eb' : '#6b7280',
+                              fontWeight: 700,
+                              marginBottom: '0.25rem'
+                            }}>
+                              {senderLabel}
+                            </div>
+                            <div style={{
+                              fontSize: '0.95rem',
+                              lineHeight: 1.5,
+                              wordWrap: 'break-word'
+                            }}>
+                              {m.message}
+                            </div>
+                            <div style={{
+                              fontSize: '0.7rem',
+                              color: mine ? '#e5e7eb' : '#6b7280',
+                              marginTop: '0.4rem',
+                              fontWeight: 500
+                            }}>
+                              {timeLabel}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ))
               )}
+              <div ref={messagesEndRef} />
             </Card.Body>
             <Card.Footer className={`${isMobile ? 'p-3' : 'p-md-4'}`} style={{
               background: 'white',
@@ -659,7 +820,7 @@ const Feedback = () => {
                     className={`btn ${isMobile ? 'w-100' : 'w-md-auto'}`}
                     style={{
                       background: (active && !sending && text.trim())
-                        ? '#6941db'
+                        ? 'var(--theme-color)'
                         : '#d1d5db',
                       border: 'none',
                       color: 'white',
@@ -693,10 +854,10 @@ const Feedback = () => {
       <Modal show={showNew} onHide={() => setShowNew(false)} centered>
         <Form onSubmit={handleCreate}>
           <Modal.Header style={{
-            background: '#6941db',
+            background: 'var(--theme-color)',
             borderBottom: 'none',
             padding: '1.5rem'
-          }} closeButton>
+          }} closeButton closeVariant="white">
             <Modal.Title style={{ color: 'white', fontWeight: '700' }}>
               <FaComments style={{ marginRight: '0.5rem' }} />
               Start New Conversation
@@ -783,7 +944,7 @@ const Feedback = () => {
               whileTap={{ scale: 0.95 }}
               type="submit"
               style={{
-                background: '#6941db',
+                background: 'var(--theme-color)',
                 border: 'none',
                 color: 'white',
                 borderRadius: '10px',
@@ -806,7 +967,7 @@ const Feedback = () => {
         .gradient-border-input:focus {
           outline: none !important;
           box-shadow: none !important;
-          border: 2px solid #6941db !important;
+          border: 2px solid var(--theme-color) !important;
           background: white !important;
         }
       `}</style>

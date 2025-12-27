@@ -1,19 +1,13 @@
 import React from 'react';
 import { Container } from 'react-bootstrap';
 import TimeTable from '../../components/shared/TimeTable';
-import Sidebar from '../../components/Sidebar';
 import '../Dashboard.css';
 
 function AdminTimeTables() {
   return (
-    <>
-      <Sidebar activeMenu="timetables" />
-      <div className="dashboard-page">
         <Container fluid className="pb-4" style={{ maxWidth: '1600px' }}>
           <TimeTable isAdmin />
         </Container>
-      </div>
-    </>
   );
 }
 

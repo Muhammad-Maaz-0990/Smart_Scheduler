@@ -4,13 +4,12 @@ import { FaDoorOpen, FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaE
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { useAuth } from '../../context/AuthContext';
-import Sidebar from '../../components/Sidebar';
+import AdminPageHeader from '../../components/AdminPageHeader';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
 
 const MotionCard = motion.create(Card);
 const MotionButton = motion.create(Button);
-const MotionTr = motion.tr;
 
 const Rooms = () => {
   const { instituteObjectId } = useAuth();
@@ -34,8 +33,12 @@ const Rooms = () => {
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [previousRoom, setPreviousRoom] = useState(null);
+  const [originalRoom, setOriginalRoom] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState(null);
   const [sortField, setSortField] = useState('_id'); // Default sort by ID
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
+  const [visibleRoomsCount, setVisibleRoomsCount] = useState(10); // how many rooms to render initially
   const fileInputRef = React.useRef(null);
 
   useEffect(() => {
@@ -137,16 +140,19 @@ const Rooms = () => {
   const handleShowModal = (mode, room = null) => {
     setModalMode(mode);
     if (mode === 'edit' && room) {
-      setCurrentRoom({
+      const roomData = {
         _id: room._id,
         roomNumber: room.roomNumber,
         roomStatus: room.roomStatus
-      });
+      };
+      setCurrentRoom(roomData);
+      setOriginalRoom(roomData);
     } else {
       setCurrentRoom({
         roomNumber: '',
         roomStatus: 'Class'
       });
+      setOriginalRoom(null);
     }
     // Remove focus from button immediately when opening modal
     if (document.activeElement) {
@@ -157,25 +163,42 @@ const Rooms = () => {
     setSuccess('');
   };
 
-  const handleDelete = async (roomId) => {
-    if (!window.confirm('Are you sure you want to delete this room?')) return;
+  const handleDeleteClick = (room) => {
+    setRoomToDelete(room);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!roomToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/rooms/${roomId}`, {
+      const response = await fetch(`http://localhost:5000/api/rooms/${roomToDelete._id}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
-        setSuccess('Room deleted successfully');
+        // Store deleted room for undo
+        setPreviousRoom({ ...roomToDelete, isDeleted: true });
+        setSnackbarMessage({ roomName: roomToDelete.roomNumber, action: 'deleted', extra: 'successfully' });
+        setShowSnackbar(true);
+        setTimeout(() => setShowSnackbar(false), 5000);
+        
         fetchRooms();
-        setTimeout(() => setSuccess(''), 3000);
       } else {
         const data = await response.json();
         setError(data.message || 'Delete failed');
       }
     } catch (err) {
       setError('An error occurred');
+    } finally {
+      setShowDeleteModal(false);
+      setRoomToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setRoomToDelete(null);
   };
 
   const handleCloseModal = () => {
@@ -184,6 +207,7 @@ const Rooms = () => {
       roomNumber: '',
       roomStatus: 'Class'
     });
+    setOriginalRoom(null);
     setTouched(false);
     setError('');
     setSuccess('');
@@ -229,29 +253,46 @@ const Rooms = () => {
       });
 
       if (response.ok) {
-        const actionText = modalMode === 'add' ? 'added' : 'updated';
+        fetchRooms();
+        handleCloseModal();
         
-        // Show snackbar for updates only
+        // Show snackbar for both add and update
         if (modalMode === 'edit') {
           // Find the previous room data for undo
           const oldRoom = rooms.find(r => r._id === currentRoom._id);
           setPreviousRoom({ ...oldRoom, _id: currentRoom._id });
-          setSnackbarMessage(`Room ${currentRoom.roomNumber} status updated to ${currentRoom.roomStatus}`);
+          setSnackbarMessage({ roomName: currentRoom.roomNumber, action: 'updated', extra: `to ${currentRoom.roomStatus}` });
           setShowSnackbar(true);
           setTimeout(() => setShowSnackbar(false), 5000);
         } else {
-          setSuccess(`Room ${actionText} successfully`);
-          setTimeout(() => setSuccess(''), 3000);
+          // For add operation, get the newly created room data after fetch
+          setTimeout(async () => {
+            const token = localStorage.getItem('token');
+            const roomsResponse = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(instituteObjectId)}`, {
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+            if (roomsResponse.ok) {
+              const roomsData = await roomsResponse.json();
+              const newlyAddedRoom = roomsData.find(r => r.roomNumber === currentRoom.roomNumber && r.roomStatus === currentRoom.roomStatus);
+              if (newlyAddedRoom) {
+                setPreviousRoom({ ...newlyAddedRoom, isAdded: true });
+              }
+            }
+          }, 100);
+          
+          setSnackbarMessage({ roomName: currentRoom.roomNumber, action: 'added', extra: 'successfully' });
+          setShowSnackbar(true);
+          setTimeout(() => setShowSnackbar(false), 5000);
         }
         
-        fetchRooms();
-        handleCloseModal();
       } else {
         const data = await response.json();
         setError(data.message || `Failed to ${modalMode} room`);
+        // Don't close modal - keep it open to show error
       }
     } catch (err) {
       setError(`An error occurred while ${modalMode === 'add' ? 'adding' : 'updating'} the room`);
+      // Don't close modal - keep it open to show error
     }
   };
 
@@ -260,26 +301,71 @@ const Rooms = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/rooms/${previousRoom._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          roomNumber: previousRoom.roomNumber,
-          roomStatus: previousRoom.roomStatus,
-          instituteID: instituteObjectId
-        })
-      });
+      
+      // Check if it was a delete operation
+      if (previousRoom.isDeleted) {
+        // Restore deleted room by creating it again
+        const response = await fetch(`http://localhost:5000/api/rooms`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            roomNumber: previousRoom.roomNumber,
+            roomStatus: previousRoom.roomStatus,
+            instituteID: instituteObjectId
+          })
+        });
 
-      if (response.ok) {
-        fetchRooms();
-        setSnackbarMessage(`Room ${previousRoom.roomNumber} status undo successful`);
-        setTimeout(() => {
-          setShowSnackbar(false);
-          setPreviousRoom(null);
-        }, 3000);
+        if (response.ok) {
+          fetchRooms();
+          setSnackbarMessage({ roomName: previousRoom.roomNumber, action: 'restored', extra: 'successfully' });
+          setTimeout(() => {
+            setShowSnackbar(false);
+            setPreviousRoom(null);
+          }, 3000);
+        }
+      } else if (previousRoom.isAdded) {
+        // Undo add operation by deleting the newly added room
+        const response = await fetch(`http://localhost:5000/api/rooms/${previousRoom._id}`, {
+          method: 'DELETE',
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          }
+        });
+
+        if (response.ok) {
+          fetchRooms();
+          setSnackbarMessage({ roomName: previousRoom.roomNumber, action: 'removed', extra: 'successfully' });
+          setTimeout(() => {
+            setShowSnackbar(false);
+            setPreviousRoom(null);
+          }, 3000);
+        }
+      } else {
+        // Update operation undo
+        const response = await fetch(`http://localhost:5000/api/rooms/${previousRoom._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            roomNumber: previousRoom.roomNumber,
+            roomStatus: previousRoom.roomStatus,
+            instituteID: instituteObjectId
+          })
+        });
+
+        if (response.ok) {
+          fetchRooms();
+          setSnackbarMessage({ roomName: previousRoom.roomNumber, action: 'undo', extra: 'successful' });
+          setTimeout(() => {
+            setShowSnackbar(false);
+            setPreviousRoom(null);
+          }, 3000);
+        }
       }
     } catch (err) {
       console.error('Undo failed:', err);
@@ -342,98 +428,78 @@ const Rooms = () => {
     return filtered;
   };
 
+  // Reset visible count when filters/search/sort or data length changes
+  useEffect(() => {
+    setVisibleRoomsCount(10);
+  }, [searchTerm, statusFilter, sortField, sortDirection, rooms.length]);
+
+  // Infinite scroll: load more rooms as user nears bottom of page
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const threshold = document.body.offsetHeight - 200;
+      if (scrollPosition >= threshold) {
+        const total = getSortedRooms().length;
+        setVisibleRoomsCount(prev => {
+          if (prev >= total) return prev;
+          return Math.min(prev + 10, total);
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [searchTerm, statusFilter, sortField, sortDirection, rooms.length]);
+
   return (
     <>
-      <Sidebar activeMenu="rooms" />
-      <div className="dashboard-page">
-        {/* Animated Background */}
-        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(105, 65, 219, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
-        <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%)', animation: 'float 15s ease-in-out infinite reverse' }}></div>
-
-        <Container fluid className="dashboard-content">
-          {/* Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
-            style={{ paddingTop: '1rem' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-              <div style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '12px',
-                background: '#6941db',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
-                flexShrink: 0
-              }}>
-                <FaDoorOpen style={{ fontSize: '1.5rem', color: 'white' }} />
-              </div>
-              <div>
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: '800',
-                  color: '#6941db',
-                  lineHeight: '1.2',
-                  margin: 0
-                }}>
-                  Rooms Management
-                </h2>
-                <p style={{
-                  fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
-                  color: '#6941db',
-                  margin: 0,
-                  fontWeight: '600'
-                }}>
-                  Manage all classrooms and labs in your institute
-                </p>
-              </div>
-            </div>
+      <AdminPageHeader
+        icon={FaDoorOpen}
+        title="Rooms Management"
+        subtitle="Manage all classrooms and labs in your institute"
+        actions={
+          <>
+            <Button
+              onClick={() => handleShowModal('add')}
+              className="action-btn action-btn-purple"
+            >
+              <FaPlus /> Add Room
+            </Button>
             
-            <div className="d-flex gap-2 flex-wrap">
-              <Button
-                onClick={() => handleShowModal('add')}
-                className="action-btn action-btn-purple"
-              >
-                <FaPlus /> Add Room
-              </Button>
-              
-              <Button
-                onClick={onImportClick}
-                className="action-btn action-btn-green"
-              >
-                <FaFileImport /> Import
-              </Button>
-              
-              <Button
-                onClick={exportCSV}
-                className="action-btn action-btn-blue"
-              >
-                <FaFileExport /> Export
-              </Button>
-              
-              <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
-            </div>
-          </motion.div>
+            <Button
+              onClick={onImportClick}
+              className="action-btn action-btn-green"
+            >
+              <FaFileImport /> Import
+            </Button>
+            
+            <Button
+              onClick={exportCSV}
+              className="action-btn action-btn-blue"
+            >
+              <FaFileExport /> Export
+            </Button>
+            
+            <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
+          </>
+        }
+      />
 
-          {/* Search and Filter */}
+      {/* Search and Filter */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
             className="mb-4"
             style={{ position: 'relative', zIndex: 100 }}
           >
             <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 mb-3">
               <InputGroup style={{ flex: 1 }}>
                 <InputGroup.Text style={{
-                  background: 'rgba(79, 70, 229, 0.12)',
-                  border: '1px solid rgba(79, 70, 229, 0.25)',
+                  background: 'var(--theme-color-light)',
+                  border: '1px solid var(--theme-color)',
                   borderRadius: '12px 0 0 12px',
-                  color: '#4338CA',
+                  color: 'var(--theme-color)',
                   padding: '0.75rem 1rem'
                 }}>
                   <FaSearch />
@@ -445,7 +511,7 @@ const Rooms = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="search-input-gradient"
                   style={{
-                    border: '2px solid rgba(105, 65, 219, 0.2)',
+                    border: '2px solid var(--theme-color)',
                     borderRadius: '0 12px 12px 0',
                     padding: '0.75rem 1rem',
                     fontSize: '0.9rem',
@@ -453,13 +519,13 @@ const Rooms = () => {
                     transition: 'all 0.3s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.border = '2px solid transparent';
-                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #6941db 0%, #3b82f6 100%)';
+                    e.target.style.border = '2px solid var(--theme-color)';
+                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, var(--theme-color) 0%, var(--theme-color-dark) 100%)';
                     e.target.style.backgroundOrigin = 'border-box';
                     e.target.style.backgroundClip = 'padding-box, border-box';
                   }}
                   onBlur={(e) => {
-                    e.target.style.border = '2px solid rgba(105, 65, 219, 0.2)';
+                    e.target.style.border = '2px solid var(--theme-color)';
                     e.target.style.backgroundImage = 'none';
                   }}
                 />
@@ -469,12 +535,12 @@ const Rooms = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowFilterMenu(s => !s)}
                 style={{
-                  background: showFilterMenu ? '#6941db' : 'linear-gradient(135deg, rgba(105, 65, 219, 0.1), rgba(59, 130, 246, 0.1))',
-                  border: '2px solid rgba(105, 65, 219, 0.2)',
+                  background: showFilterMenu ? 'var(--theme-color)' : 'var(--theme-color-light)',
+                  border: '2px solid var(--theme-color)',
                   borderRadius: '12px',
                   padding: '0.75rem 1.5rem',
                   fontWeight: 400,
-                  color: showFilterMenu ? 'white' : '#6941db',
+                  color: showFilterMenu ? 'white' : 'var(--theme-color)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem'
@@ -496,7 +562,7 @@ const Rooms = () => {
                     <span style={{ 
                       fontWeight: 600, 
                       fontSize: '0.875rem',
-                      color: '#6941db',
+                      color: 'var(--theme-color)',
                       whiteSpace: 'nowrap'
                     }}>
                       Room Status
@@ -521,7 +587,7 @@ const Rooms = () => {
                             boxShadow: 'none'
                           }}
                           onMouseOver={(e) => {
-                            e.target.style.borderColor = '#6941db';
+                            e.target.style.borderColor = 'var(--theme-color)';
                           }}
                           onMouseOut={(e) => {
                             if (document.activeElement !== e.target) {
@@ -529,7 +595,7 @@ const Rooms = () => {
                             }
                           }}
                           onFocus={(e) => {
-                            e.target.style.borderColor = '#6941db';
+                            e.target.style.borderColor = 'var(--theme-color)';
                             e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
                           }}
                           onBlur={(e) => {
@@ -549,7 +615,7 @@ const Rooms = () => {
                         style={{
                           background: 'transparent',
                           border: '2px solid rgba(105, 65, 219, 0.2)',
-                          color: '#6941db',
+                          color: 'var(--theme-color)',
                           borderRadius: '12px',
                           fontWeight: 400,
                           padding: '0.75rem 0.875rem',
@@ -568,30 +634,6 @@ const Rooms = () => {
 
           {/* Alerts */}
           <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Alert 
-                  variant="danger" 
-                  dismissible 
-                  onClose={() => setError('')}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(248, 113, 113, 0.1))',
-                    border: '2px solid rgba(239, 68, 68, 0.3)',
-                    borderRadius: '12px',
-                    padding: '1rem 1.5rem',
-                    fontWeight: 400,
-                    color: '#dc2626'
-                  }}
-                >
-                  {error}
-                </Alert>
-              </motion.div>
-            )}
             {success && (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -653,20 +695,19 @@ const Rooms = () => {
                 style={{ marginBottom: '2rem' }}
               >
                 <MotionCard style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 100%)',
-                  backdropFilter: 'blur(20px)',
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%)',
                   border: '2px solid rgba(105, 65, 219, 0.12)',
                   borderRadius: '12px',
-                  boxShadow: '0 10px 40px rgba(105, 65, 219, 0.1)',
+                  boxShadow: '0 8px 24px rgba(105, 65, 219, 0.15)',
                   overflow: 'hidden'
                 }}>
                   <Card.Header style={{
-                    background: 'rgba(79, 70, 229, 0.12)',
-                    color: '#4338CA',
+                    background: 'var(--theme-color-light)',
+                    color: 'var(--theme-color)',
                     fontWeight: 600,
                     fontSize: '1.125rem',
                     padding: '1.25rem 1.5rem',
-                    border: '1px solid rgba(79, 70, 229, 0.25)',
+                    border: '1px solid var(--theme-color)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
@@ -680,11 +721,11 @@ const Rooms = () => {
                   <Card.Body style={{ padding: 0 }}>
                     <div style={{ overflowX: 'auto' }}>
                       <Table hover responsive style={{ marginBottom: 0 }}>
-                        <thead style={{ backgroundColor: '#6941db' }}>
+                        <thead style={{ backgroundColor: 'var(--theme-color-dark)' }}>
                           <tr>
-                            <th style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: '#6941db' }}>#</th>
-                            <th style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: '#6941db' }}>Room Number</th>
-                            <th style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: '#6941db' }}>Room Status</th>
+                            <th style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: 'var(--theme-color-dark)' }}>#</th>
+                            <th style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: 'var(--theme-color-dark)' }}>Room Number</th>
+                            <th style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'white', borderBottom: 'none', backgroundColor: 'var(--theme-color-dark)' }}>Room Status</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -695,7 +736,7 @@ const Rooms = () => {
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: idx * 0.05 }}
                               whileHover={{
-                                backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                                backgroundColor: 'var(--theme-color-light)',
                                 transition: { duration: 0.2 }
                               }}
                               style={{ borderBottom: '1px solid rgba(105, 65, 219, 0.1)' }}
@@ -752,7 +793,7 @@ const Rooms = () => {
                           borderRadius: '12px',
                           padding: '0.75rem 1.5rem',
                           fontWeight: 400,
-                          color: '#6941db',
+                          color: 'var(--theme-color)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '8px',
@@ -774,16 +815,15 @@ const Rooms = () => {
 
           {/* Rooms Table */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
           >
             <MotionCard style={{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 100%)',
-              backdropFilter: 'blur(20px)',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%)',
               border: '2px solid rgba(105, 65, 219, 0.12)',
               borderRadius: '12px',
-              boxShadow: '0 10px 40px rgba(105, 65, 219, 0.1)',
+              boxShadow: '0 8px 24px rgba(105, 65, 219, 0.15)',
               overflow: 'hidden'
             }}>
               <Card.Body style={{ padding: 0 }}>
@@ -796,10 +836,10 @@ const Rooms = () => {
                           style={{ 
                             padding: '1rem', 
                             fontWeight: 600, 
-                            color: '#4338CA', 
+                            color: 'var(--theme-color)', 
                             borderBottom: 'none', 
-                            backgroundColor: 'rgba(79, 70, 229, 0.12)',
-                            border: '1px solid rgba(79, 70, 229, 0.25)',
+                            backgroundColor: 'var(--theme-color-light)',
+                            border: '1px solid var(--theme-color)',
                             cursor: 'pointer',
                             userSelect: 'none'
                           }}
@@ -818,10 +858,10 @@ const Rooms = () => {
                           style={{ 
                             padding: '1rem', 
                             fontWeight: 600, 
-                            color: '#4338CA', 
+                            color: 'var(--theme-color)', 
                             borderBottom: 'none', 
-                            backgroundColor: 'rgba(79, 70, 229, 0.12)',
-                            border: '1px solid rgba(79, 70, 229, 0.25)',
+                            backgroundColor: 'var(--theme-color-light)',
+                            border: '1px solid var(--theme-color)',
                             cursor: 'pointer',
                             userSelect: 'none',
                             position: 'relative'
@@ -841,10 +881,10 @@ const Rooms = () => {
                           style={{ 
                             padding: '1rem', 
                             fontWeight: 600, 
-                            color: '#4338CA', 
+                            color: 'var(--theme-color)', 
                             borderBottom: 'none', 
-                            backgroundColor: 'rgba(79, 70, 229, 0.12)',
-                            border: '1px solid rgba(79, 70, 229, 0.25)',
+                            backgroundColor: 'var(--theme-color-light)',
+                            border: '1px solid var(--theme-color)',
                             cursor: 'pointer',
                             userSelect: 'none',
                             position: 'relative'
@@ -862,11 +902,11 @@ const Rooms = () => {
                         <th style={{ 
                           padding: '1rem', 
                           fontWeight: 600, 
-                          color: '#4338CA', 
+                          color: 'var(--theme-color)', 
                           textAlign: 'center', 
                           borderBottom: 'none', 
-                          backgroundColor: 'rgba(79, 70, 229, 0.12)',
-                          border: '1px solid rgba(79, 70, 229, 0.25)'
+                          backgroundColor: 'var(--theme-color-light)',
+                          border: '1px solid var(--theme-color)'
                         }}>Actions</th>
                       </tr>
                     </thead>
@@ -891,7 +931,7 @@ const Rooms = () => {
                               borderRadius: '12px',
                               margin: '1rem'
                             }}>
-                              <FaDoorOpen style={{ fontSize: '3rem', color: '#6941db', marginBottom: '1rem' }} />
+                              <FaDoorOpen style={{ fontSize: '3rem', color: 'var(--theme-color)', marginBottom: '1rem' }} />
                               <div style={{ fontWeight: 400 }}>No rooms found</div>
                               <div style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>Click "Add Room" to create your first room!</div>
                             </div>
@@ -899,17 +939,20 @@ const Rooms = () => {
                         </tr>
                       ) : (
                         getSortedRooms()
+                          .slice(0, visibleRoomsCount)
                           .map((room, index) => (
-                            <MotionTr 
+                            <tr 
                               key={room._id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.05 }}
-                              whileHover={{ 
-                                backgroundColor: 'rgba(79, 70, 229, 0.12)',
-                                transition: { duration: 0.2 }
+                              style={{ 
+                                borderBottom: '1px solid rgba(105, 65, 219, 0.1)',
+                                transition: 'background-color 0.15s ease'
                               }}
-                              style={{ borderBottom: '1px solid rgba(105, 65, 219, 0.1)' }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'var(--theme-color-light)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
                             >
                               <td style={{ padding: '1rem', fontWeight: 400 }}>{index + 1}</td>
                               <td style={{ padding: '1rem', fontSize: '1.05rem', fontWeight: 400, color: '#374151' }}>
@@ -936,15 +979,15 @@ const Rooms = () => {
                                     <FaEdit /> Edit
                                   </Button>
 
-                                  <Button
-                                    onClick={() => handleDelete(room._id)}
-                                    className="table-action-btn table-action-delete"
-                                  >
-                                    <FaTrash /> Delete
-                                  </Button>
+                                    <Button
+                                      onClick={() => handleDeleteClick(room)}
+                                      className="table-action-btn table-action-delete"
+                                    >
+                                      <FaTrash /> Delete
+                                    </Button>
                                 </div>
                               </td>
-                            </MotionTr>
+                            </tr>
                           ))
                       )}
                     </tbody>
@@ -953,8 +996,6 @@ const Rooms = () => {
               </Card.Body>
             </MotionCard>
           </motion.div>
-        </Container>
-      </div>
 
       {/* Add/Edit Modal */}
       <Modal
@@ -984,7 +1025,7 @@ const Rooms = () => {
         <Modal.Header 
           closeButton
           style={{
-            background: '#6941db',
+            background: 'var(--theme-color)',
             color: 'white',
             border: 'none',
             borderRadius: '12px 12px 0 0',
@@ -1074,9 +1115,9 @@ const Rooms = () => {
                     background: '#fff'
                   }}
                   onFocus={e => {
-                    e.target.style.borderColor = (touched && currentRoom.roomNumber === '') ? '#ef4444' : '#6941db';
+                    e.target.style.borderColor = (touched && currentRoom.roomNumber === '') ? '#ef4444' : 'var(--theme-color)';
                     e.target.style.boxShadow = (touched && currentRoom.roomNumber === '') ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px rgba(105, 65, 219, 0.15)';
-                    e.target.style.color = '#6941db';
+                    e.target.style.color = 'var(--theme-color)';
                   }}
                   onBlur={e => {
                     setTouched(true);
@@ -1085,7 +1126,7 @@ const Rooms = () => {
                     e.target.style.color = '#000000';
                   }}
                   onMouseOver={e => {
-                    e.target.style.borderColor = (touched && currentRoom.roomNumber === '') ? '#ef4444' : '#6941db';
+                    e.target.style.borderColor = (touched && currentRoom.roomNumber === '') ? '#ef4444' : 'var(--theme-color)';
                   }}
                   onMouseOut={e => {
                     if (!e.target.matches(':focus')) e.target.style.borderColor = (touched && currentRoom.roomNumber === '') ? '#ef4444' : '#e5e7eb';
@@ -1136,7 +1177,7 @@ const Rooms = () => {
                       background: currentRoom.roomStatus === 'Class' 
                         ? '#e0d4f7'
                         : '#ffffff',
-                      color: currentRoom.roomStatus === 'Class' ? '#6941db' : '#6b7280',
+                      color: currentRoom.roomStatus === 'Class' ? 'var(--theme-color)' : '#6b7280',
                       boxShadow: currentRoom.roomStatus === 'Class' 
                         ? 'none'
                         : '0 2px 4px rgba(0,0,0,0.05)'
@@ -1164,7 +1205,7 @@ const Rooms = () => {
                       background: currentRoom.roomStatus === 'Lab' 
                         ? '#e0d4f7'
                         : '#ffffff',
-                      color: currentRoom.roomStatus === 'Lab' ? '#6941db' : '#6b7280',
+                      color: currentRoom.roomStatus === 'Lab' ? 'var(--theme-color)' : '#6b7280',
                       boxShadow: currentRoom.roomStatus === 'Lab' 
                         ? 'none'
                         : '0 2px 4px rgba(0,0,0,0.05)'
@@ -1200,22 +1241,25 @@ const Rooms = () => {
                 </MotionButton>
                 <MotionButton
                   type="submit"
+                  disabled={modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus}
                   whileHover={{ 
-                    background: '#fff',
-                    color: '#6941db',
-                    border: '2px solid #6941db'
+                    background: modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus ? '#9ca3af' : '#fff',
+                    color: modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus ? '#fff' : 'var(--theme-color)',
+                    border: modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus ? '2px solid #9ca3af' : '2px solid var(--theme-color)'
                   }}
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus ? 1 : 0.98 }}
                   transition={{ duration: 0.15 }}
                   style={{
-                    background: '#6941db',
-                    border: '2px solid #6941db',
+                    background: modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus ? '#9ca3af' : 'var(--theme-color)',
+                    border: modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus ? '2px solid #9ca3af' : '2px solid var(--theme-color)',
                     borderRadius: '12px',
                     padding: '0.5rem 1rem',
                     fontWeight: 600,
                     fontSize: '0.875rem',
                     color: '#fff',
-                    boxShadow: '0 2px 8px rgba(105, 65, 219, 0.08)'
+                    boxShadow: modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus ? 'none' : '0 2px 8px rgba(105, 65, 219, 0.08)',
+                    cursor: modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus ? 'not-allowed' : 'pointer',
+                    opacity: modalMode === 'edit' && originalRoom && currentRoom.roomNumber === originalRoom.roomNumber && currentRoom.roomStatus === originalRoom.roomStatus ? 0.6 : 1
                   }}
                 >
                   {modalMode === 'add' ? 'Add Room' : 'Update Room'}
@@ -1226,13 +1270,129 @@ const Rooms = () => {
         </motion.div>
       </Modal>
 
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteModal}
+        onHide={handleCancelDelete}
+        centered
+        backdrop="static"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Modal.Header 
+            closeButton
+            style={{
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px 12px 0 0',
+              padding: '0.75rem 1rem'
+            }}
+            closeVariant="white"
+          >
+            <Modal.Title style={{ 
+              fontWeight: 600, 
+              fontSize: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <FaTrash size={18} />
+              Confirm Delete
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{
+              background: '#ffffff',
+              padding: '2rem',
+              border: 'none',
+              borderRadius: '0 0 12px 12px',
+              overflow: 'visible'
+            }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ 
+                fontSize: '1rem', 
+                color: '#374151',
+                marginBottom: '1rem',
+                lineHeight: 1.6
+              }}>
+                Are you sure you want to delete room <strong style={{ color: '#ef4444' }}>{roomToDelete?.roomNumber}</strong>?
+              </p>
+              <p style={{ 
+                fontSize: '0.875rem', 
+                color: '#6b7280',
+                marginBottom: 0
+              }}>
+                This action cannot be undone.
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+              <MotionButton
+                type="button"
+                whileHover={{ 
+                  background: '#ffffff',
+                  color: '#6b7280',
+                  borderColor: '#6b7280'
+                }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                onClick={handleCancelDelete}
+                style={{
+                  background: '#6b7280',
+                  border: '2px solid #6b7280',
+                  borderRadius: '12px',
+                  padding: '0.5rem 1rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: '#ffffff'
+                }}
+              >
+                Cancel
+              </MotionButton>
+              <MotionButton
+                type="button"
+                whileHover={{ 
+                  background: '#fff',
+                  color: '#ef4444',
+                  border: '2px solid #ef4444'
+                }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.15 }}
+                onClick={handleConfirmDelete}
+                style={{
+                  background: '#ef4444',
+                  border: '2px solid #ef4444',
+                  borderRadius: '12px',
+                  padding: '0.5rem 1rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: '#fff',
+                  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.08)'
+                }}
+              >
+                Delete
+              </MotionButton>
+            </div>
+          </Modal.Body>
+        </motion.div>
+      </Modal>
+
       <AnimatePresence>
         {showSnackbar && (
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            transition={{ 
+              duration: 0.4,
+              type: "spring",
+              stiffness: 300,
+              damping: 25
+            }}
             style={{
               position: 'fixed',
               bottom: '2rem',
@@ -1240,60 +1400,90 @@ const Rooms = () => {
               transform: 'translateX(-50%)',
               background: '#ffffff',
               color: '#1f2937',
-              padding: '1rem 1.5rem',
-              borderRadius: '12px',
-              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
+              padding: '1.25rem 1.75rem',
+              borderRadius: '16px',
+              boxShadow: '0 16px 40px rgba(0, 0, 0, 0.12), 0 3px 12px rgba(0, 0, 0, 0.08)',
               zIndex: 10000,
               display: 'flex',
               alignItems: 'center',
-              gap: '1rem',
-              minWidth: '400px',
+              gap: '1.25rem',
+              minWidth: '420px',
+              maxWidth: '90vw',
               border: '1px solid #e5e7eb'
             }}
           >
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.75rem',
-              flex: 1
-            }}>
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center'
+              }}
+            >
               <svg
-                width="20"
-                height="20"
+                width="24"
+                height="24"
                 viewBox="0 0 20 20"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z"
-                  fill="#10b981"
+                  fill="var(--theme-color)"
                 />
               </svg>
-              <span style={{ fontWeight: 500, fontSize: '0.9rem' }}>
-                {snackbarMessage}
+            </motion.div>
+            
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.75rem',
+              flex: 1
+            }}>
+              <span style={{ 
+                fontSize: '0.95rem',
+                lineHeight: 1.5,
+                letterSpacing: '0.01em',
+                color: '#1f2937'
+              }}>
+                {typeof snackbarMessage === 'string' ? snackbarMessage : (
+                  <>
+                    Room <strong>{snackbarMessage.roomName}</strong> <strong>{snackbarMessage.action}</strong> {snackbarMessage.extra}
+                  </>
+                )}
               </span>
             </div>
             
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '0.5rem',
+              borderLeft: '1px solid #e5e7eb',
+              paddingLeft: '1rem'
+            }}>
               <MotionButton
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, backgroundColor: '#f3f4f6' }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleUndo}
                 style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#6941db',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  padding: '0.25rem 0.75rem',
-                  cursor: 'pointer'
+                  background: '#f9fafb',
+                  border: '1px solid #e5e7eb',
+                  color: 'var(--theme-color)',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer',
+                  borderRadius: '8px',
+                  letterSpacing: '0.5px',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 UNDO
               </MotionButton>
               
               <MotionButton
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, opacity: 0.6 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setShowSnackbar(false);
@@ -1304,12 +1494,14 @@ const Rooms = () => {
                   border: 'none',
                   color: '#6b7280',
                   fontWeight: 600,
-                  fontSize: '0.875rem',
-                  padding: '0.25rem 0.75rem',
-                  cursor: 'pointer'
+                  fontSize: '1.25rem',
+                  padding: '0.25rem 0.5rem',
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                  transition: 'all 0.2s ease'
                 }}
               >
-                DISMISS
+                ✕
               </MotionButton>
             </div>
           </motion.div>

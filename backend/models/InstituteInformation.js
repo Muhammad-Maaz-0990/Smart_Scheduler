@@ -32,6 +32,10 @@ const instituteSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  themeColor: {
+    type: String,
+    default: '#7c3aed'
+  },
   subscription: {
     type: String,
     enum: ['Monthly', 'Yearly', 'Trial'],

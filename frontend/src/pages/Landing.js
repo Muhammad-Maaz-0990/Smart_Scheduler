@@ -54,7 +54,7 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                 width: 45,
                 height: 45,
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
@@ -66,7 +66,7 @@ const TopBar = ({ onSignIn, onSignUp }) => {
             <div>
               <strong style={{ 
                 fontSize: '1.3rem', 
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 fontWeight: 800
@@ -94,7 +94,7 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                     textDecoration: 'none',
                     transition: 'color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.target.style.color = '#7e22ce'}
+                  onMouseEnter={(e) => e.target.style.color = 'var(--theme-color)'}
                   onMouseLeave={(e) => e.target.style.color = '#374151'}
                 >
                   {item}
@@ -114,20 +114,20 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                     borderWidth: 2,
                     borderRadius: '10px',
                     padding: '8px 20px',
-                    borderColor: '#7e22ce',
-                    color: '#7e22ce',
+                    borderColor: 'var(--theme-color)',
+                    color: 'var(--theme-color)',
                     transition: 'all 0.3s ease'
                   }} 
                   onClick={onSignIn}
                   onMouseEnter={(e) => {
-                    e.target.style.background = 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)';
+                    e.target.style.background = 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)';
                     e.target.style.color = 'white';
                     e.target.style.borderColor = 'transparent';
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.background = 'transparent';
-                    e.target.style.color = '#7e22ce';
-                    e.target.style.borderColor = '#7e22ce';
+                    e.target.style.color = 'var(--theme-color)';
+                    e.target.style.borderColor = 'var(--theme-color)';
                   }}
                 >
                   Sign In
@@ -137,7 +137,7 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                 <Button 
                   style={{ 
                     fontWeight: 600, 
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                    background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                     border: 'none',
                     borderRadius: '10px',
                     padding: '8px 24px',
@@ -159,7 +159,7 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                 background: 'transparent',
                 border: 'none',
                 fontSize: '1.5rem',
-                color: '#7e22ce',
+                color: 'var(--theme-color)',
                 cursor: 'pointer'
               }}
             >
@@ -203,20 +203,20 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                   style={{ 
                     flex: 1, 
                     fontWeight: 600,
-                    borderColor: '#7e22ce',
-                    color: '#7e22ce',
+                    borderColor: 'var(--theme-color)',
+                    color: 'var(--theme-color)',
                     transition: 'all 0.3s ease'
                   }} 
                   onClick={() => { onSignIn(); setMobileMenuOpen(false); }}
                   onMouseEnter={(e) => {
-                    e.target.style.background = 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)';
+                    e.target.style.background = 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)';
                     e.target.style.color = 'white';
                     e.target.style.borderColor = 'transparent';
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.background = 'transparent';
-                    e.target.style.color = '#7e22ce';
-                    e.target.style.borderColor = '#7e22ce';
+                    e.target.style.color = 'var(--theme-color)';
+                    e.target.style.borderColor = 'var(--theme-color)';
                   }}
                 >
                   Sign In
@@ -225,7 +225,7 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                   style={{ 
                     flex: 1,
                     fontWeight: 600, 
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                    background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                     border: 'none'
                   }} 
                   onClick={() => { onSignUp(); setMobileMenuOpen(false); }}
@@ -295,7 +295,7 @@ const Hero = ({ onSignUp }) => (
               }}
             >
               <span style={{ 
-                color: '#7e22ce', 
+                color: 'var(--theme-color)', 
                 fontWeight: 700,
                 fontSize: '0.9rem'
               }}>
@@ -312,7 +312,7 @@ const Hero = ({ onSignUp }) => (
             }}>
               Intelligent
               <span style={{
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 display: 'block'
@@ -338,7 +338,7 @@ const Hero = ({ onSignUp }) => (
                   size="lg"
                   onClick={onSignUp}
                   style={{
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                    background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                     border: 'none',
                     fontWeight: 700,
                     padding: '14px 32px',
@@ -365,8 +365,8 @@ const Hero = ({ onSignUp }) => (
                     borderRadius: '12px',
                     fontSize: '1.1rem',
                     borderWidth: 2,
-                    borderColor: '#7e22ce',
-                    color: '#7e22ce'
+                    borderColor: 'var(--theme-color)',
+                    color: 'var(--theme-color)'
                   }}
                 >
                   Watch Demo
@@ -417,7 +417,7 @@ const Hero = ({ onSignUp }) => (
               border: '1px solid rgba(126, 34, 206, 0.1)'
             }}>
               <div style={{
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                 borderRadius: '16px',
                 padding: '24px',
                 marginBottom: '16px',
@@ -461,7 +461,7 @@ const Hero = ({ onSignUp }) => (
                 gap: '12px'
               }}>
                 {[
-                  { label: 'Classes', value: '24+', color: '#7e22ce' },
+                  { label: 'Classes', value: '24+', color: 'var(--theme-color)' },
                   { label: 'Rooms', value: '15+', color: '#3b82f6' },
                   { label: 'Courses', value: '50+', color: '#10b981' }
                 ].map((stat, idx) => (
@@ -550,7 +550,7 @@ const Features = () => (
         }}>
           Powerful Features for
           <span style={{
-            background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+            background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             display: 'block'
@@ -569,7 +569,7 @@ const Features = () => (
             icon: <FaRobot />,
             title: 'AI-Powered Constraint Solver',
             description: 'Advanced CSP engine automatically resolves conflicts for teachers, rooms, and classes with intelligent break placement.',
-            color: '#7e22ce'
+            color: 'var(--theme-color)'
           },
           {
             icon: <FaUsers />,
@@ -697,7 +697,7 @@ const HowItWorks = () => (
                       width: '80px',
                       height: '80px',
                       borderRadius: '16px',
-                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                      background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -710,7 +710,7 @@ const HowItWorks = () => (
                       <div style={{
                         fontSize: '3rem',
                         fontWeight: 900,
-                        background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                        background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                         lineHeight: 0.8,
@@ -772,13 +772,13 @@ const Pricing = ({ onSignUp }) => (
           >
             <Card style={{
               borderRadius: '24px',
-              border: '2px solid #7e22ce',
+              border: '2px solid var(--theme-color)',
               boxShadow: '0 20px 60px rgba(126, 34, 206, 0.2)',
               background: 'linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(224, 231, 255, 0.3) 100%)',
               overflow: 'hidden'
             }}>
               <div style={{
-                background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                 padding: '24px',
                 textAlign: 'center',
                 color: 'white'
@@ -839,7 +839,7 @@ const Pricing = ({ onSignUp }) => (
                     onClick={onSignUp}
                     style={{
                       width: '100%',
-                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+                      background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                       border: 'none',
                       fontWeight: 700,
                       padding: '16px',
@@ -895,8 +895,8 @@ const Pricing = ({ onSignUp }) => (
             padding: '12px 32px',
             borderRadius: '10px',
             borderWidth: 2,
-            borderColor: '#7e22ce',
-            color: '#7e22ce'
+            borderColor: 'var(--theme-color)',
+            color: 'var(--theme-color)'
           }}
           href="mailto:mbsofficalgroup@gmail.com"
         >
@@ -910,7 +910,7 @@ const Pricing = ({ onSignUp }) => (
 const CTA = ({ onSignUp }) => (
   <section style={{
     padding: '100px 0',
-    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+    background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
     position: 'relative',
     overflow: 'hidden'
   }}>
@@ -967,7 +967,7 @@ const CTA = ({ onSignUp }) => (
             onClick={onSignUp}
             style={{
               background: 'white',
-              color: '#7e22ce',
+              color: 'var(--theme-color)',
               border: 'none',
               fontWeight: 700,
               padding: '16px 48px',
@@ -1009,7 +1009,7 @@ const Footer = () => (
               width: 45,
               height: 45,
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
+              background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'

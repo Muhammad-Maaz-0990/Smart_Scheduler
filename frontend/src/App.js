@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
+import AdminLayout from './components/AdminLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Landing from './pages/Landing';
@@ -20,7 +21,7 @@ import GenerateTimetable from './pages/Admin/GenerateTimetable';
 import Users from './pages/Admin/Users';
 import AdminFeedbacksPage from './pages/Admin/Feedbacks';
 import AdminProfilePage from './pages/Admin/Profile';
-import EditInstitute from './pages/Admin/EditInstitute';
+
 import ChangePassword from './pages/Admin/ChangePassword';
 import StudentDashboard from './pages/Student/StudentDashboard';
 import TeacherDashboard from './pages/Teacher/TeacherDashboard';
@@ -93,107 +94,36 @@ function App() {
               path="/admin" 
               element={
                 <PrivateRoute allowedRoles={['Admin']}>
-                  <AdminDashboard />
+                  <AdminLayout />
                 </PrivateRoute>
-              } 
-            />
-            
-            <Route 
-              path="/admin/rooms" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']}>
-                  <Rooms />
-                </PrivateRoute>
-              } 
-            />
-            
-            <Route 
-              path="/admin/classes" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']}>
-                  <Classes />
-                </PrivateRoute>
-              } 
-            />
-            
-            <Route 
-              path="/admin/courses" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']}>
-                  <Courses />
-                </PrivateRoute>
-              } 
-            />
-
-            <Route 
-              path="/admin/timeslots" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']}>
-                  <TimeSlots />
-                </PrivateRoute>
-              } 
-            />
-
-            <Route 
-              path="/admin/timetables" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']}>
-                  <AdminTimeTablesPage />
-                </PrivateRoute>
-              } 
-            />
-
-            <Route 
-              path="/admin/generate-timetable" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']}>
-                  <GenerateTimetable />
-                </PrivateRoute>
-              } 
-            />
-
-            <Route 
-              path="/admin/users" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']}>
-                  <Users />
-                </PrivateRoute>
-              } 
-            />
-
-            <Route 
-              path="/admin/feedbacks" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']}>
-                  <AdminFeedbacksPage />
-                </PrivateRoute>
-              } 
-            />
-            
-            <Route 
-              path="/admin/profile" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
-                  <AdminProfilePage />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
-              path="/admin/profile/edit" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
-                  <EditInstitute />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
-              path="/admin/profile/password" 
-              element={
-                <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
-                  <ChangePassword />
-                </PrivateRoute>
-              } 
-            />
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="rooms" element={<Rooms />} />
+              <Route path="classes" element={<Classes />} />
+              <Route path="courses" element={<Courses />} />
+              <Route path="timeslots" element={<TimeSlots />} />
+              <Route path="timetables" element={<AdminTimeTablesPage />} />
+              <Route path="generate-timetable" element={<GenerateTimetable />} />
+              <Route path="users" element={<Users />} />
+              <Route path="feedbacks" element={<AdminFeedbacksPage />} />
+              <Route 
+                path="profile" 
+                element={
+                  <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
+                    <AdminProfilePage />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="profile/password" 
+                element={
+                  <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
+                    <ChangePassword />
+                  </PrivateRoute>
+                } 
+              />
+            </Route>
             
             <Route 
               path="/student" 

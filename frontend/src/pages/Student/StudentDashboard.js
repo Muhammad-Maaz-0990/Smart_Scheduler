@@ -10,7 +10,72 @@ import DailyTimetableGrid from '../../components/shared/DailyTimetableGrid';
 import '../Dashboard.css';
 
 // Global purple color variable
-const PURPLE_COLOR = '#6941db';
+const PURPLE_COLOR = 'var(--theme-color)';
+
+const expandCourseName = (courseName) => {
+  if (!courseName) return courseName;
+  
+  const abbreviations = {
+    'OOP': 'Object Oriented Programming',
+    'DSA': 'Data Structures and Algorithms',
+    'DAA': 'Design and Analysis of Algorithms',
+    'OS': 'Operating Systems',
+    'DBMS': 'Database Management Systems',
+    'SE': 'Software Engineering',
+    'AI': 'Artificial Intelligence',
+    'ML': 'Machine Learning',
+    'DL': 'Deep Learning',
+    'NLP': 'Natural Language Processing',
+    'CV': 'Computer Vision',
+    'CN': 'Computer Networks',
+    'DC': 'Data Communications',
+    'DIP': 'Digital Image Processing',
+    'CC': 'Cloud Computing',
+    'BD': 'Big Data',
+    'IoT': 'Internet of Things',
+    'HCI': 'Human Computer Interaction',
+    'IR': 'Information Retrieval',
+    'IS': 'Information Security',
+    'CG': 'Computer Graphics',
+    'TOA': 'Theory of Automata',
+    'DLD': 'Digital Logic Design',
+    'CA': 'Computer Architecture',
+    'COA': 'Computer Organization and Architecture',
+    'PF': 'Programming Fundamentals',
+    'DS': 'Data Science',
+    'WD': 'Web Development',
+    'MD': 'Mobile Development',
+    'GD': 'Game Development',
+    'VP': 'Visual Programming',
+    'LA': 'Linear Algebra',
+    'DM': 'Discrete Mathematics',
+    'PS': 'Probability and Statistics',
+    'CAL': 'Calculus',
+    'DE': 'Differential Equations',
+    'NM': 'Numerical Methods',
+    'PM': 'Project Management',
+    'BPR': 'Business Process Reengineering',
+    'ITM': 'IT Management',
+    'MIS': 'Management Information Systems',
+    'ICT': 'Information and Communication Technology',
+    'IT': 'Information Technology',
+    'CS': 'Computer Science',
+    'TA': 'Technical Writing',
+    'CE': 'Communication and Presentation Skills'
+  };
+  
+  if (abbreviations[courseName.trim()]) {
+    return abbreviations[courseName.trim()];
+  }
+  
+  let expanded = courseName;
+  Object.keys(abbreviations).forEach(abbr => {
+    const regex = new RegExp(`\\b${abbr}\\b`, 'g');
+    expanded = expanded.replace(regex, abbreviations[abbr]);
+  });
+  
+  return expanded;
+};
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -202,20 +267,20 @@ const StudentDashboard = () => {
                 overflow: 'hidden'
               }}>
                 <Card.Header style={{
-                  background: 'rgba(79, 70, 229, 0.12)',
-                  borderBottom: '1px solid rgba(79, 70, 229, 0.25)',
-                  border: '1px solid rgba(79, 70, 229, 0.25)',
-                  color: '#4338CA',
+                  background: 'var(--theme-color-light)',
+                  borderBottom: '1px solid var(--theme-color)',
+                  border: '1px solid var(--theme-color)',
+                  color: 'var(--theme-color)',
                   fontWeight: 700,
                   fontSize: '1.25rem',
-                  padding: '1.5rem',
+                  padding: '1rem 1.5rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: '10px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <FaCalendarDay style={{ color: '#4338CA' }} />
+                    <FaCalendarDay style={{ color: 'var(--theme-color)' }} />
                     Today's Schedule
                   </div>
 
@@ -224,15 +289,15 @@ const StudentDashboard = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
-                      padding: '0.65rem 0.9rem',
-                      background: '#ffffff',
-                      border: '1px solid rgba(79, 70, 229, 0.25)',
+                      padding: '0',
+                      background: 'transparent',
+                      border: 'none',
                       borderRadius: '12px',
                       color: '#111827'
                     }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          <FaCalendarDay style={{ fontSize: '1.05rem', color: '#4338CA', flexShrink: 0 }} />
+                          <FaCalendarDay style={{ fontSize: '1.05rem', color: 'var(--theme-color)', flexShrink: 0 }} />
                           <span style={{
                             fontSize: '0.75rem',
                             fontWeight: 600,
@@ -245,7 +310,7 @@ const StudentDashboard = () => {
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          <FaRegClock style={{ fontSize: '1.1rem', color: '#4338CA', flexShrink: 0 }} />
+                          <FaRegClock style={{ fontSize: '1.1rem', color: 'var(--theme-color)', flexShrink: 0 }} />
                           <span style={{
                             fontSize: '0.9rem',
                             fontWeight: 700,
@@ -266,7 +331,7 @@ const StudentDashboard = () => {
                     background: '#fafafa'
                   }}>
                     <Row className="align-items-start g-3">
-                      <Col lg={4} md={6} sm={12}>
+                      <Col lg={3} md={6} sm={12}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           <label style={{ 
                             fontSize: '0.875rem', 
@@ -297,7 +362,7 @@ const StudentDashboard = () => {
                         </div>
                       </Col>
                       
-                      <Col lg={4} md={6} sm={12}>
+                      <Col lg={3} md={6} sm={12}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                           <label style={{ 
                             fontSize: '0.875rem', 
@@ -325,76 +390,147 @@ const StudentDashboard = () => {
                         </div>
                       </Col>
                       
-                      <Col lg={4} md={12} sm={12}>
-                        {currentLecture && (
-                          <div style={{
-                            padding: '0.75rem 1rem',
-                            background: '#ecfdf5',
-                            border: '1px solid #10b981',
-                            borderRadius: '8px'
+                      <Col lg={1} md={6} sm={12}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <label style={{ 
+                            fontSize: '0.875rem', 
+                            fontWeight: 600, 
+                            color: '#374151',
+                            marginBottom: 0,
+                            visibility: 'hidden'
                           }}>
-                            <div style={{
-                              fontSize: '0.75rem',
+                            Action
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedClass(''); fetchForFilters(''); }}
+                            style={{
                               fontWeight: 600,
-                              color: '#059669',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.025em',
-                              marginBottom: '0.25rem'
-                            }}>
-                              Current Lecture
-                            </div>
-                            <div style={{
+                              borderRadius: '8px',
+                              padding: '0.625rem 0.75rem',
+                              border: '1px solid #d1d5db',
+                              background: '#ffffff',
+                              color: '#374151',
                               fontSize: '0.875rem',
-                              fontWeight: 600,
-                              color: '#111827',
-                              marginBottom: '0.25rem'
-                            }}>
-                              {currentLecture.course}
-                            </div>
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              width: '100%'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#f3f4f6';
+                              e.currentTarget.style.borderColor = '#9ca3af';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = '#ffffff';
+                              e.currentTarget.style.borderColor = '#d1d5db';
+                            }}
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </Col>
+                      
+                      <Col lg={5} md={12} sm={12}>
+                        <div style={{
+                          padding: '0.5rem',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '0',
+                          boxShadow: 'none',
+                          position: 'relative',
+                          minHeight: 'auto'
+                        }}>
+                          {currentLecture ? (
                             <div style={{
-                              fontSize: '0.75rem',
-                              color: '#6b7280',
                               display: 'flex',
-                              gap: '0.5rem'
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start'
                             }}>
-                              <span><FaDoorOpen style={{ fontSize: '0.7rem' }} /> {currentLecture.roomNumber}</span>
-                              <span>•</span>
-                              <span>{formatTimeText(currentLecture.time)}</span>
+                              <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.25rem'
+                              }}>
+                                <div style={{
+                                  fontSize: '0.875rem',
+                                  fontWeight: 600,
+                                  color: '#374151'
+                                }}>
+                                  Current Lecture
+                                </div>
+                                
+                                <div style={{
+                                  fontSize: '1.1rem',
+                                  fontWeight: 700,
+                                  color: '#111827',
+                                  lineHeight: '1.3'
+                                }}>
+                                  {expandCourseName(currentLecture.course)}
+                                </div>
+                              </div>
+                              
+                              <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'flex-start',
+                                gap: '0.25rem'
+                              }}>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem'
+                                }}>
+                                  <FaDoorOpen style={{ fontSize: '0.9rem', color: '#059669' }} />
+                                  <span style={{
+                                    fontSize: '0.95rem',
+                                    fontWeight: 700,
+                                    color: '#059669'
+                                  }}>
+                                    {currentLecture.roomNumber}
+                                  </span>
+                                </div>
+                                
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem'
+                                }}>
+                                  <FaRegClock style={{ fontSize: '0.9rem', color: '#059669' }} />
+                                  <span style={{
+                                    fontSize: '0.95rem',
+                                    fontWeight: 700,
+                                    color: '#059669'
+                                  }}>
+                                    {formatTimeText(currentLecture.time)}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          ) : (
+                            <div style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.25rem'
+                            }}>
+                              <div style={{
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                color: '#374151'
+                              }}>
+                                Current Lecture
+                              </div>
+                              <div style={{
+                                fontSize: '0.9rem',
+                                color: '#6b7280',
+                                fontStyle: 'italic'
+                              }}>
+                                No lecture at the moment
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </Col>
                     </Row>
-
-                    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '1rem' }}>
-                      <button
-                        type="button"
-                        onClick={() => { setSelectedClass(''); fetchForFilters(''); }}
-                        style={{
-                          fontWeight: 600,
-                          borderRadius: '8px',
-                          padding: '0.625rem 1.5rem',
-                          border: '1px solid #d1d5db',
-                          background: '#ffffff',
-                          color: '#374151',
-                          fontSize: '0.875rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          width: '100%',
-                          maxWidth: '170px'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#f3f4f6';
-                          e.currentTarget.style.borderColor = '#9ca3af';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#ffffff';
-                          e.currentTarget.style.borderColor = '#d1d5db';
-                        }}
-                      >
-                        Reset Filter
-                      </button>
-                    </div>
                   </div>
                   <div style={{ padding: '1.5rem' }}>
                     {filteredDetails.length > 0 ? (

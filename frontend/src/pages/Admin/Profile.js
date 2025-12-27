@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Alert } from 'react-bootstrap';
-import Sidebar from '../../components/Sidebar';
+import { motion } from 'framer-motion';
 import Profile from '../../components/shared/Profile';
 import '../Dashboard.css';
 import { useAuth } from '../../context/AuthContext';
@@ -21,15 +21,16 @@ const AdminProfilePage = () => {
     return () => { mounted = false; };
   }, [instituteObjectId, loadSubscriptionOnce]);
   return (
-    <>
-      <Sidebar activeMenu="profile" />
-      <div className="dashboard-page">
-        <div className="bg-animation">
-          <div className="floating-shape shape-1"></div>
-          <div className="floating-shape shape-2"></div>
-          <div className="floating-shape shape-3"></div>
-        </div>
-        <Container fluid className="dashboard-content" style={{ padding: 0 }}>
+        <>
+        <Container 
+          fluid 
+          style={{ padding: 0, marginLeft: 0 }}
+          as={motion.div}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
           {expired && (
             <div style={{ padding: '0 1.5rem', marginTop: '1.5rem' }}>
               <Alert variant="warning" style={{ borderRadius: '12px' }}>
@@ -39,8 +40,7 @@ const AdminProfilePage = () => {
           )}
           <Profile />
         </Container>
-      </div>
-    </>
+        </>
   );
 };
 

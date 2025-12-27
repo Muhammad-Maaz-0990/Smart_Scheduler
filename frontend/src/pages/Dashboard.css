@@ -25,14 +25,15 @@
 }
 
 .custom-gradient-tooltip .tooltip-arrow::before {
-  border-top-color: #7e22ce !important;
-  border-bottom-color: #7e22ce !important;
-  border-left-color: #7e22ce !important;
-  border-right-color: #7e22ce !important;
+  border-top-color: var(--theme-color) !important;
+  border-bottom-color: var(--theme-color) !important;
+  border-left-color: var(--theme-color) !important;
+  border-right-color: var(--theme-color) !important;
 }
 
 :root {
-  --sidebar-margin: 260px;
+  /* Match Sidebar.css width (240px) to remove extra left gap */
+  --sidebar-margin: 240px;
 }
 
 body.sidebar-collapsed {
@@ -43,9 +44,23 @@ body.no-sidebar {
   --sidebar-margin: 0px;
 }
 
+/* Specific styling for AdminDashboard only */
+.admin-dashboard-content {
+  margin-left: 140px !important;
+  transition: margin-left 0.3s ease;
+}
+
+body.sidebar-collapsed .admin-dashboard-content {
+  margin-left: 45px !important;
+}
+
 @media (max-width: 992px) {
   :root {
     --sidebar-margin: 0px;
+  }
+  
+  .admin-dashboard-content {
+    margin-left: 0 !important;
   }
 }
 
@@ -74,7 +89,8 @@ div[style*="marginLeft: '250px'"] {
   position: relative;
   overflow-x: hidden;
   margin-left: var(--sidebar-margin);
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.25s ease-out;
+  will-change: margin-left;
 }
 /* When sidebar is hidden, use full width */
 .no-sidebar .dashboard-page {
@@ -83,7 +99,7 @@ div[style*="marginLeft: '250px'"] {
 
 /* When sidebar is collapsed, reduce content margin */
 .sidebar-collapsed .dashboard-page {
-  margin-left: 80px;
+  margin-left: var(--sidebar-margin);
 }
 
 /* Mobile responsive */
@@ -255,7 +271,7 @@ div[style*="marginLeft: '250px'"] {
 .dashboard-content {
   position: relative;
   z-index: 10;
-  padding: 2rem;
+  padding: 1.5rem 1rem;
   padding-top: 0;
 }
 
@@ -279,7 +295,7 @@ div[style*="marginLeft: '250px'"] {
 .dashboard-title {
   font-size: clamp(1.75rem, 4.5vw, 2.75rem);
   font-weight: 900;
-  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -302,7 +318,7 @@ div[style*="marginLeft: '250px'"] {
 
 .dashboard-subtitle {
   font-size: clamp(0.875rem, 2vw, 1.125rem);
-  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -312,7 +328,7 @@ div[style*="marginLeft: '250px'"] {
 }
 
 .highlight-text {
-  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -400,7 +416,7 @@ div[style*="marginLeft: '250px'"] {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #7e22ce, #3b82f6, #7e22ce);
+  background: linear-gradient(90deg, var(--theme-color), #3b82f6, var(--theme-color));
   transform: scaleX(0);
   transition: transform 0.5s ease;
 }
@@ -440,7 +456,7 @@ div[style*="marginLeft: '250px'"] {
 
 .stat-icon {
   font-size: clamp(2.5rem, 5vw, 3.5rem);
-  background: var(--icon-color, linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%));
+  background: var(--icon-color, linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -487,7 +503,7 @@ div[style*="marginLeft: '250px'"] {
 .stat-value {
   font-size: clamp(2.25rem, 5.5vw, 3.25rem);
   font-weight: 900;
-  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -499,7 +515,7 @@ div[style*="marginLeft: '250px'"] {
 
 .stat-label {
   font-size: clamp(0.8rem, 1.75vw, 1rem);
-  background: linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -520,7 +536,7 @@ div[style*="marginLeft: '250px'"] {
   transform: translateX(-50%);
   width: 50px;
   height: 3px;
-  background: linear-gradient(90deg, transparent, #7e22ce, #3b82f6, transparent);
+  background: linear-gradient(90deg, transparent, var(--theme-color), #3b82f6, transparent);
   border-radius: 2px;
 }
 
@@ -978,8 +994,8 @@ div[style*="marginLeft: '250px'"] {
 }
 
 .action-btn-purple {
-  background: #6941db !important;
-  border: 2px solid #6941db !important;
+  background: #7c3aed !important;
+  border: 2px solid #7c3aed !important;
   color: #fff !important;
   padding: 0.5rem 1rem !important;
   font-size: 0.875rem !important;
@@ -989,8 +1005,8 @@ div[style*="marginLeft: '250px'"] {
 .action-btn-purple:focus,
 .action-btn-purple:active {
   background: #fff !important;
-  color: #6941db !important;
-  border-color: #6941db !important;
+  color: #7c3aed !important;
+  border-color: #7c3aed !important;
   box-shadow: none !important;
   transform: scale(1.05);
 }
@@ -1051,17 +1067,17 @@ div[style*="marginLeft: '250px'"] {
 
 .table-action-edit {
   background: rgba(0, 0, 0, 0) !important;
-  border: 2px solid #6941db !important;
-  color: #6941db !important;
+  border: 2px solid var(--theme-color) !important;
+  color: var(--theme-color) !important;
   box-shadow: none !important;
 }
 
 .table-action-edit:hover,
 .table-action-edit:focus,
 .table-action-edit:active {
-  background: #6941db !important;
+  background: var(--theme-color) !important;
   color: #ffffff !important;
-  border-color: #6941db !important;
+  border-color: var(--theme-color) !important;
   box-shadow: none !important;
   transform: scale(1.05);
 }

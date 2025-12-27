@@ -24,6 +24,29 @@ export const AuthProvider = ({ children }) => {
   const [subscriptionCache, setSubscriptionCache] = useState(null);
   const [paymentsHistoryCache, setPaymentsHistoryCache] = useState(null);
 
+  // Color presets for theme
+  const colorPresets = [
+    { name: 'Purple', value: '#7c3aed', light: '#ede9fe', dark: '#5b21b6' },
+    { name: 'Blue', value: '#2563eb', light: '#dbeafe', dark: '#1e40af' },
+    { name: 'Emerald', value: '#059669', light: '#d1fae5', dark: '#047857' }
+  ];
+
+  // Apply theme from localStorage immediately on mount (before API calls)
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('appTheme');
+    if (savedTheme) {
+      try {
+        const theme = JSON.parse(savedTheme);
+        console.log('🎨 Restoring theme from localStorage:', theme);
+        document.documentElement.style.setProperty('--theme-color', theme.value);
+        document.documentElement.style.setProperty('--theme-color-light', theme.light);
+        document.documentElement.style.setProperty('--theme-color-dark', theme.dark);
+      } catch (error) {
+        console.error('Failed to parse saved theme:', error);
+      }
+    }
+  }, []);
+
   // Configure axios defaults
   useEffect(() => {
     if (token) {
@@ -149,12 +172,21 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.get(`/api/auth/institute/${encodeURIComponent(instituteID)}`);
       setInstituteCache(res.data);
+      // Apply theme color with all variants
+      if (res.data?.themeColor) {
+        const selectedColor = colorPresets.find(c => c.value === res.data.themeColor) || colorPresets[0];
+        console.log('🔄 loadInstituteOnce - Applying theme:', selectedColor.name, selectedColor);
+        document.documentElement.style.setProperty('--theme-color', selectedColor.value);
+        document.documentElement.style.setProperty('--theme-color-light', selectedColor.light);
+        document.documentElement.style.setProperty('--theme-color-dark', selectedColor.dark);
+        // Save to localStorage
+        localStorage.setItem('appTheme', JSON.stringify(selectedColor));
+      }
       return res.data;
     } catch {
       return null;
     }
-  }, [instituteCache]);
-
+  }, [instituteCache, colorPresets])
   const loadSubscriptionOnce = useCallback(async (instituteID) => {
     if (!instituteID) return null;
     if (subscriptionCache && subscriptionCache._for === instituteID) return subscriptionCache;
@@ -181,6 +213,54 @@ export const AuthProvider = ({ children }) => {
     }
   }, [paymentsHistoryCache]);
 
+  // Force refresh institute cache
+  const refreshInstituteData = useCallback(async (instituteID) => {
+    if (!instituteID) return null;
+    try {
+      const res = await axios.get(`/api/auth/institute/${encodeURIComponent(instituteID)}`);
+      setInstituteCache(res.data);
+      // Apply theme color with all variants
+      if (res.data?.themeColor) {
+        const selectedColor = colorPresets.find(c => c.value === res.data.themeColor) || colorPresets[0];
+        console.log('🔄 refreshInstituteData - Applying theme:', selectedColor.name, selectedColor);
+        document.documentElement.style.setProperty('--theme-color', selectedColor.value);
+        document.documentElement.style.setProperty('--theme-color-light', selectedColor.light);
+        document.documentElement.style.setProperty('--theme-color-dark', selectedColor.dark);
+        // Save to localStorage
+        localStorage.setItem('appTheme', JSON.stringify(selectedColor));
+      }
+      return res.data;
+    } catch {
+      return null;
+    }
+  }, [colorPresets]);
+
+  // Force refresh subscription cache
+  const refreshSubscriptionData = useCallback(async (instituteID) => {
+    if (!instituteID) return null;
+    try {
+      const res = await axios.get(`/api/subscription/status/${encodeURIComponent(instituteID)}`);
+      const data = { ...res.data, _for: instituteID };
+      setSubscriptionCache(data);
+      return data;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Force refresh payments history cache
+  const refreshPaymentsHistory = useCallback(async (instituteID) => {
+    if (!instituteID) return null;
+    try {
+      const res = await axios.get(`/api/payments/history/${encodeURIComponent(instituteID)}`);
+      const data = { items: res.data?.items || [], _for: instituteID };
+      setPaymentsHistoryCache(data);
+      return data;
+    } catch {
+      return null;
+    }
+  }, []);
+
   const login = async (email, password) => {
     try {
       const response = await axios.post('/api/auth/login', { email, password });
@@ -190,6 +270,46 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', newToken);
       setToken(newToken);
       setUser(userData);
+      
+      // Fetch and cache theme immediately after login
+      if (userData?.instituteID) {
+        try {
+          const instituteRes = await axios.get(`/api/auth/institute/${encodeURIComponent(userData.instituteID)}`, {
+            headers: { 'Authorization': `Bearer ${newToken}` }
+          });
+          
+          if (instituteRes.data?.themeColor) {
+            // Check if it matches a preset
+            let selectedColor = colorPresets.find(c => c.value.toLowerCase() === instituteRes.data.themeColor.toLowerCase());
+            
+            // If no match, create custom color object
+            if (!selectedColor) {
+              console.log('🎨 Custom color detected:', instituteRes.data.themeColor);
+              const customColor = instituteRes.data.themeColor;
+              
+              // Generate light and dark variants for custom color
+              selectedColor = {
+                name: 'Custom',
+                value: customColor,
+                light: customColor + '26', // Add 15% opacity for light variant
+                dark: customColor
+              };
+            }
+            
+            console.log('🎨 Login - Applying theme:', selectedColor.name, selectedColor.value);
+            
+            // Apply theme immediately
+            document.documentElement.style.setProperty('--theme-color', selectedColor.value);
+            document.documentElement.style.setProperty('--theme-color-light', selectedColor.light);
+            document.documentElement.style.setProperty('--theme-color-dark', selectedColor.dark);
+            
+            // Save to localStorage for future use
+            localStorage.setItem('appTheme', JSON.stringify(selectedColor));
+          }
+        } catch (themeError) {
+          console.error('Failed to fetch theme on login:', themeError);
+        }
+      }
       
       return { success: true, user: userData };
     } catch (error) {
@@ -250,6 +370,10 @@ export const AuthProvider = ({ children }) => {
     loadInstituteOnce,
     loadSubscriptionOnce,
     loadPaymentsHistoryOnce,
+    // expose refresh methods
+    refreshInstituteData,
+    refreshSubscriptionData,
+    refreshPaymentsHistory,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

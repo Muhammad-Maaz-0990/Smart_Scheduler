@@ -449,7 +449,9 @@ router.get('/institute/:instituteID/logo', async (req, res) => {
         return res.status(403).json({ message: 'You can only update your own institute' });
       }
 
-      const { instituteName, address, contactNumber, instituteLogo } = req.body;
+      const { instituteName, address, contactNumber, instituteLogo, themeColor } = req.body;
+      
+      console.log('📥 Received update request:', { instituteName, address, contactNumber, themeColor });
 
       // Prepare binary logo from data URL if provided
       let logoData, logoContentType, logoString = undefined;
@@ -476,9 +478,12 @@ router.get('/institute/:instituteID/logo', async (req, res) => {
       if (typeof instituteName === 'string') update.instituteName = instituteName.trim();
       if (typeof address === 'string') update.address = address.trim();
       if (typeof contactNumber === 'string') update.contactNumber = contactNumber.trim();
+      if (typeof themeColor === 'string') update.themeColor = themeColor.trim();
       if (logoString !== undefined) update.instituteLogo = logoString;
       if (logoData !== undefined) update.logoData = logoData;
       if (logoContentType !== undefined) update.logoContentType = logoContentType;
+
+      console.log('💾 Updating institute with:', update);
 
       const inst = await InstituteInformation.findOneAndUpdate(
         { instituteID },
@@ -486,6 +491,8 @@ router.get('/institute/:instituteID/logo', async (req, res) => {
         { new: true }
       );
       if (!inst) return res.status(404).json({ message: 'Institute not found' });
+
+      console.log('✅ Institute updated. Theme color:', inst.themeColor);
 
       const obj = inst.toObject();
       if (obj.logoData && obj.logoData.length) {

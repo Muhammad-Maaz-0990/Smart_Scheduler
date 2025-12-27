@@ -3,9 +3,9 @@ import { Container, Card, Table, Alert, Button, Modal, Form, Badge, InputGroup }
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
-import Sidebar from '../../components/Sidebar';
+import AdminPageHeader from '../../components/AdminPageHeader';
 import { useAuth } from '../../context/AuthContext';
-import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUserShield } from 'react-icons/fa';
+import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUserShield, FaUsers } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import '../Dashboard.css';
@@ -40,6 +40,8 @@ const Users = () => {
   const [filterCNIC, setFilterCNIC] = useState('');
   const [filterDesignation, setFilterDesignation] = useState('All'); // All | Student | Teacher
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [sortField, setSortField] = useState('_id'); // Default sort by ID
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
 
   const tokenHeader = () => {
     const token = localStorage.getItem('token');
@@ -325,104 +327,102 @@ const Users = () => {
     downloadCSV('users.csv', toCSV(headers, rows));
   };
 
+  const handleSort = (field) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field with ascending order
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortedUsers = () => {
+    let filtered = users
+      .filter(u => String(u.userName || '').toLowerCase().includes(searchName.trim().toLowerCase()))
+      .filter(u => filterDesignation === 'All' ? true : String(u.designation || '') === filterDesignation)
+      .filter(u => filterCNIC.trim() ? String(u.cnic || '').toLowerCase().includes(filterCNIC.trim().toLowerCase()) : true);
+
+    if (sortField) {
+      filtered.sort((a, b) => {
+        let aVal = a[sortField];
+        let bVal = b[sortField];
+
+        // For ID sorting (MongoDB ObjectId)
+        if (sortField === '_id') {
+          return sortDirection === 'asc' 
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+        }
+
+        // String comparison for all fields
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+        if (sortDirection === 'asc') {
+          return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+        } else {
+          return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+        }
+      });
+    }
+
+    return filtered;
+  };
+
   return (
     <>
-      <Sidebar activeMenu="users" />
-      <div className="dashboard-page">
-        {/* Animated Background */}
-        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(105, 65, 219, 0.08) 0%, transparent 70%)', borderRadius: '50%', animation: 'float 20s ease-in-out infinite' }}></div>
-        <div style={{ position: 'absolute', top: '60%', right: '10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', borderRadius: '50%)', animation: 'float 15s ease-in-out infinite reverse' }}></div>
+      <AdminPageHeader
+        icon={FaUsers}
+        title="Users Management"
+        subtitle="Manage users in your institute"
+        actions={
+          <>
+            <Button
+              onClick={openAdd}
+              className="action-btn action-btn-purple"
+            >
+              <FaPlus /> Add User
+            </Button>
 
-        <Container fluid className="dashboard-content">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
-            style={{ paddingTop: '1rem' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-              <div style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '12px',
-                background: '#6941db',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
-                flexShrink: 0
-              }}>
-                <FaUserShield style={{ fontSize: '1.5rem', color: 'white' }} />
-              </div>
-              <div>
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: '800',
-                  color: '#6941db',
-                  lineHeight: '1.2',
-                  margin: 0
-                }}>
-                  Users Management
-                </h2>
-                <p style={{
-                  fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
-                  color: '#6941db',
-                  margin: 0,
-                  fontWeight: '600'
-                }}>
-                  Manage users in your institute
-                </p>
-              </div>
-            </div>
+            <Button
+              onClick={onImportClick}
+              className="action-btn action-btn-green"
+            >
+              <FaFileImport /> Import
+            </Button>
 
-            <div className="d-flex gap-2 flex-wrap">
-              <Button
-                onClick={openAdd}
-                className="action-btn action-btn-purple"
-              >
-                <FaPlus /> Add User
-              </Button>
+            <Button
+              onClick={exportCSV}
+              className="action-btn action-btn-blue"
+            >
+              <FaFileExport /> Export
+            </Button>
 
-              <Button
-                onClick={onImportClick}
-                className="action-btn action-btn-green"
-              >
-                <FaFileImport /> Import
-              </Button>
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={onFileSelected}
+            />
+          </>
+        }
+      />
 
-              <Button
-                onClick={exportCSV}
-                className="action-btn action-btn-blue"
-              >
-                <FaFileExport /> Export
-              </Button>
-
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                ref={fileInputRef}
-                style={{ display: 'none' }}
-                onChange={onFileSelected}
-              />
-            </div>
-          </motion.div>
-
-          {/* Search and Filter */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+      {/* Search and Filter */}
+          <div
             className="mb-4"
             style={{ position: 'relative', zIndex: 100 }}
           >
             <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 mb-3">
               <InputGroup style={{ flex: 1 }}>
                 <InputGroup.Text style={{
-                  background: 'rgba(79, 70, 229, 0.12)',
-                  border: '1px solid rgba(79, 70, 229, 0.25)',
+                  background: 'var(--theme-color-light)',
+                  border: '1px solid var(--theme-color)',
                   borderRadius: '12px 0 0 12px',
-                  color: '#4338CA',
+                  color: 'var(--theme-color)',
                   padding: '0.75rem 1rem'
                 }}>
                   <FaSearch />
@@ -443,7 +443,7 @@ const Users = () => {
                   }}
                   onFocus={(e) => {
                     e.target.style.border = '2px solid transparent';
-                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #6941db 0%, #3b82f6 100%)';
+                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)';
                     e.target.style.backgroundOrigin = 'border-box';
                     e.target.style.backgroundClip = 'padding-box, border-box';
                   }}
@@ -458,12 +458,12 @@ const Users = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowFilterMenu(s => !s)}
                 style={{
-                  background: showFilterMenu ? '#6941db' : 'linear-gradient(135deg, rgba(105, 65, 219, 0.1), rgba(59, 130, 246, 0.1))',
+                  background: showFilterMenu ? 'var(--theme-color)' : 'linear-gradient(135deg, rgba(105, 65, 219, 0.1), rgba(59, 130, 246, 0.1))',
                   border: '2px solid rgba(105, 65, 219, 0.2)',
                   borderRadius: '12px',
                   padding: '0.75rem 1.5rem',
                   fontWeight: 400,
-                  color: showFilterMenu ? 'white' : '#6941db',
+                  color: showFilterMenu ? 'white' : 'var(--theme-color)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem'
@@ -493,7 +493,7 @@ const Users = () => {
                         <label style={{ 
                           fontSize: '0.875rem',
                           fontWeight: 600,
-                          color: '#6941db',
+                          color: 'var(--theme-color)',
                           marginBottom: '0.5rem',
                           display: 'block'
                         }}>
@@ -516,7 +516,7 @@ const Users = () => {
                             outline: 'none'
                           }}
                           onFocus={(e) => {
-                            e.target.style.borderColor = '#6941db';
+                            e.target.style.borderColor = 'var(--theme-color)';
                             e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
                           }}
                           onBlur={(e) => {
@@ -530,7 +530,7 @@ const Users = () => {
                         <label style={{ 
                           fontSize: '0.875rem',
                           fontWeight: 600,
-                          color: '#6941db',
+                          color: 'var(--theme-color)',
                           marginBottom: '0.5rem',
                           display: 'block'
                         }}>
@@ -552,7 +552,7 @@ const Users = () => {
                             outline: 'none'
                           }}
                           onFocus={(e) => {
-                            e.target.style.borderColor = '#6941db';
+                            e.target.style.borderColor = 'var(--theme-color)';
                             e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
                           }}
                           onBlur={(e) => {
@@ -574,7 +574,7 @@ const Users = () => {
                           style={{
                             background: 'transparent',
                             border: '2px solid rgba(105, 65, 219, 0.2)',
-                            color: '#6941db',
+                            color: 'var(--theme-color)',
                             borderRadius: '12px',
                             fontWeight: 400,
                             padding: '0.75rem 0.875rem',
@@ -590,7 +590,7 @@ const Users = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
 
           {/* Alerts */}
           <AnimatePresence>
@@ -693,8 +693,8 @@ const Users = () => {
                   <h5 style={{
                     fontSize: '1.125rem',
                     fontWeight: '700',
-                    background: '#6941db',
-                    color: '#6941db',
+                    background: 'var(--theme-color)',
+                    color: 'var(--theme-color)',
                     marginBottom: '1rem'
                   }}>
                     Import Preview ({importPreview.length} users)
@@ -706,12 +706,12 @@ const Users = () => {
                           background: 'rgba(255, 255, 255, 0.5)',
                           borderBottom: '2px solid rgba(105, 65, 219, 0.2)'
                         }}>
-                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>#</th>
-                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Name</th>
-                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Email</th>
-                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Designation</th>
-                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Phone</th>
-                          <th style={{ color: '#6941db', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>National ID</th>
+                          <th style={{ color: 'var(--theme-color)', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>#</th>
+                          <th style={{ color: 'var(--theme-color)', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Name</th>
+                          <th style={{ color: 'var(--theme-color)', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Email</th>
+                          <th style={{ color: 'var(--theme-color)', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Designation</th>
+                          <th style={{ color: 'var(--theme-color)', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>Phone</th>
+                          <th style={{ color: 'var(--theme-color)', fontWeight: 700, fontSize: '0.875rem', padding: '0.75rem' }}>National ID</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -722,7 +722,7 @@ const Users = () => {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: idx * 0.05 }}
                             whileHover={{
-                              backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                              backgroundColor: 'var(--theme-color-light)',
                               transition: { duration: 0.2 }
                             }}
                             style={{ fontSize: '0.875rem', borderBottom: '1px solid rgba(0, 0, 0, 0.05)' }}>
@@ -792,13 +792,139 @@ const Users = () => {
               <Table hover responsive style={{ marginBottom: 0 }}>
                 <thead>
                   <tr>
-                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>#</th>
-                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Name</th>
-                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Email</th>
-                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Designation</th>
-                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>National ID</th>
-                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Phone</th>
-                    <th style={{ padding: '1rem', fontWeight: 600, color: '#4338CA', textAlign: 'center', borderBottom: 'none', backgroundColor: 'rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.25)' }}>Actions</th>
+                    <th 
+                      onClick={() => handleSort('_id')}
+                      style={{ 
+                        padding: '1rem', 
+                        fontWeight: 600, 
+                        color: 'var(--theme-color)', 
+                        borderBottom: 'none', 
+                        backgroundColor: 'var(--theme-color-light)', 
+                        border: '1px solid var(--theme-color)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        #
+                        {sortField === '_id' && (
+                          <span style={{ fontSize: '0.75rem' }}>
+                            {sortDirection === 'asc' ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => handleSort('userName')}
+                      style={{ 
+                        padding: '1rem', 
+                        fontWeight: 600, 
+                        color: 'var(--theme-color)', 
+                        borderBottom: 'none', 
+                        backgroundColor: 'var(--theme-color-light)', 
+                        border: '1px solid var(--theme-color)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        Name
+                        {sortField === 'userName' && (
+                          <span style={{ fontSize: '0.75rem' }}>
+                            {sortDirection === 'asc' ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => handleSort('email')}
+                      style={{ 
+                        padding: '1rem', 
+                        fontWeight: 600, 
+                        color: 'var(--theme-color)', 
+                        borderBottom: 'none', 
+                        backgroundColor: 'var(--theme-color-light)', 
+                        border: '1px solid var(--theme-color)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        Email
+                        {sortField === 'email' && (
+                          <span style={{ fontSize: '0.75rem' }}>
+                            {sortDirection === 'asc' ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => handleSort('designation')}
+                      style={{ 
+                        padding: '1rem', 
+                        fontWeight: 600, 
+                        color: 'var(--theme-color)', 
+                        borderBottom: 'none', 
+                        backgroundColor: 'var(--theme-color-light)', 
+                        border: '1px solid var(--theme-color)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        Designation
+                        {sortField === 'designation' && (
+                          <span style={{ fontSize: '0.75rem' }}>
+                            {sortDirection === 'asc' ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => handleSort('cnic')}
+                      style={{ 
+                        padding: '1rem', 
+                        fontWeight: 600, 
+                        color: 'var(--theme-color)', 
+                        borderBottom: 'none', 
+                        backgroundColor: 'var(--theme-color-light)', 
+                        border: '1px solid var(--theme-color)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        National ID
+                        {sortField === 'cnic' && (
+                          <span style={{ fontSize: '0.75rem' }}>
+                            {sortDirection === 'asc' ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      onClick={() => handleSort('phoneNumber')}
+                      style={{ 
+                        padding: '1rem', 
+                        fontWeight: 600, 
+                        color: 'var(--theme-color)', 
+                        borderBottom: 'none', 
+                        backgroundColor: 'var(--theme-color-light)', 
+                        border: '1px solid var(--theme-color)',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        Phone
+                        {sortField === 'phoneNumber' && (
+                          <span style={{ fontSize: '0.75rem' }}>
+                            {sortDirection === 'asc' ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--theme-color)', textAlign: 'center', borderBottom: 'none', backgroundColor: 'var(--theme-color-light)', border: '1px solid var(--theme-color)' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -816,25 +942,18 @@ const Users = () => {
                     </tr>
                   ) : (
                     <AnimatePresence>
-                      {users
-                        .filter(u => String(u.userName || '').toLowerCase().includes(searchName.trim().toLowerCase()))
-                        .filter(u => filterDesignation === 'All' ? true : String(u.designation || '') === filterDesignation)
-                        .filter(u => filterCNIC.trim() ? String(u.cnic || '').toLowerCase().includes(filterCNIC.trim().toLowerCase()) : true)
-                        .map((u, index) => (
+                      {getSortedUsers().map((u, index) => (
                           <MotionTr
                             key={u._id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ delay: index * 0.05 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.2 }}
                             whileHover={{
-                              backgroundColor: 'rgba(79, 70, 229, 0.12)',
-                              transition: { duration: 0.2 }
+                              backgroundColor: 'var(--theme-color-light)'
                             }}
                             style={{
                               fontSize: '0.875rem',
-                              transition: 'background-color 0.2s ease',
-                              borderBottom: '1px solid rgba(0, 0, 0, 0.05)'
+                              borderBottom: '1px solid rgba(105, 65, 219, 0.1)'
                             }}
                           >
                             <td style={{ padding: '1rem', fontWeight: '500', color: '#6b7280' }}>{index + 1}</td>
@@ -880,8 +999,6 @@ const Users = () => {
               </Table>
             </div>
           </Card>
-        </Container>
-      </div>
 
       {/* Add/Edit Modal */}
       <Modal
@@ -909,7 +1026,7 @@ const Users = () => {
           <Modal.Header
             closeButton
             style={{
-              background: '#6941db',
+              background: 'var(--theme-color)',
               color: 'white',
               border: 'none',
               padding: '0.75rem 1rem'
@@ -956,7 +1073,7 @@ const Users = () => {
                 transition={{ delay: 0.1 }}
               >
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Full Name</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: 'var(--theme-color)', fontSize: '0.875rem' }}>Full Name</Form.Label>
                   <Form.Control
                     type="text"
                     value={current.userName}
@@ -983,7 +1100,7 @@ const Users = () => {
                 transition={{ delay: 0.15 }}
               >
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Email</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: 'var(--theme-color)', fontSize: '0.875rem' }}>Email</Form.Label>
                   <Form.Control
                     type="email"
                     value={current.email}
@@ -1011,7 +1128,7 @@ const Users = () => {
                   transition={{ delay: 0.2 }}
                 >
                   <Form.Group className="mb-3">
-                    <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Password</Form.Label>
+                    <Form.Label style={{ fontWeight: '600', color: 'var(--theme-color)', fontSize: '0.875rem' }}>Password</Form.Label>
                     <Form.Control
                       type="password"
                       value={current.password}
@@ -1040,7 +1157,7 @@ const Users = () => {
                 transition={{ delay: mode === 'add' ? 0.25 : 0.2 }}
               >
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Designation</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: 'var(--theme-color)', fontSize: '0.875rem' }}>Designation</Form.Label>
                   <Form.Select
                     value={current.designation}
                     onChange={e => { setCurrent({ ...current, designation: e.target.value }); e.target.blur(); }}
@@ -1068,7 +1185,7 @@ const Users = () => {
                 transition={{ delay: mode === 'add' ? 0.3 : 0.25 }}
               >
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>Phone</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: 'var(--theme-color)', fontSize: '0.875rem' }}>Phone</Form.Label>
                   <PhoneInput
                     international
                     defaultCountry="PK"
@@ -1094,7 +1211,7 @@ const Users = () => {
                 transition={{ delay: mode === 'add' ? 0.35 : 0.3 }}
               >
                 <Form.Group className="mb-4">
-                  <Form.Label style={{ fontWeight: '600', color: '#6941db', fontSize: '0.875rem' }}>{getCNICLabel(country)}</Form.Label>
+                  <Form.Label style={{ fontWeight: '600', color: 'var(--theme-color)', fontSize: '0.875rem' }}>{getCNICLabel(country)}</Form.Label>
                   <Form.Control
                     type="text"
                     value={current.cnic}
@@ -1156,16 +1273,16 @@ const Users = () => {
                 <MotionButton
                   whileHover={{ 
                     background: submitting ? undefined : '#fff',
-                    color: submitting ? undefined : '#6941db',
-                    border: submitting ? undefined : '2px solid #6941db'
+                    color: submitting ? undefined : 'var(--theme-color)',
+                    border: submitting ? undefined : '2px solid var(--theme-color)'
                   }}
                   whileTap={{ scale: submitting ? 1 : 0.98 }}
                   transition={{ duration: 0.15 }}
                   type="submit"
                   disabled={submitting}
                   style={{
-                    background: submitting ? 'rgba(105, 65, 219, 0.6)' : '#6941db',
-                    border: '2px solid #6941db',
+                    background: submitting ? 'rgba(105, 65, 219, 0.6)' : 'var(--theme-color)',
+                    border: '2px solid var(--theme-color)',
                     borderRadius: '12px',
                     padding: '0.5rem 1rem',
                     color: 'white',
@@ -1213,7 +1330,7 @@ const Users = () => {
           border-radius: 12px !important;
           background: 
             linear-gradient(white, white) padding-box,
-            linear-gradient(135deg, #6941db 0%, #3b82f6 100%) border-box !important;
+            linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%) border-box !important;
           box-shadow: 0 0 0 3px rgba(105, 65, 219, 0.15) !important;
           outline: none !important;
         }
@@ -1230,7 +1347,7 @@ const Users = () => {
           border-radius: 12px !important;
           background: 
             linear-gradient(white, white) padding-box,
-            linear-gradient(135deg, #6941db 0%, #3b82f6 100%) border-box !important;
+            linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%) border-box !important;
           box-shadow: 0 0 0 3px rgba(105, 65, 219, 0.15) !important;
           outline: none !important;
         }

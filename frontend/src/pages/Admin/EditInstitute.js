@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 import { motion } from 'framer-motion';
-import { FaBuilding, FaMapMarkerAlt, FaPhone, FaImage, FaCheckCircle, FaSave, FaArrowLeft } from 'react-icons/fa';
+import { FaBuilding, FaMapMarkerAlt, FaPhone, FaImage, FaCheckCircle, FaSave, FaArrowLeft, FaPalette } from 'react-icons/fa';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import Sidebar from '../../components/Sidebar';
@@ -21,12 +21,20 @@ const EditInstitute = () => {
     instituteName: '',
     address: '',
     contactNumber: '',
-    instituteLogo: '' // data URL or URL string
+    instituteLogo: '', // data URL or URL string
+    themeColor: '#7c3aed' // default purple
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  
+  const presetColors = [
+    { name: 'Purple', value: '#7c3aed', light: '#ede9fe', dark: '#5b21b6' },
+    { name: 'Blue', value: '#2563eb', light: '#dbeafe', dark: '#1e40af' },
+    { name: 'Emerald', value: '#059669', light: '#d1fae5', dark: '#047857' }
+  ];
 
   useEffect(() => {
     const load = async () => {
@@ -39,8 +47,18 @@ const EditInstitute = () => {
           instituteName: inst.instituteName || '',
           address: inst.address || '',
           contactNumber: inst.contactNumber || '',
-          instituteLogo: inst.instituteLogo || ''
+          instituteLogo: inst.instituteLogo || '',
+          themeColor: inst.themeColor || '#7c3aed'
         });
+        // Apply theme color with all variants
+        if (inst.themeColor) {
+          const selectedColor = presetColors.find(c => c.value === inst.themeColor) || presetColors[0];
+          document.documentElement.style.setProperty('--theme-color', selectedColor.value);
+          document.documentElement.style.setProperty('--theme-color-light', selectedColor.light);
+          document.documentElement.style.setProperty('--theme-color-dark', selectedColor.dark);
+          // Save to localStorage
+          localStorage.setItem('appTheme', JSON.stringify(selectedColor));
+        }
       } catch (e) {
         setError(e?.response?.data?.message || 'Failed to load institute');
       } finally {
@@ -156,6 +174,13 @@ const EditInstitute = () => {
       const res = await axios.put(`/api/auth/institute/${encodeURIComponent(user.instituteID)}`, payload);
       if (res.data) {
         setSuccess('Institute updated successfully');
+        
+        // Update localStorage with the saved theme
+        if (payload.themeColor) {
+          const selectedColor = presetColors.find(c => c.value === payload.themeColor) || presetColors[0];
+          localStorage.setItem('appTheme', JSON.stringify(selectedColor));
+          console.log('🎨 Theme saved to localStorage:', selectedColor.name);
+        }
       }
     } catch (err) {
       setError(err?.response?.data?.message || 'Update failed');
@@ -166,7 +191,6 @@ const EditInstitute = () => {
 
   return (
     <>
-      <Sidebar activeMenu="profile" />
       <div className="dashboard-page">
         <div className="bg-animation">
           <div className="floating-shape shape-1"></div>
@@ -308,6 +332,61 @@ const EditInstitute = () => {
                     <p style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#6b7280' }}>
                       Click to upload institute logo
                     </p>
+                  </div>
+
+                  {/* Theme Color Selector */}
+                  <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                    <Form.Label style={{
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '1rem',
+                      fontSize: '0.875rem',
+                      display: 'block'
+                    }}>
+                      Theme Color
+                    </Form.Label>
+                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      {presetColors.map((color) => (
+                        <motion.div
+                          key={color.value}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => {
+                            setForm(f => ({ ...f, themeColor: color.value }));
+                            document.documentElement.style.setProperty('--theme-color', color.value);
+                            document.documentElement.style.setProperty('--theme-color-light', color.light);
+                            document.documentElement.style.setProperty('--theme-color-dark', color.dark);
+                            // Save to localStorage immediately for instant restore
+                            localStorage.setItem('appTheme', JSON.stringify(color));
+                          }}
+                          style={{
+                            width: '80px',
+                            padding: '0.5rem',
+                            borderRadius: '12px',
+                            border: form.themeColor === color.value ? `3px solid ${color.value}` : '2px solid #e5e7eb',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            background: 'white',
+                            boxShadow: form.themeColor === color.value ? `0 4px 12px ${color.value}40` : '0 2px 4px rgba(0,0,0,0.1)'
+                          }}
+                        >
+                          <div style={{
+                            width: '100%',
+                            height: '40px',
+                            borderRadius: '8px',
+                            background: color.value,
+                            marginBottom: '0.5rem'
+                          }} />
+                          <div style={{
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: form.themeColor === color.value ? color.value : '#6b7280'
+                          }}>
+                            {color.name}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
 
                   <Form.Group className="mb-4">

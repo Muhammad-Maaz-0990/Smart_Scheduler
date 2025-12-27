@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
@@ -36,49 +36,50 @@ const OwnerDashboard = () => {
           <div className="floating-shape shape-2"></div>
           <div className="floating-shape shape-3"></div>
         </div>
-        <Container fluid className="dashboard-content p-3 p-md-4">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            className="welcome-section mb-4"
+        <Container fluid className="dashboard-content">
+          {/* Title Section */}
+          <motion.div 
+            style={{ textAlign: 'center', marginBottom: '3rem' }}
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <div className="d-flex align-items-center gap-3 mb-2">
-              <div style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(126, 34, 206, 0.3)'
-              }}>
-                <FaTrophy style={{ color: '#fff', fontSize: '24px' }} />
-              </div>
-              <div>
-                <h1 style={{
-                  fontSize: 'clamp(1.5rem, 3vw, 1.75rem)',
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  marginBottom: '0.25rem',
-                  letterSpacing: '-0.5px'
-                }}>
-                  Welcome Back, {user?.userName}! 
-                </h1>
-                <p style={{
-                  fontSize: 'clamp(0.875rem, 1.5vw, 1rem)',
-                  color: '#6b7280',
-                  fontWeight: 500,
-                  marginBottom: 0
-                }}>
-                  Owner Dashboard - Manage your entire system
-                </p>
-              </div>
-            </div>
+            <Badge 
+              bg="light" 
+              style={{
+                background: '#f3f4f6',
+                color: '#000000',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                padding: '0.5rem 1.25rem',
+                borderRadius: '50px',
+                marginTop: '1.5rem',
+                marginBottom: '1rem',
+                border: '2px solid #e5e7eb',
+                display: 'inline-block'
+              }}
+            >
+              <FaTrophy style={{ marginRight: '0.5rem' }} />
+              Welcome to Your Dashboard
+            </Badge>
+            
+            <h1 style={{
+              fontSize: 'clamp(1.75rem, 4.5vw, 2.75rem)',
+              fontWeight: 600,
+              color: '#000000',
+              marginBottom: '1rem',
+              letterSpacing: '-1.5px'
+            }}>
+              Owner Dashboard
+            </h1>
+            <p style={{
+              fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
+              color: '#000000',
+              fontWeight: 500
+            }}>
+              Welcome back, <span style={{ fontWeight: 700 }}>{user?.userName || 'Owner'}</span>! 
+              Manage your <span style={{ fontWeight: 700 }}>entire system</span>
+            </p>
           </motion.div>
 
           <Row className="g-3 g-md-4 mb-4">
@@ -104,7 +105,7 @@ const OwnerDashboard = () => {
                         width: '50px',
                         height: '50px',
                         borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+                        background: 'var(--theme-color)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -117,12 +118,8 @@ const OwnerDashboard = () => {
                     <h3 style={{
                       fontSize: '2rem',
                       fontWeight: 700,
-                      color: '#111827',
-                      marginBottom: '0.5rem',
-                      background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text'
+                      color: 'var(--theme-color)',
+                      marginBottom: '0.5rem'
                     }}>
                       {stats.institutes}
                     </h3>

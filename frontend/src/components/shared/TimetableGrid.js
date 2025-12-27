@@ -62,7 +62,7 @@ const TimetableGrid = ({ data = [], allDays = [], allTimes = [], showClassHeader
           <div 
             key={className}
             style={{
-              border: '2px solid #7c3aed',
+              border: '2px solid var(--theme-color)',
               borderRadius: '12px',
               overflow: 'hidden',
               background: '#fff'
@@ -71,7 +71,7 @@ const TimetableGrid = ({ data = [], allDays = [], allTimes = [], showClassHeader
             {/* Class Header */}
             {showClassHeader && (
               <div style={{
-                background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+                background: 'linear-gradient(135deg, var(--theme-color) 0%, var(--theme-color) 100%)',
                 color: '#fff',
                 padding: '16px 20px',
                 display: 'flex',
@@ -113,12 +113,12 @@ const TimetableGrid = ({ data = [], allDays = [], allTimes = [], showClassHeader
                   color: '#374151',
                   fontSize: '13px',
                   borderRight: '1px solid #e5e7eb',
-                  borderBottom: '2px solid #7c3aed',
+                  borderBottom: '2px solid var(--theme-color)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <FaClock style={{ marginRight: '6px', fontSize: '12px', color: '#7c3aed' }} />
+                  <FaClock style={{ marginRight: '6px', fontSize: '12px', color: 'var(--theme-color)' }} />
                   Day / Time
                 </div>
 
@@ -137,7 +137,7 @@ const TimetableGrid = ({ data = [], allDays = [], allTimes = [], showClassHeader
                         fontSize: '12px',
                         textAlign: 'center',
                         borderRight: '1px solid #e5e7eb',
-                        borderBottom: '2px solid #7c3aed',
+                        borderBottom: '2px solid var(--theme-color)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -168,7 +168,7 @@ const TimetableGrid = ({ data = [], allDays = [], allTimes = [], showClassHeader
                       alignItems: 'center',
                       gap: '6px'
                     }}>
-                      <FaCalendarAlt style={{ color: '#7c3aed', fontSize: '14px' }} />
+                      <FaCalendarAlt style={{ color: 'var(--theme-color)', fontSize: '14px' }} />
                       {day}
                     </div>
 
@@ -213,13 +213,14 @@ const TimetableGrid = ({ data = [], allDays = [], allTimes = [], showClassHeader
                         <div
                           key={`${day}-${timeIndex}`}
                           style={{
-                            padding: slot ? '12px' : '16px',
+                            padding: '12px',
                             background: slot
                               ? (dayIndex % 2 === 0 ? '#faf5ff' : '#f5f3ff')
                               : (dayIndex % 2 === 0 ? '#ffffff' : '#fafafa'),
                             borderRight: '1px solid #e5e7eb',
                             borderBottom: '1px solid #e5e7eb',
                             minHeight: '80px',
+                            height: '100%',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '4px'
@@ -230,7 +231,7 @@ const TimetableGrid = ({ data = [], allDays = [], allTimes = [], showClassHeader
                               <div style={{
                                 fontSize: '12px',
                                 fontWeight: 700,
-                                color: '#7c3aed',
+                                color: 'var(--theme-color)',
                                 marginBottom: '4px'
                               }}>
                                 {slot.course}

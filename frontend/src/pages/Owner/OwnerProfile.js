@@ -204,7 +204,7 @@ const OwnerProfile = () => {
                   width: '50px',
                   height: '50px',
                   borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+                  background: 'var(--theme-color)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -216,10 +216,7 @@ const OwnerProfile = () => {
                   <h2 style={{
                     fontSize: 'clamp(1.5rem, 3vw, 1.75rem)',
                     fontWeight: 700,
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
+                    color: 'var(--theme-color)',
                     marginBottom: '0.25rem',
                     letterSpacing: '-0.5px'
                   }}>
@@ -236,13 +233,13 @@ const OwnerProfile = () => {
                 </div>
               </div>
               <Button onClick={() => setShowPasswordModal(true)} style={{
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                background: 'var(--theme-color)',
                 border: 'none',
                 borderRadius: '10px',
                 padding: '8px 16px',
                 fontWeight: 600,
                 fontSize: '0.85rem',
-                boxShadow: '0 1px 3px rgba(59, 130, 246, 0.3)',
+                boxShadow: '0 1px 3px rgba(126, 34, 206, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px'
@@ -433,18 +430,15 @@ const OwnerProfile = () => {
                     </Row>
                     <div className="d-flex gap-2 mt-4">
                       {!editMode ? (
-                        <Button onClick={() => setEditMode(true)} style={{
-                          background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '8px 16px',
-                          fontWeight: 600,
-                          fontSize: '0.85rem',
-                          boxShadow: '0 1px 3px rgba(126, 34, 206, 0.3)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}>
+                        <Button 
+                          onClick={() => setEditMode(true)} 
+                          className="table-action-btn table-action-edit"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
                           <FaEdit /> Edit Profile
                         </Button>
                       ) : (
@@ -491,8 +485,18 @@ const OwnerProfile = () => {
 
       {/* Change Password Modal */}
       <Modal show={showPasswordModal} onHide={() => setShowPasswordModal(false)} centered>
+        <style>{`
+          .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 1;
+          }
+          .modal-header .btn-close:hover {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+          }
+        `}</style>
         <Modal.Header closeButton style={{
-          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+          background: 'var(--theme-color)',
           color: '#fff',
           borderBottom: 'none'
         }}>
@@ -542,14 +546,10 @@ const OwnerProfile = () => {
                     transition: 'all 0.2s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.border = '2px solid transparent';
-                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
-                    e.target.style.backgroundOrigin = 'border-box';
-                    e.target.style.backgroundClip = 'padding-box, border-box';
+                    e.target.style.border = '2px solid var(--theme-color)';
                   }}
                   onBlur={(e) => {
                     e.target.style.border = '1px solid #d1d5db';
-                    e.target.style.backgroundImage = 'none';
                   }}
                 />
                 <Button
@@ -561,7 +561,7 @@ const OwnerProfile = () => {
                     transform: 'translateY(-50%)',
                     background: 'transparent',
                     border: 'none',
-                    color: '#7e22ce',
+                    color: 'var(--theme-color)',
                     padding: '4px 8px',
                     cursor: 'pointer'
                   }}
@@ -589,14 +589,10 @@ const OwnerProfile = () => {
                     transition: 'all 0.2s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.border = '2px solid transparent';
-                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
-                    e.target.style.backgroundOrigin = 'border-box';
-                    e.target.style.backgroundClip = 'padding-box, border-box';
+                    e.target.style.border = '2px solid var(--theme-color)';
                   }}
                   onBlur={(e) => {
                     e.target.style.border = '1px solid #d1d5db';
-                    e.target.style.backgroundImage = 'none';
                   }}
                 />
                 <Button
@@ -608,7 +604,7 @@ const OwnerProfile = () => {
                     transform: 'translateY(-50%)',
                     background: 'transparent',
                     border: 'none',
-                    color: '#7e22ce',
+                    color: 'var(--theme-color)',
                     padding: '4px 8px',
                     cursor: 'pointer'
                   }}
@@ -636,14 +632,10 @@ const OwnerProfile = () => {
                     transition: 'all 0.2s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.border = '2px solid transparent';
-                    e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
-                    e.target.style.backgroundOrigin = 'border-box';
-                    e.target.style.backgroundClip = 'padding-box, border-box';
+                    e.target.style.border = '2px solid var(--theme-color)';
                   }}
                   onBlur={(e) => {
                     e.target.style.border = '1px solid #d1d5db';
-                    e.target.style.backgroundImage = 'none';
                   }}
                 />
                 <Button
@@ -655,7 +647,7 @@ const OwnerProfile = () => {
                     transform: 'translateY(-50%)',
                     background: 'transparent',
                     border: 'none',
-                    color: '#7e22ce',
+                    color: 'var(--theme-color)',
                     padding: '4px 8px',
                     cursor: 'pointer'
                   }}
@@ -682,13 +674,13 @@ const OwnerProfile = () => {
                 Cancel
               </Button>
               <Button onClick={handleChangePassword} style={{
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                background: 'var(--theme-color)',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '8px 16px',
                 fontWeight: 600,
                 fontSize: '0.85rem',
-                boxShadow: '0 1px 3px rgba(59, 130, 246, 0.3)'
+                boxShadow: '0 1px 3px rgba(126, 34, 206, 0.3)'
               }}>
                 Change Password
               </Button>

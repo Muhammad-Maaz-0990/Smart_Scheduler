@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { Container } from 'react-bootstrap';
 import Sidebar from '../../components/Sidebar';
 import TimetableGrid from '../../components/shared/TimetableGrid';
 import '../Dashboard.css';
@@ -495,16 +496,7 @@ function GenerateTimetable() {
   ].filter(Boolean)));
 
   return (
-    <>
-      <Sidebar activeMenu="timetables" />
-      <div className="dashboard-page">
-        <div className="bg-animation">
-          <div className="floating-shape shape-1"></div>
-          <div className="floating-shape shape-2"></div>
-          <div className="floating-shape shape-3"></div>
-        </div>
-        <div className="dashboard-content" style={{ background: '#fff', minHeight: '100vh', padding: '32px' }}>
-          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <Container fluid style={{ padding: 0, maxWidth: 'none', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '2rem', paddingBottom: '2rem', background: '#fff', minHeight: '100vh' }}>
             {/* Header */}
             <div style={{ marginBottom: '32px' }}>
               <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
@@ -538,7 +530,7 @@ function GenerateTimetable() {
                         width: '40px',
                         height: '40px',
                         borderRadius: '8px',
-                        background: step >= s.num ? '#7c3aed' : '#e5e7eb',
+                        background: step >= s.num ? 'var(--theme-color)' : '#e5e7eb',
                         color: step >= s.num ? '#fff' : '#9ca3af',
                         display: 'flex',
                         alignItems: 'center',
@@ -550,7 +542,7 @@ function GenerateTimetable() {
                       {s.num}
                     </div>
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: 600, color: step >= s.num ? '#7c3aed' : '#9ca3af' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: step >= s.num ? 'var(--theme-color)' : '#9ca3af' }}>
                         {s.label}
                       </div>
                     </div>
@@ -560,7 +552,7 @@ function GenerateTimetable() {
                       style={{
                         flex: 1,
                         height: '2px',
-                        background: step > s.num ? '#7c3aed' : '#e5e7eb',
+                        background: step > s.num ? 'var(--theme-color)' : '#e5e7eb',
                       }}
                     ></div>
                   )}
@@ -588,21 +580,19 @@ function GenerateTimetable() {
               {/* Action Buttons at Top */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px', paddingBottom: '24px', borderBottom: '2px solid #e5e7eb' }}>
                 <button
-                  onClick={handleBack}
-                  disabled={step === 1}
+                  onClick={step === 1 ? () => navigate('/admin/timetables') : handleBack}
                   style={{
                     padding: '12px 24px',
                     border: '2px solid #e5e7eb',
                     borderRadius: '8px',
                     background: '#fff',
                     color: '#374151',
-                    cursor: step === 1 ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                     fontWeight: 600,
                     fontSize: '14px',
-                    opacity: step === 1 ? 0.5 : 1,
                   }}
                 >
-                  Back
+                  {step === 1 ? 'Return to Timetable Screen' : 'Back'}
                 </button>
 
                 {/* Steps 1-5: Next */}
@@ -613,7 +603,7 @@ function GenerateTimetable() {
                       padding: '12px 32px',
                       border: 'none',
                       borderRadius: '8px',
-                      background: '#7c3aed',
+                      background: 'var(--theme-color)',
                       color: '#fff',
                       cursor: 'pointer',
                       fontWeight: 600,
@@ -633,7 +623,7 @@ function GenerateTimetable() {
                       padding: '12px 32px',
                       border: 'none',
                       borderRadius: '8px',
-                      background: '#7c3aed',
+                      background: 'var(--theme-color)',
                       color: '#fff',
                       cursor: loading ? 'not-allowed' : 'pointer',
                       fontWeight: 600,
@@ -686,7 +676,7 @@ function GenerateTimetable() {
                       padding: '12px 32px',
                       border: 'none',
                       borderRadius: '8px',
-                      background: '#7c3aed',
+                      background: 'var(--theme-color)',
                       color: '#fff',
                       cursor: (loading || selectedCandidateIndex == null) ? 'not-allowed' : 'pointer',
                       fontWeight: 600,
@@ -743,14 +733,14 @@ function GenerateTimetable() {
                               <div style={{ 
                                 fontSize: '14px', 
                                 fontWeight: 600, 
-                                color: '#7c3aed', 
+                                color: 'var(--theme-color)', 
                                 marginBottom: '12px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px'
                               }}>
                                 <span style={{ 
-                                  background: '#7c3aed', 
+                                  background: 'var(--theme-color)', 
                                   color: '#fff', 
                                   padding: '4px 10px', 
                                   borderRadius: '6px',
@@ -775,8 +765,8 @@ function GenerateTimetable() {
                                           alignItems: 'center',
                                           gap: '8px',
                                           padding: '8px 12px',
-                                          background: '#f5f3ff',
-                                          border: '2px solid #7c3aed',
+                                          background: 'var(--theme-color-light)',
+                                          border: '2px solid var(--theme-color)',
                                           borderRadius: '8px',
                                           fontSize: '14px',
                                           fontWeight: 600,
@@ -1028,14 +1018,14 @@ function GenerateTimetable() {
                                     <div style={{ 
                                       fontSize: '14px', 
                                       fontWeight: 600, 
-                                      color: '#7c3aed', 
+                                      color: 'var(--theme-color)', 
                                       marginBottom: '12px',
                                       display: 'flex',
                                       alignItems: 'center',
                                       gap: '8px'
                                     }}>
                                       <span style={{ 
-                                        background: '#7c3aed', 
+                                        background: 'var(--theme-color)', 
                                         color: '#fff', 
                                         padding: '4px 10px', 
                                         borderRadius: '6px',
@@ -1055,18 +1045,18 @@ function GenerateTimetable() {
                                             key={room._id}
                                             onClick={() => handleRoomToggle(room._id)}
                                             style={{
-                                              border: selectedRooms.includes(room._id) ? '3px solid #7c3aed' : '2px solid #e5e7eb',
+                                              border: selectedRooms.includes(room._id) ? '3px solid var(--theme-color)' : '2px solid #e5e7eb',
                                               borderRadius: '10px',
                                               padding: '14px',
                                               cursor: 'pointer',
-                                              background: selectedRooms.includes(room._id) ? '#f5f3ff' : '#fff',
+                                              background: selectedRooms.includes(room._id) ? 'var(--theme-color-light)' : '#fff',
                                               transition: 'all 0.2s',
                                             }}
                                           >
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                               <div style={{ fontSize: '15px', fontWeight: 700, color: '#1f2937' }}>{room.roomNumber}</div>
                                               {selectedRooms.includes(room._id) && (
-                                                <div style={{ color: '#7c3aed', fontSize: '16px' }}>✓</div>
+                                                <div style={{ color: 'var(--theme-color)', fontSize: '16px' }}>✓</div>
                                               )}
                                             </div>
                                           </div>
@@ -1157,9 +1147,9 @@ function GenerateTimetable() {
                       onClick={() => setAssignmentMode(prev => prev === 'list' ? 'graphic' : 'list')}
                       style={{
                         padding: '10px 20px',
-                        background: assignmentMode === 'graphic' ? '#7c3aed' : '#fff',
-                        color: assignmentMode === 'graphic' ? '#fff' : '#7c3aed',
-                        border: '2px solid #7c3aed',
+                        background: assignmentMode === 'graphic' ? 'var(--theme-color)' : '#fff',
+                        color: assignmentMode === 'graphic' ? '#fff' : 'var(--theme-color)',
+                        border: '2px solid var(--theme-color)',
                         borderRadius: '8px',
                         fontSize: '14px',
                         fontWeight: 600,
@@ -1367,14 +1357,14 @@ function GenerateTimetable() {
                                     <div style={{ 
                                       fontSize: '14px', 
                                       fontWeight: 600, 
-                                      color: '#7c3aed', 
+                                      color: 'var(--theme-color)', 
                                       marginBottom: '12px',
                                       display: 'flex',
                                       alignItems: 'center',
                                       gap: '8px'
                                     }}>
                                       <span style={{ 
-                                        background: '#7c3aed', 
+                                        background: 'var(--theme-color)', 
                                         color: '#fff', 
                                         padding: '4px 10px', 
                                         borderRadius: '6px',
@@ -1402,7 +1392,7 @@ function GenerateTimetable() {
                                             <div style={{ 
                                               fontSize: '15px', 
                                               fontWeight: 700, 
-                                              color: '#7c3aed',
+                                              color: 'var(--theme-color)',
                                               marginBottom: '10px'
                                             }}>
                                               {room.roomNumber}
@@ -1578,10 +1568,10 @@ function GenerateTimetable() {
                         onClick={() => setActiveRoomTypeTab('classroom')}
                         style={{
                           padding: '12px 24px',
-                          background: activeRoomTypeTab === 'classroom' ? '#7c3aed' : '#fff',
+                          background: activeRoomTypeTab === 'classroom' ? 'var(--theme-color)' : '#fff',
                           color: activeRoomTypeTab === 'classroom' ? '#fff' : '#6b7280',
                           border: 'none',
-                          borderBottom: '3px solid ' + (activeRoomTypeTab === 'classroom' ? '#7c3aed' : 'transparent'),
+                          borderBottom: '3px solid ' + (activeRoomTypeTab === 'classroom' ? 'var(--theme-color)' : 'transparent'),
                           cursor: 'pointer',
                           fontSize: '14px',
                           fontWeight: 600,
@@ -1648,12 +1638,12 @@ function GenerateTimetable() {
                       {selectedClassForAssignment && (
                         <div style={{ 
                           fontSize: '13px', 
-                          color: '#7c3aed', 
+                          color: 'var(--theme-color)', 
                           marginBottom: '16px',
                           padding: '10px',
-                          background: '#f5f3ff',
+                          background: 'var(--theme-color-light)',
                           borderRadius: '8px',
-                          border: '2px solid #7c3aed',
+                          border: '2px solid var(--theme-color)',
                           fontWeight: 600,
                           display: 'flex',
                           justifyContent: 'space-between',
@@ -1665,11 +1655,11 @@ function GenerateTimetable() {
                             style={{
                               padding: '4px 8px',
                               background: '#fff',
-                              border: '1px solid #7c3aed',
+                              border: '1px solid var(--theme-color)',
                               borderRadius: '6px',
                               cursor: 'pointer',
                               fontSize: '12px',
-                              color: '#7c3aed',
+                              color: 'var(--theme-color)',
                               fontWeight: 600
                             }}
                           >
@@ -1768,12 +1758,12 @@ function GenerateTimetable() {
                                 style={{
                                   border: '2px dashed ' + (isLab ? 
                                     (hasAssignment ? '#059669' : '#a7f3d0') : 
-                                    (hasAssignment ? '#7c3aed' : '#ddd6fe')),
+                                    (hasAssignment ? 'var(--theme-color)' : '#ddd6fe')),
                                   borderRadius: '10px',
                                   padding: '16px',
                                   background: isLab ?
                                     (hasAssignment ? '#ecfdf5' : '#fff') :
-                                    (hasAssignment ? '#f5f3ff' : '#fff'),
+                                    (hasAssignment ? 'var(--theme-color-light)' : '#fff'),
                                   transition: 'all 0.2s',
                                   minHeight: '120px',
                                   cursor: selectedClassForAssignment ? 'pointer' : 'default'
@@ -1788,7 +1778,7 @@ function GenerateTimetable() {
                                   <div style={{ 
                                     fontSize: '15px', 
                                     fontWeight: 700, 
-                                    color: isLab ? '#059669' : '#7c3aed'
+                                    color: isLab ? '#059669' : 'var(--theme-color)'
                                   }}>
                                     {room.roomNumber}
                                     <span style={{ 
@@ -1880,7 +1870,7 @@ function GenerateTimetable() {
                                         return cls ? (
                                           <div style={{ 
                                             background: '#f3e8ff', 
-                                            border: '1px solid #7c3aed',
+                                            border: '1px solid var(--theme-color)',
                                             borderRadius: '6px',
                                             padding: '4px 8px',
                                             fontSize: '12px',
@@ -1931,13 +1921,13 @@ function GenerateTimetable() {
                           
                           // Determine color based on assignment and active tab
                           let cardBg = '#fff';
-                          let cardBorder = '#7c3aed';
+                          let cardBorder = 'var(--theme-color)';
                           let cardColor = '#1f2937';
                           let canInteract = true;
                           
                           if (isSelected) {
                             cardBg = '#ddd6fe';
-                            cardBorder = '#7c3aed';
+                            cardBorder = 'var(--theme-color)';
                           } else if (activeRoomTypeTab === 'classroom') {
                             // In Classroom tab
                             if (isAssignedToClassroom) {
@@ -1949,7 +1939,7 @@ function GenerateTimetable() {
                             } else {
                               // Not assigned to classroom yet (can assign even if in lab)
                               cardBg = isAssignedToLab ? '#ecfdf5' : '#fff';
-                              cardBorder = isAssignedToLab ? '#059669' : '#7c3aed';
+                              cardBorder = isAssignedToLab ? '#059669' : 'var(--theme-color)';
                             }
                           } else {
                             // In Lab tab
@@ -1961,8 +1951,8 @@ function GenerateTimetable() {
                               canInteract = false;
                             } else if (isAssignedToClassroom) {
                               // Assigned to classroom - show purple but allow lab assignment
-                              cardBg = '#f5f3ff';
-                              cardBorder = '#7c3aed';
+                              cardBg = 'var(--theme-color-light)';
+                              cardBorder = 'var(--theme-color)';
                             }
                           }
                           
@@ -2066,7 +2056,7 @@ function GenerateTimetable() {
                             
                             // Determine tab color based on assignment status
                             let tabColor = '#6b7280'; // Default gray
-                            let activeTabColor = '#7c3aed'; // Default purple
+                            let activeTabColor = 'var(--theme-color)'; // Default purple
                             if (hasAssignedCourses) {
                               tabColor = '#059669'; // Green when courses assigned
                               activeTabColor = '#059669'; // Green when active
@@ -2179,11 +2169,11 @@ function GenerateTimetable() {
                                   {hasClassroom && (
                                     <div style={{ 
                                       fontSize: '13px', 
-                                      color: '#7c3aed',
+                                      color: 'var(--theme-color)',
                                       padding: '6px 12px',
-                                      background: '#f5f3ff',
+                                      background: 'var(--theme-color-light)',
                                       borderRadius: '6px',
-                                      border: '1px solid #7c3aed',
+                                      border: '1px solid var(--theme-color)',
                                       fontWeight: 600,
                                       display: 'flex',
                                       alignItems: 'center',
@@ -2231,7 +2221,7 @@ function GenerateTimetable() {
                                     fontSize: '13px', 
                                     color: '#fff',
                                     padding: '6px 12px',
-                                    background: '#7c3aed',
+                                    background: 'var(--theme-color)',
                                     borderRadius: '6px',
                                     fontWeight: 700
                                   }}>
@@ -2265,14 +2255,14 @@ function GenerateTimetable() {
                                         flex: '1',
                                         minWidth: '300px',
                                         padding: '12px',
-                                        background: '#f5f3ff',
-                                        border: '1px solid #7c3aed',
+                                        background: 'var(--theme-color-light)',
+                                        border: '1px solid var(--theme-color)',
                                         borderRadius: '6px'
                                       }}>
                                         <div style={{ 
                                           fontSize: '12px', 
                                           fontWeight: 700, 
-                                          color: '#7c3aed',
+                                          color: 'var(--theme-color)',
                                           marginBottom: '8px',
                                           display: 'flex',
                                           justifyContent: 'space-between',
@@ -2280,7 +2270,7 @@ function GenerateTimetable() {
                                         }}>
                                           <span>Theory ({selectedTheory.length})</span>
                                           <span style={{ 
-                                            background: '#7c3aed',
+                                            background: 'var(--theme-color)',
                                             color: '#fff',
                                             padding: '3px 8px',
                                             borderRadius: '4px',
@@ -2302,7 +2292,7 @@ function GenerateTimetable() {
                                                 style={{
                                                   padding: '6px 10px',
                                                   background: '#fff',
-                                                  border: '1px solid #7c3aed',
+                                                  border: '1px solid var(--theme-color)',
                                                   borderRadius: '4px',
                                                   fontSize: '11px',
                                                   fontWeight: 600,
@@ -2313,7 +2303,7 @@ function GenerateTimetable() {
                                                   flex: '1 1 100%'
                                                 }}
                                               >
-                                                <span style={{ fontWeight: 700, color: '#7c3aed' }}>{course.courseCode}</span>
+                                                <span style={{ fontWeight: 700, color: 'var(--theme-color)' }}>{course.courseCode}</span>
                                                 <span>-</span>
                                                 <span>{course.courseTitle}</span>
                                                 <span style={{ 
@@ -2476,7 +2466,7 @@ function GenerateTimetable() {
                                       transition: 'all 0.2s',
                                       background: '#fff'
                                     }}
-                                    onFocus={(e) => e.target.style.borderColor = '#7c3aed'}
+                                    onFocus={(e) => e.target.style.borderColor = 'var(--theme-color)'}
                                     onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
                                   />
                                 </div>
@@ -2541,7 +2531,7 @@ function GenerateTimetable() {
                                     gap: '8px'
                                   }}>
                                     <span style={{ 
-                                      background: '#7c3aed', 
+                                      background: 'var(--theme-color)', 
                                       color: '#fff', 
                                       padding: '4px 10px', 
                                       borderRadius: '6px',
@@ -2576,10 +2566,10 @@ function GenerateTimetable() {
                                             onClick={() => handleCourseToggle(activeClassTab, course._id)}
                                             style={{
                                               padding: '12px 14px',
-                                              border: '2px solid ' + (isSelected ? '#7c3aed' : '#e5e7eb'),
+                                              border: '2px solid ' + (isSelected ? 'var(--theme-color)' : '#e5e7eb'),
                                               borderRadius: '8px',
-                                              background: isSelected ? '#f5f3ff' : '#fff',
-                                              color: isSelected ? '#7c3aed' : '#6b7280',
+                                              background: isSelected ? 'var(--theme-color-light)' : '#fff',
+                                              color: isSelected ? 'var(--theme-color)' : '#6b7280',
                                               cursor: 'pointer',
                                               fontWeight: isSelected ? 700 : 600,
                                               fontSize: '13px',
@@ -2597,7 +2587,7 @@ function GenerateTimetable() {
                                               <span style={{ 
                                                 fontSize: '11px', 
                                                 fontWeight: 700,
-                                                color: isSelected ? '#7c3aed' : '#6b7280'
+                                                color: isSelected ? 'var(--theme-color)' : '#6b7280'
                                               }}>
                                                 {course.courseCode}
                                               </span>
@@ -2630,7 +2620,7 @@ function GenerateTimetable() {
                                                 borderRadius: '4px',
                                                 fontWeight: 700,
                                                 fontSize: '10px',
-                                                color: isSelected ? '#7c3aed' : '#6b7280'
+                                                color: isSelected ? 'var(--theme-color)' : '#6b7280'
                                               }}>
                                                 {course.creditHours} CH
                                               </span>
@@ -2821,7 +2811,7 @@ function GenerateTimetable() {
                             
                             // Determine tab color
                             let tabColor = '#6b7280'; // Default gray
-                            let activeTabColor = '#7c3aed'; // Default purple
+                            let activeTabColor = 'var(--theme-color)'; // Default purple
                             if (allCoursesHaveTeachers) {
                               tabColor = '#059669'; // Green when all teachers assigned
                               activeTabColor = '#059669'; // Green when active
@@ -2895,11 +2885,11 @@ function GenerateTimetable() {
                                   {classInClassRoom && (
                                     <div style={{ 
                                       fontSize: '13px', 
-                                      color: '#7c3aed',
+                                      color: 'var(--theme-color)',
                                       padding: '6px 12px',
-                                      background: '#f5f3ff',
+                                      background: 'var(--theme-color-light)',
                                       borderRadius: '6px',
-                                      border: '1px solid #7c3aed',
+                                      border: '1px solid var(--theme-color)',
                                       fontWeight: 600,
                                       display: 'flex',
                                       alignItems: 'center',
@@ -2960,7 +2950,7 @@ function GenerateTimetable() {
                                           gap: '8px'
                                         }}>
                                           <span style={{ 
-                                            background: '#7c3aed', 
+                                            background: 'var(--theme-color)', 
                                             color: '#fff', 
                                             padding: '4px 10px', 
                                             borderRadius: '6px',
@@ -3022,12 +3012,12 @@ function GenerateTimetable() {
                                                     width: '100%',
                                                     padding: '12px 14px',
                                                     fontSize: '14px',
-                                                    border: '2px solid ' + (selectedTeacherId ? '#7c3aed' : '#e5e7eb'),
+                                                    border: '2px solid ' + (selectedTeacherId ? 'var(--theme-color)' : '#e5e7eb'),
                                                     borderRadius: '8px',
-                                                    background: selectedTeacherId ? '#f5f3ff' : '#fff',
+                                                    background: selectedTeacherId ? 'var(--theme-color-light)' : '#fff',
                                                     cursor: 'pointer',
                                                     fontWeight: selectedTeacherId ? 600 : 400,
-                                                    color: selectedTeacherId ? '#7c3aed' : '#1f2937',
+                                                    color: selectedTeacherId ? 'var(--theme-color)' : '#1f2937',
                                                     outline: 'none'
                                                   }}
                                                 >
@@ -3291,7 +3281,7 @@ function GenerateTimetable() {
                         <div 
                           key={roomId} 
                           style={{ 
-                            border: '2px solid ' + (isLab ? '#059669' : '#7c3aed'),
+                            border: '2px solid ' + (isLab ? '#059669' : 'var(--theme-color)'),
                             borderRadius: '12px', 
                             padding: '20px', 
                             background: isLab ? '#f0fdf4' : '#faf5ff'
@@ -3304,13 +3294,13 @@ function GenerateTimetable() {
                             gap: '12px',
                             marginBottom: '20px',
                             paddingBottom: '16px',
-                            borderBottom: '2px solid ' + (isLab ? '#d1fae5' : '#e9d5ff')
+                            borderBottom: '2px solid ' + (isLab ? 'var(--theme-color-light)' : '#e9d5ff')
                           }}>
                             <div style={{
                               width: '48px',
                               height: '48px',
                               borderRadius: '10px',
-                              background: isLab ? '#059669' : '#7c3aed',
+                              background: isLab ? '#059669' : 'var(--theme-color)',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -3397,7 +3387,7 @@ function GenerateTimetable() {
                                   <div style={{ 
                                     fontSize: '15px', 
                                     fontWeight: 700, 
-                                    color: isLab ? '#059669' : '#7c3aed',
+                                    color: isLab ? '#059669' : 'var(--theme-color)',
                                     marginBottom: '12px',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -3408,7 +3398,7 @@ function GenerateTimetable() {
                                       fontSize: '11px',
                                       padding: '2px 8px',
                                       borderRadius: '4px',
-                                      background: isLab ? '#d1fae5' : '#ede9fe',
+                                      background: isLab ? 'var(--theme-color-light)' : 'var(--theme-color-light)',
                                       color: isLab ? '#047857' : '#6b21a8',
                                       fontWeight: 600
                                     }}>
@@ -3472,7 +3462,7 @@ function GenerateTimetable() {
                                               <div style={{
                                                 fontSize: '13px',
                                                 fontWeight: 700,
-                                                color: isLab ? '#059669' : '#7c3aed',
+                                                color: isLab ? '#059669' : 'var(--theme-color)',
                                                 marginBottom: '4px'
                                               }}>
                                                 {room?.roomNumber}
@@ -3541,10 +3531,10 @@ function GenerateTimetable() {
                               onClick={() => setActiveCandidateTab(idx)}
                               style={{
                                 padding: '12px 24px',
-                                background: isActive ? '#7c3aed' : '#fff',
+                                background: isActive ? 'var(--theme-color)' : '#fff',
                                 color: isActive ? '#fff' : '#6b7280',
                                 border: 'none',
-                                borderBottom: '3px solid ' + (isActive ? '#7c3aed' : 'transparent'),
+                                borderBottom: '3px solid ' + (isActive ? 'var(--theme-color)' : 'transparent'),
                                 cursor: 'pointer',
                                 fontSize: '14px',
                                 fontWeight: 600,
@@ -3597,7 +3587,7 @@ function GenerateTimetable() {
                               justifyContent: 'space-between',
                               alignItems: 'center',
                               padding: '16px',
-                              background: selectedCandidateIndex === activeCandidateTab ? '#d1fae5' : '#f9fafb',
+                              background: selectedCandidateIndex === activeCandidateTab ? 'var(--theme-color-light)' : '#f9fafb',
                               borderRadius: '8px',
                               border: '2px solid ' + (selectedCandidateIndex === activeCandidateTab ? '#059669' : '#e5e7eb')
                             }}>
@@ -3613,7 +3603,7 @@ function GenerateTimetable() {
                                 onClick={() => setSelectedCandidateIndex(activeCandidateTab)}
                                 style={{
                                   padding: '10px 20px',
-                                  background: selectedCandidateIndex === activeCandidateTab ? '#059669' : '#7c3aed',
+                                  background: selectedCandidateIndex === activeCandidateTab ? '#059669' : 'var(--theme-color)',
                                   color: '#fff',
                                   border: 'none',
                                   borderRadius: '8px',
@@ -3656,10 +3646,6 @@ function GenerateTimetable() {
               )}
             </div>
 
-          </div>
-        </div>
-      </div>
-
       {/* Custom Modal */}
       {showModal && (
         <div 
@@ -3699,7 +3685,7 @@ function GenerateTimetable() {
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                background: '#7c3aed',
+                background: 'var(--theme-color)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -3732,7 +3718,7 @@ function GenerateTimetable() {
               style={{
                 width: '100%',
                 padding: '12px 24px',
-                background: '#7c3aed',
+                background: 'var(--theme-color)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '8px',
@@ -3742,14 +3728,14 @@ function GenerateTimetable() {
                 transition: 'all 0.2s'
               }}
               onMouseOver={(e) => e.target.style.background = '#6d28d9'}
-              onMouseOut={(e) => e.target.style.background = '#7c3aed'}
+              onMouseOut={(e) => e.target.style.background = 'var(--theme-color)'}
             >
               OK
             </button>
           </div>
         </div>
       )}
-    </>
+    </Container>
   );
 }
 

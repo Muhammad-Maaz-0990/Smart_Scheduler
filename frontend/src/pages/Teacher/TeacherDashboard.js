@@ -10,7 +10,7 @@ import DailyTimetableGrid from '../../components/shared/DailyTimetableGrid';
 import '../Dashboard.css';
 
 // Global purple color variable
-const PURPLE_COLOR = '#6941db';
+const PURPLE_COLOR = 'var(--theme-color)';
 
 const TeacherDashboard = () => {
   const { user } = useAuth();
@@ -189,10 +189,10 @@ const TeacherDashboard = () => {
                 overflow: 'hidden'
               }}>
                 <Card.Header style={{
-                  background: 'rgba(79, 70, 229, 0.12)',
-                  borderBottom: '1px solid rgba(79, 70, 229, 0.25)',
-                  border: '1px solid rgba(79, 70, 229, 0.25)',
-                  color: '#4338CA',
+                  background: 'var(--theme-color-light)',
+                  borderBottom: '1px solid var(--theme-color)',
+                  border: '1px solid var(--theme-color)',
+                  color: 'var(--theme-color)',
                   fontWeight: 700,
                   fontSize: '1.25rem',
                   padding: '1.5rem',
@@ -202,7 +202,7 @@ const TeacherDashboard = () => {
                   gap: '10px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <FaCalendarDay style={{ color: '#4338CA' }} />
+                    <FaCalendarDay style={{ color: 'var(--theme-color)' }} />
                     Today's Schedule
                   </div>
 
@@ -213,13 +213,13 @@ const TeacherDashboard = () => {
                       gap: '0.5rem',
                       padding: '0.65rem 0.9rem',
                       background: '#ffffff',
-                      border: '1px solid rgba(79, 70, 229, 0.25)',
+                      border: '1px solid var(--theme-color)',
                       borderRadius: '12px',
                       color: '#111827'
                     }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          <FaCalendarDay style={{ fontSize: '1.05rem', color: '#4338CA', flexShrink: 0 }} />
+                          <FaCalendarDay style={{ fontSize: '1.05rem', color: 'var(--theme-color)', flexShrink: 0 }} />
                           <span style={{
                             fontSize: '0.75rem',
                             fontWeight: 600,
@@ -232,7 +232,7 @@ const TeacherDashboard = () => {
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          <FaRegClock style={{ fontSize: '1.1rem', color: '#4338CA', flexShrink: 0 }} />
+                          <FaRegClock style={{ fontSize: '1.1rem', color: 'var(--theme-color)', flexShrink: 0 }} />
                           <span style={{
                             fontSize: '0.9rem',
                             fontWeight: 700,

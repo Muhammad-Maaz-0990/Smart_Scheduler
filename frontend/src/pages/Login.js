@@ -148,7 +148,7 @@ const Login = () => {
         }
         
         .gradient-text {
-          color: #6941db;
+          color: var(--theme-color);
         }
         
         /* Remove autofill background */
@@ -251,9 +251,9 @@ const Login = () => {
                   style={{
                     width: 'clamp(80px, 20vw, 100px)',
                     height: 'clamp(80px, 20vw, 100px)',
-                    background: '#6941db',
+                    background: 'var(--theme-color)',
                     borderRadius: '50%',
-                    boxShadow: '0 10px 40px rgba(105, 65, 219, 0.5), 0 0 0 8px rgba(105, 65, 219, 0.1)'
+                    boxShadow: '0 10px 40px var(--theme-color), 0 0 0 8px var(--theme-color-light)'
                   }}
                   whileHover={{ 
                     scale: 1.1, 
@@ -264,7 +264,7 @@ const Login = () => {
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    style={{ position: 'absolute', inset: '-10px', borderRadius: '50%', border: '2px dashed rgba(126, 34, 206, 0.3)' }}
+                    style={{ position: 'absolute', inset: '-10px', borderRadius: '50%', border: '2px dashed var(--theme-color)' }}
                   />
                   <svg width="50" height="50" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '50%', height: '50%' }}>
                     <motion.circle 
@@ -325,7 +325,7 @@ const Login = () => {
                   <a
                     href="/register"
                     style={{
-                      color: '#6941db',
+                      color: 'var(--theme-color)',
                       textDecoration: 'none',
                       fontWeight: '600'
                     }}
@@ -367,8 +367,8 @@ const Login = () => {
                         padding: 'clamp(0.875rem, 3vw, 1.125rem)',
                         fontSize: 'clamp(0.9375rem, 2.5vw, 1.0625rem)',
                         fontWeight: '600',
-                        background: '#6941db',
-                        border: '2px solid #6941db',
+                        background: 'var(--theme-color)',
+                        border: '2px solid var(--theme-color)',
                         borderRadius: '1rem',
                         color: 'white',
                         gap: 'clamp(0.5rem, 2vw, 0.75rem)',
@@ -377,7 +377,7 @@ const Login = () => {
                       whileHover={{ 
                         scale: 1.02,
                         background: 'white',
-                        color: '#6941db',
+                        color: 'var(--theme-color)',
                         borderColor: '#d1d5db'
                       }}
                       whileTap={{ scale: 0.98 }}
@@ -472,7 +472,7 @@ const Login = () => {
                             animate={{
                               top: (email || emailError) ? '-0.5rem' : '50%',
                               fontSize: (email || emailError) ? 'clamp(0.75rem, 1.8vw, 0.8125rem)' : 'clamp(0.875rem, 2.5vw, 0.9375rem)',
-                              color: emailError ? '#ef4444' : (email ? '#7e22ce' : '#9ca3af'),
+                              color: emailError ? '#ef4444' : (email ? 'var(--theme-color)' : '#9ca3af'),
                               y: (email || emailError) ? 0 : '-50%'
                             }}
                             transition={{ duration: 0.2 }}
@@ -512,13 +512,13 @@ const Login = () => {
                                 WebkitBoxShadow: emailError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)'
                               }}
                               onFocus={(e) => {
-                                e.currentTarget.style.borderColor = emailError ? '#ef4444' : '#7e22ce';
-                                e.currentTarget.style.boxShadow = emailError ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px rgba(126, 34, 206, 0.15)';
+                                e.currentTarget.style.borderColor = emailError ? '#ef4444' : 'var(--theme-color)';
+                                e.currentTarget.style.boxShadow = emailError ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px var(--theme-color-light)';
                                 const label = e.currentTarget.previousSibling;
                                 if (label) {
                                   label.style.top = '-0.5rem';
                                   label.style.fontSize = 'clamp(0.75rem, 1.8vw, 0.8125rem)';
-                                  label.style.color = emailError ? '#ef4444' : '#7e22ce';
+                                  label.style.color = emailError ? '#ef4444' : 'var(--theme-color)';
                                   label.style.transform = 'translateY(0)';
                                 }
                               }}
@@ -574,7 +574,7 @@ const Login = () => {
                             animate={{
                               top: (password || passwordError) ? '-0.5rem' : '50%',
                               fontSize: (password || passwordError) ? 'clamp(0.75rem, 1.8vw, 0.8125rem)' : 'clamp(0.875rem, 2.5vw, 0.9375rem)',
-                              color: passwordError ? '#ef4444' : (password ? '#7e22ce' : '#9ca3af'),
+                              color: passwordError ? '#ef4444' : (password ? 'var(--theme-color)' : '#9ca3af'),
                               y: (password || passwordError) ? 0 : '-50%'
                             }}
                             transition={{ duration: 0.2 }}
@@ -614,13 +614,13 @@ const Login = () => {
                                 WebkitBoxShadow: passwordError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)'
                               }}
                               onFocus={(e) => {
-                                e.currentTarget.style.borderColor = passwordError ? '#ef4444' : '#7e22ce';
-                                e.currentTarget.style.boxShadow = passwordError ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px rgba(126, 34, 206, 0.15)';
+                                e.currentTarget.style.borderColor = passwordError ? '#ef4444' : 'var(--theme-color)';
+                                e.currentTarget.style.boxShadow = passwordError ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px var(--theme-color-light)';
                                 const label = e.currentTarget.previousSibling;
                                 if (label) {
                                   label.style.top = '-0.5rem';
                                   label.style.fontSize = 'clamp(0.75rem, 1.8vw, 0.8125rem)';
-                                  label.style.color = passwordError ? '#ef4444' : '#7e22ce';
+                                  label.style.color = passwordError ? '#ef4444' : 'var(--theme-color)';
                                   label.style.transform = 'translateY(0)';
                                 }
                               }}
@@ -676,8 +676,8 @@ const Login = () => {
                           padding: 'clamp(0.875rem, 3vw, 1.125rem)',
                           fontSize: 'clamp(0.9375rem, 2.5vw, 1.0625rem)',
                           fontWeight: '600',
-                          background: '#6941db',
-                          border: '2px solid #6941db',
+                          background: 'var(--theme-color)',
+                          border: '2px solid var(--theme-color)',
                           borderRadius: '1rem',
                           color: 'white',
                           transition: 'all 0.3s ease'
@@ -685,7 +685,7 @@ const Login = () => {
                         whileHover={{ 
                           scale: 1.02,
                           background: 'white',
-                          color: '#6941db',
+                          color: 'var(--theme-color)',
                           borderColor: '#d1d5db'
                         }}
                         whileTap={{ scale: 0.98 }}
@@ -706,7 +706,7 @@ const Login = () => {
                       onClick={() => setShowManualLogin(false)}
                       className="w-100 mt-3"
                       style={{
-                        color: '#7e22ce',
+                        color: 'var(--theme-color)',
                         textDecoration: 'none',
                         fontSize: 'clamp(0.8125rem, 2vw, 0.9375rem)',
                         fontWeight: '600',

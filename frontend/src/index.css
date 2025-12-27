@@ -23,6 +23,12 @@
   
 }
 
+:root {
+  --theme-color: #7c3aed;
+  --theme-color-light: #ede9fe;
+  --theme-color-dark: #5b21b6;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

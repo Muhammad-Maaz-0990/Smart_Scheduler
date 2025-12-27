@@ -197,28 +197,17 @@ const DailyTimetableGrid = ({ data = [], currentDay, searchQuery = '' }) => {
         {primaryClassName && (
           <div
             style={{
-              padding: '14px 18px',
-              background: 'linear-gradient(135deg, #6941db 0%, #a855f7 100%)',
-              borderBottom: '1px solid rgba(105, 65, 219, 0.2)',
+              padding: '1rem 1.5rem',
+              background: 'rgba(79, 70, 229, 0.12)',
+              borderBottom: '1px solid rgba(79, 70, 229, 0.25)',
+              border: '1px solid rgba(79, 70, 229, 0.25)',
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
             }}
           >
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <FaGraduationCap style={{ color: '#fff', fontSize: '18px' }} />
-            </div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 'clamp(0.95rem, 1.8vw, 1.1rem)', letterSpacing: '0.3px' }}>
+            <FaGraduationCap style={{ color: '#4338CA', fontSize: '1.25rem' }} />
+            <div style={{ color: '#4338CA', fontWeight: 700, fontSize: '1.25rem', letterSpacing: '0.3px' }}>
               Class: {primaryClassName}
             </div>
           </div>

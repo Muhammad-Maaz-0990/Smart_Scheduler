@@ -24,7 +24,7 @@ const AddEditInstitute = ({ show, onHide, onSave, initial }) => {
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton style={{
-        background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+        background: 'var(--theme-color)',
         color: '#fff',
         borderBottom: 'none'
       }}>
@@ -165,7 +165,7 @@ const AddEditInstitute = ({ show, onHide, onSave, initial }) => {
               <FaTimes />Cancel
             </Button>
             <Button type="submit" style={{
-              background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+              background: 'var(--theme-color)',
               border: 'none',
               borderRadius: '8px',
               padding: '8px 16px',

@@ -101,7 +101,7 @@ const OwnerDashboardGraphs = () => {
           }}>
             <Card.Header style={{
               background: 'rgba(79, 70, 229, 0.12)',
-              color: '#4338CA',
+              color: 'var(--theme-color)',
               fontWeight: 700,
               fontSize: '0.95rem',
               padding: '14px 20px',
@@ -111,8 +111,8 @@ const OwnerDashboardGraphs = () => {
             }}>
               <FaChartLine />Institute Growth Over Time
             </Card.Header>
-            <Card.Body className="p-3">
-              <Line data={lineData} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+            <Card.Body className="p-3" style={{ height: '300px' }}>
+              <Line data={lineData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
             </Card.Body>
           </Card>
         </motion.div>
@@ -134,7 +134,7 @@ const OwnerDashboardGraphs = () => {
           }}>
             <Card.Header style={{
               background: 'rgba(79, 70, 229, 0.12)',
-              color: '#4338CA',
+              color: 'var(--theme-color)',
               fontWeight: 700,
               fontSize: '0.95rem',
               padding: '14px 20px',
@@ -144,8 +144,10 @@ const OwnerDashboardGraphs = () => {
             }}>
               <FaChartPie />Overall Teacher/Student Ratio
             </Card.Header>
-            <Card.Body className="p-3">
-              <Pie data={pieData} />
+            <Card.Body className="p-3" style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ maxWidth: '250px', maxHeight: '250px' }}>
+                <Pie data={pieData} options={{ maintainAspectRatio: true }} />
+              </div>
             </Card.Body>
           </Card>
         </motion.div>
@@ -167,7 +169,7 @@ const OwnerDashboardGraphs = () => {
           }}>
             <Card.Header style={{
               background: 'rgba(79, 70, 229, 0.12)',
-              color: '#4338CA',
+              color: 'var(--theme-color)',
               fontWeight: 700,
               fontSize: '0.95rem',
               padding: '14px 20px',
@@ -177,8 +179,8 @@ const OwnerDashboardGraphs = () => {
             }}>
               <FaChartBar />Teachers & Students by Institute
             </Card.Header>
-            <Card.Body className="p-3">
-              <Bar data={barData2} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+            <Card.Body className="p-3" style={{ height: '300px' }}>
+              <Bar data={barData2} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} />
             </Card.Body>
           </Card>
         </motion.div>

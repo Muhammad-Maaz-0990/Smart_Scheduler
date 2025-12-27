@@ -14,7 +14,7 @@ const StudentFeedbacksPage = () => {
           <div className="floating-shape shape-2"></div>
           <div className="floating-shape shape-3"></div>
         </div>
-        <Container fluid className="dashboard-content">
+        <Container fluid className="dashboard-content" style={{ height: '100vh', overflow: 'hidden', padding: 0, paddingLeft: '2rem', paddingRight: '2rem' }}>
           <Feedback />
         </Container>
       </div>

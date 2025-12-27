@@ -824,7 +824,7 @@ const Register = () => {
                       width: 'clamp(80px, 18vw, 100px)',
                       height: 'clamp(80px, 18vw, 100px)',
                       margin: '0 auto clamp(0.75rem, 2vw, 1rem)',
-                      background: '#6941db',
+                      background: 'var(--theme-color)',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
@@ -869,7 +869,7 @@ const Register = () => {
                   variants={slideInFromBottom}
                 >
                   <h1 className="welcome-title" style={{ 
-                    color: '#6941db',
+                    color: 'var(--theme-color)',
                     fontSize: 'clamp(1.5rem, 4vw, 2rem)',
                     fontWeight: '800',
                     margin: 0,
@@ -897,8 +897,8 @@ const Register = () => {
                   className="w-100 position-relative overflow-hidden"
                   onClick={() => setCurrentStep(0)}
                   style={{
-                    background: '#6941db',
-                    border: '2px solid #6941db',
+                    background: 'var(--theme-color)',
+                    border: '2px solid var(--theme-color)',
                     padding: 'clamp(0.875rem, 3vw, 1.125rem)',
                     fontWeight: 600,
                     fontSize: 'clamp(0.9375rem, 2.5vw, 1.0625rem)',
@@ -910,7 +910,7 @@ const Register = () => {
                   whileHover={{ 
                     scale: 1.02,
                     background: 'white',
-                    color: '#6941db',
+                    color: 'var(--theme-color)',
                     borderColor: '#d1d5db'
                   }}
                   whileTap={{ scale: 0.98 }}
@@ -969,7 +969,7 @@ const Register = () => {
                 initial="hidden"
                 animate="visible"
                 style={{
-                  color: '#6941db',
+                  color: 'var(--theme-color)',
                   fontSize: 'clamp(1.5rem, 4vw, 2rem)',
                   fontWeight: '800',
                   textAlign: 'center',
@@ -1033,7 +1033,7 @@ const Register = () => {
                       fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                       border: '2px solid #e5e7eb'
                     }}
-                    whileHover={{ scale: 1.02, borderColor: '#7e22ce' }}
+                    whileHover={{ scale: 1.02, borderColor: 'var(--theme-color)' }}
                     whileTap={{ scale: 0.98 }}
                   >
                     ← Previous
@@ -1046,8 +1046,8 @@ const Register = () => {
                     onClick={handleNext}
                     style={{
                       flex: 1,
-                      background: '#6941db',
-                      border: '2px solid #6941db',
+                      background: 'var(--theme-color)',
+                      border: '2px solid var(--theme-color)',
                       padding: 'clamp(0.625rem, 2vw, 0.875rem)',
                       borderRadius: '0.875rem',
                       fontWeight: '600',
@@ -1058,7 +1058,7 @@ const Register = () => {
                     whileHover={{ 
                       scale: 1.02,
                       background: 'white',
-                      color: '#6941db',
+                      color: 'var(--theme-color)',
                       borderColor: '#d1d5db'
                     }}
                     whileTap={{ scale: 0.98 }}
@@ -1072,8 +1072,8 @@ const Register = () => {
                     disabled={loading || !formData.termsAccepted || !formData.privacyAccepted}
                     style={{
                       flex: 1,
-                      background: '#6941db',
-                      border: '2px solid #6941db',
+                      background: 'var(--theme-color)',
+                      border: '2px solid var(--theme-color)',
                       padding: 'clamp(0.625rem, 2vw, 0.875rem)',
                       borderRadius: '0.875rem',
                       fontWeight: '600',
@@ -1083,9 +1083,9 @@ const Register = () => {
                     }}
                     whileHover={{ 
                       scale: loading ? 1 : 1.02,
-                      background: loading ? '#6941db' : 'white',
-                      color: loading ? 'white' : '#6941db',
-                      borderColor: loading ? '#6941db' : '#d1d5db'
+                      background: loading ? 'var(--theme-color)' : 'white',
+                      color: loading ? 'white' : 'var(--theme-color)',
+                      borderColor: loading ? 'var(--theme-color)' : '#d1d5db'
                     }}
                     whileTap={{ scale: loading ? 1 : 0.98 }}
                   >
@@ -1099,7 +1099,7 @@ const Register = () => {
                 className="back-to-login mt-3 d-block text-center"
                 onClick={handleSkip}
                 style={{
-                  color: '#7e22ce',
+                  color: 'var(--theme-color)',
                   fontWeight: '600',
                   fontSize: 'clamp(0.8125rem, 1.8vw, 0.9375rem)',
                   textDecoration: 'none'

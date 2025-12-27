@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Card, Button, Badge, Form, Row, Col,} from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeInUp, fadeIn, scaleIn } from './animation_variants';
-import { FaPrint, FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen, FaEdit, FaSave, FaTimes, FaExchangeAlt } from 'react-icons/fa';
+import { FaPrint, FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen, FaEdit, FaSave, FaTimes, FaExchangeAlt, FaFilePdf, FaInfoCircle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import html2pdf from 'html2pdf.js';
 
 // Function to expand common abbreviations to full names
 const expandCourseName = (courseName) => {
@@ -93,9 +94,12 @@ function TimeTable({ isAdmin = false }) {
   const [instituteInfo, setInstituteInfo] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editDetails, setEditDetails] = useState([]);
+  const [undoStack, setUndoStack] = useState([]); // History for undo functionality
+  const [redoStack, setRedoStack] = useState([]); // History for redo functionality
   const [swapBox, setSwapBox] = useState({}); // Organized by class: { className: [cells] }
   const [selectedCells, setSelectedCells] = useState([]); // Array of {index, class}
   const [successMessage, setSuccessMessage] = useState('');
+  const [undoRedoMessage, setUndoRedoMessage] = useState({ className: null, message: '' });
   const [renderKey, setRenderKey] = useState(0);
   const [swappingCells, setSwappingCells] = useState(null); // { cell1: index, cell2: index }
   const [showCellModal, setShowCellModal] = useState(false);
@@ -119,6 +123,7 @@ function TimeTable({ isAdmin = false }) {
     breakDuration: 30
   });
   const [searchQuery, setSearchQuery] = useState(''); // search across course/instructor
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
 
   // Auto-scroll during drag
   useEffect(() => {
@@ -402,10 +407,15 @@ function TimeTable({ isAdmin = false }) {
   }, [navigate]);
 
   const handlePrint = useCallback(async () => {
+    setShowPrintPreview(true);
+  }, []);
+
+  const confirmPrint = useCallback(async () => {
     try {
+      setShowPrintPreview(false);
+      
       // Ensure institute info is loaded
       if (!instituteInfo) {
-        // Try refetch quickly if missing
         const token = localStorage.getItem('token');
         const userStr = localStorage.getItem('user');
         if (userStr) {
@@ -429,23 +439,87 @@ function TimeTable({ isAdmin = false }) {
         }
       }
 
-      // If there's a logo, wait for it to load before printing
-      if (instituteInfo?.instituteLogo) {
-        await new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-          img.src = instituteInfo.instituteLogo;
-        });
+      // Get the content to print
+      const element = document.getElementById('timetable-print-content');
+      if (!element) {
+        console.error('Print content not found');
+        return;
       }
 
-      // Give the browser a tick to apply print-only styles
-      await new Promise(r => setTimeout(r, 50));
-      window.print();
-    } catch {
-      window.print();
+      // Clone the element to avoid modifying the original
+      const clonedElement = element.cloneNode(true);
+      
+      // Remove elements with 'no-print' class from the clone
+      const noPrintElements = clonedElement.querySelectorAll('.no-print');
+      noPrintElements.forEach(el => el.remove());
+
+      // Add compact styling to make timetables fit on one page
+      const timetableCards = clonedElement.querySelectorAll('[data-class-timetable]');
+      timetableCards.forEach((card, index) => {
+        // Add page breaks after each class timetable
+        if (index < timetableCards.length - 1) {
+          card.style.pageBreakAfter = 'always';
+          card.style.breakAfter = 'page';
+        }
+
+        // Avoid splitting a single timetable across pages
+        card.style.pageBreakInside = 'avoid';
+        card.style.breakInside = 'avoid-page';
+
+        // Reduce overall size to fit on one page
+        card.style.transform = 'scale(0.7)';
+        card.style.transformOrigin = 'top left';
+        card.style.margin = '0 auto 8px auto';
+
+        // Make cells more compact
+        const cells = card.querySelectorAll('div[style*="minHeight"]');
+        cells.forEach(cell => {
+          cell.style.minHeight = '55px';
+          cell.style.padding = '6px';
+          cell.style.fontSize = '9px';
+        });
+
+        // Reduce header size
+        const header = card.querySelector('div[style*="padding: 1rem"]');
+        if (header) {
+          header.style.padding = '0.4rem 0.8rem';
+          header.style.fontSize = '13px';
+        }
+
+        // Make grid more compact
+        const grid = card.querySelector('div[style*="gridTemplateColumns"]');
+        if (grid) {
+          grid.style.fontSize = '9px';
+        }
+      });
+
+      // Configure html2pdf options
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: `timetable-${selected?.weekStart || 'schedule'}.pdf`,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { 
+          scale: 1.5,
+          useCORS: true,
+          logging: false,
+          letterRendering: true
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'landscape'
+        },
+        pagebreak: { mode: ['css', 'legacy'] }
+      };
+
+      // Generate PDF
+      await html2pdf().set(opt).from(clonedElement).save();
+      
+    } catch (error) {
+      console.error('Print error:', error);
+      alert('Failed to generate PDF. Please try again.');
     }
-  }, [instituteInfo]);
+  }, [instituteInfo, selected]);
 
   const enterEditMode = useCallback(() => {
     // Create a complete grid with all possible cells (including empty ones)
@@ -540,6 +614,120 @@ function TimeTable({ isAdmin = false }) {
     }
   }, [selected, editDetails]);
 
+  // Save current state to undo stack before making changes
+  const saveToUndoStack = useCallback(() => {
+    console.log('💾 Saving to undo stack:', {
+      editDetails: editDetails.slice(0, 3),
+      swapBox
+    });
+    setUndoStack(prev => [...prev, {
+      editDetails: JSON.parse(JSON.stringify(editDetails)),
+      swapBox: JSON.parse(JSON.stringify(swapBox))
+    }]);
+    setRedoStack([]); // Clear redo stack on new action
+  }, [editDetails, swapBox]);
+
+  // Undo functionality
+  const handleUndo = useCallback(() => {
+    if (undoStack.length === 0) return;
+    
+    const previousState = undoStack[undoStack.length - 1];
+    console.log('🔙 UNDO - Previous state:', {
+      editDetails: previousState.editDetails.slice(0, 3),
+      swapBox: previousState.swapBox
+    });
+    console.log('🔙 UNDO - Current state before undo:', {
+      editDetails: editDetails.slice(0, 3),
+      swapBox
+    });
+    
+    setRedoStack(prev => [...prev, {
+      editDetails: JSON.parse(JSON.stringify(editDetails)),
+      swapBox: JSON.parse(JSON.stringify(swapBox))
+    }]);
+    setEditDetails(previousState.editDetails);
+    setSwapBox(previousState.swapBox);
+    setUndoStack(prev => prev.slice(0, -1));
+    setSelectedCells([]);
+    
+    console.log('🔙 UNDO - State restored');
+    
+    // Show feedback - find which class was affected
+    const affectedClasses = new Set();
+    previousState.editDetails.forEach((cell, idx) => {
+      if (cell.course && cell.course !== editDetails[idx]?.course) {
+        affectedClasses.add(cell.class);
+      }
+    });
+    Object.keys(previousState.swapBox).forEach(className => {
+      if (JSON.stringify(previousState.swapBox[className]) !== JSON.stringify(swapBox[className])) {
+        affectedClasses.add(className);
+      }
+    });
+    
+    const affectedClass = Array.from(affectedClasses)[0];
+    if (affectedClass) {
+      setUndoRedoMessage({ className: affectedClass, message: 'Undo successful' });
+      setTimeout(() => setUndoRedoMessage({ className: null, message: '' }), 2000);
+    }
+  }, [undoStack, editDetails, swapBox]);
+
+  // Redo functionality
+  const handleRedo = useCallback(() => {
+    if (redoStack.length === 0) return;
+    
+    const nextState = redoStack[redoStack.length - 1];
+    setUndoStack(prev => [...prev, {
+      editDetails: JSON.parse(JSON.stringify(editDetails)),
+      swapBox: JSON.parse(JSON.stringify(swapBox))
+    }]);
+    setEditDetails(nextState.editDetails);
+    setSwapBox(nextState.swapBox);
+    setRedoStack(prev => prev.slice(0, -1));
+    setSelectedCells([]);
+    
+    // Show feedback - find which class was affected
+    const affectedClasses = new Set();
+    nextState.editDetails.forEach((cell, idx) => {
+      if (cell.course && cell.course !== editDetails[idx]?.course) {
+        affectedClasses.add(cell.class);
+      }
+    });
+    Object.keys(nextState.swapBox).forEach(className => {
+      if (JSON.stringify(nextState.swapBox[className]) !== JSON.stringify(swapBox[className])) {
+        affectedClasses.add(className);
+      }
+    });
+    
+    const affectedClass = Array.from(affectedClasses)[0];
+    if (affectedClass) {
+      setUndoRedoMessage({ className: affectedClass, message: 'Redo successful' });
+      setTimeout(() => setUndoRedoMessage({ className: null, message: '' }), 2000);
+    }
+  }, [redoStack, editDetails, swapBox]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    if (!isEditMode) return;
+    
+    const handleKeyDown = (e) => {
+      // Ctrl+Z or Cmd+Z for undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Ctrl+Y or Ctrl+Shift+Z or Cmd+Shift+Z for redo
+      if (((e.ctrlKey || e.metaKey) && e.key === 'y') || 
+          ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditMode, handleUndo, handleRedo]);
+
   // Click to select cells
   const handleCellClick = useCallback((cellIndex, className) => {
     if (!isEditMode) return;
@@ -549,13 +737,8 @@ function TimeTable({ isAdmin = false }) {
       // Deselect
       setSelectedCells(selectedCells.filter((_, i) => i !== alreadySelected));
     } else {
-      // Only allow selecting up to 2 cells from same class
-      if (selectedCells.length >= 2) {
-        // Already have 2 selected, don't allow more
-        return;
-      }
-      
-      if (selectedCells.length === 1 && selectedCells[0].class !== className) {
+      // Allow multiple selections, but only from same class
+      if (selectedCells.length >= 1 && selectedCells[0].class !== className) {
         // First selection is from different class, don't allow
         return;
       }
@@ -566,6 +749,7 @@ function TimeTable({ isAdmin = false }) {
 
   // Remove cell content (make it empty)
   const handleRemoveCell = useCallback((cellIndex) => {
+    saveToUndoStack();
     const newDetails = [...editDetails];
     newDetails[cellIndex] = {
       ...newDetails[cellIndex],
@@ -575,7 +759,7 @@ function TimeTable({ isAdmin = false }) {
     };
     setEditDetails(newDetails);
     setSelectedCells(selectedCells.filter(s => s.index !== cellIndex));
-  }, [editDetails, selectedCells]);
+  }, [editDetails, selectedCells, saveToUndoStack]);
 
   // Open modal to add/update cell
   const handleOpenCellModal = useCallback((cellIndex, isEmpty) => {
@@ -593,6 +777,7 @@ function TimeTable({ isAdmin = false }) {
   const handleSaveCellModal = useCallback(() => {
     if (!modalCellData || !modalForm.course) return;
     
+    saveToUndoStack();
     const newDetails = [...editDetails];
     newDetails[modalCellData.index] = {
       ...newDetails[modalCellData.index],
@@ -604,7 +789,7 @@ function TimeTable({ isAdmin = false }) {
     setShowCellModal(false);
     setModalCellData(null);
     setHoveredCell(null);
-  }, [editDetails, modalCellData, modalForm]);
+  }, [editDetails, modalCellData, modalForm, saveToUndoStack]);
 
   // Close modal
   const handleCloseCellModal = useCallback(() => {
@@ -615,16 +800,199 @@ function TimeTable({ isAdmin = false }) {
   // Drag start from timetable cell
   const handleDragStart = useCallback((e, cell, cellIndex, className) => {
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('cellIndex', cellIndex.toString());
-    e.dataTransfer.setData('cellData', JSON.stringify(cell));
-    e.dataTransfer.setData('className', className);
-  }, []);
+    
+    // Check if this cell is part of selected cells
+    const selectedIndices = selectedCells.map(sc => sc.index);
+    if (selectedIndices.includes(cellIndex) && selectedCells.length > 1) {
+      // Dragging multiple selected cells
+      e.dataTransfer.setData('multiCell', 'true');
+      e.dataTransfer.setData('selectedCells', JSON.stringify(selectedCells));
+      
+      // Hide default drag image
+      const emptyImage = document.createElement('div');
+      emptyImage.style.position = 'absolute';
+      emptyImage.style.top = '-9999px';
+      document.body.appendChild(emptyImage);
+      e.dataTransfer.setDragImage(emptyImage, 0, 0);
+      setTimeout(() => document.body.removeChild(emptyImage), 0);
+      
+      // Create animated clones for all selected cells
+      const dragContainer = document.createElement('div');
+      dragContainer.id = 'multi-drag-container';
+      dragContainer.style.position = 'fixed';
+      dragContainer.style.pointerEvents = 'none';
+      dragContainer.style.zIndex = '9999';
+      dragContainer.style.transition = 'none';
+      
+      const draggedCellElement = document.querySelector(`[data-cell-index="${cellIndex}"]`);
+      const draggedRect = draggedCellElement.getBoundingClientRect();
+      
+      // Create clone for the dragged cell (sticks to cursor)
+      const draggedClone = draggedCellElement.cloneNode(true);
+      draggedClone.style.position = 'absolute';
+      draggedClone.style.width = draggedRect.width + 'px';
+      draggedClone.style.height = draggedRect.height + 'px';
+      draggedClone.style.left = '0px';
+      draggedClone.style.top = '0px';
+      draggedClone.style.opacity = '0.95';
+      draggedClone.style.transform = 'scale(1)';
+      draggedClone.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.4)';
+      draggedClone.style.transition = 'none';
+      draggedClone.style.zIndex = '100';
+      dragContainer.appendChild(draggedClone);
+      
+      // Store other cells to animate towards dragged cell
+      const otherCells = [];
+      selectedIndices.forEach((idx) => {
+        if (idx !== cellIndex) {
+          const cellElement = document.querySelector(`[data-cell-index="${idx}"]`);
+          if (cellElement) {
+            const rect = cellElement.getBoundingClientRect();
+            const clone = cellElement.cloneNode(true);
+            
+            // Store initial position (world coordinates)
+            const initialX = rect.left;
+            const initialY = rect.top;
+            
+            clone.style.position = 'absolute';
+            clone.style.width = rect.width + 'px';
+            clone.style.height = rect.height + 'px';
+            clone.style.opacity = '0.9';
+            clone.style.transform = 'scale(0.95)';
+            clone.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.3)';
+            clone.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            clone.style.zIndex = '50';
+            
+            otherCells.push({ clone, initialX, initialY, rect });
+            dragContainer.appendChild(clone);
+            
+            // Fade out original cell
+            cellElement.style.opacity = '0.3';
+          }
+        }
+      });
+      
+      // Fade out the dragged cell
+      draggedCellElement.style.opacity = '0.3';
+      
+      document.body.appendChild(dragContainer);
+      
+      let animationStarted = false;
+      
+      // Update position on drag
+      const updatePosition = (e) => {
+        if (dragContainer) {
+          const cursorX = e.clientX;
+          const cursorY = e.clientY;
+          
+          // Update dragged cell position (centered on cursor)
+          dragContainer.style.left = (cursorX - draggedRect.width / 2) + 'px';
+          dragContainer.style.top = (cursorY - draggedRect.height / 2) + 'px';
+          
+          // Animate other cells towards dragged cell after a brief delay
+          if (!animationStarted) {
+            setTimeout(() => {
+              animationStarted = true;
+              otherCells.forEach(({ clone, initialX, initialY, rect }) => {
+                // Calculate offset relative to dragged cell's current cursor position
+                const targetX = cursorX - draggedRect.width / 2;
+                const targetY = cursorY - draggedRect.height / 2;
+                
+                // Position relative to dragged cell (maintain relative positions)
+                const offsetX = initialX - draggedRect.left;
+                const offsetY = initialY - draggedRect.top;
+                
+                clone.style.left = offsetX + 'px';
+                clone.style.top = offsetY + 'px';
+              });
+            }, 100);
+          }
+        }
+      };
+      
+      // Set initial position
+      updatePosition(e);
+      
+      // Track mouse movement
+      document.addEventListener('dragover', updatePosition);
+      
+      // Cleanup on drag end
+      const cleanup = () => {
+        const container = document.getElementById('multi-drag-container');
+        if (container) {
+          document.body.removeChild(container);
+        }
+        document.removeEventListener('dragover', updatePosition);
+        document.removeEventListener('dragend', cleanup);
+        document.removeEventListener('drop', cleanup);
+        
+        // Restore original cells
+        selectedIndices.forEach(idx => {
+          const cellElement = document.querySelector(`[data-cell-index="${idx}"]`);
+          if (cellElement) {
+            cellElement.style.opacity = '1';
+          }
+        });
+      };
+      
+      document.addEventListener('dragend', cleanup);
+      document.addEventListener('drop', cleanup);
+    } else {
+      // Dragging single cell
+      e.dataTransfer.setData('cellIndex', cellIndex.toString());
+      e.dataTransfer.setData('cellData', JSON.stringify(cell));
+      e.dataTransfer.setData('className', className);
+    }
+  }, [selectedCells]);
 
   // Drop to swap box (removes from timetable, adds to swap box)
   const handleDropToSwapBox = useCallback((e, targetClass) => {
     e.preventDefault();
     e.stopPropagation();
     try {
+      const isMultiCell = e.dataTransfer.getData('multiCell') === 'true';
+      
+      if (isMultiCell) {
+        // Handle multiple selected cells deletion
+        console.log('🗑️ Multi-cell deletion - Current state before save:', {
+          editDetails: editDetails.slice(0, 3),
+          swapBox
+        });
+        saveToUndoStack();
+        const selectedCellsData = JSON.parse(e.dataTransfer.getData('selectedCells'));
+        console.log('🗑️ Multi-cell deletion - Selected cells:', selectedCellsData);
+        const newDetails = [...editDetails];
+        const newSwapBox = { ...swapBox };
+        
+        selectedCellsData.forEach(({ index, class: className }) => {
+          const cellData = newDetails[index];
+          if (cellData && cellData.course) {
+            // Add to swap box
+            if (!newSwapBox[className]) newSwapBox[className] = [];
+            newSwapBox[className].push({ ...cellData });
+            
+            // Clear from timetable
+            newDetails[index] = {
+              ...newDetails[index],
+              course: '',
+              roomNumber: '',
+              instructorName: ''
+            };
+          }
+        });
+        
+        console.log('🗑️ Multi-cell deletion - New state:', {
+          newDetails: newDetails.slice(0, 3),
+          newSwapBox
+        });
+        
+        setSwapBox(newSwapBox);
+        setEditDetails(newDetails);
+        if (setSelectedCells) setSelectedCells([]);
+        return;
+      }
+      
+      // Handle single cell deletion
       const cellIndex = parseInt(e.dataTransfer.getData('cellIndex'), 10);
       const className = e.dataTransfer.getData('className');
       const cellDataStr = e.dataTransfer.getData('cellData');
@@ -634,6 +1002,7 @@ function TimeTable({ isAdmin = false }) {
       const cellData = JSON.parse(cellDataStr);
       const actualClass = className; // Use the class from the dragged cell
       
+      saveToUndoStack();
       // Add to swap box for this class
       setSwapBox(prev => ({
         ...prev,
@@ -652,7 +1021,7 @@ function TimeTable({ isAdmin = false }) {
     } catch (error) {
       // Error dropping to swap box
     }
-  }, [editDetails]);
+  }, [editDetails, swapBox, saveToUndoStack]);
 
   // Remove from swap box (just removes, doesn't put back)
   const handleRemoveFromSwapBox = useCallback((className, idx) => {
@@ -679,6 +1048,7 @@ function TimeTable({ isAdmin = false }) {
       const targetCell = editDetails[targetCellIndex];
       if (!targetCell || targetCell.course) return; // Invalid or not empty
       
+      saveToUndoStack();
       const cellData = JSON.parse(cellDataStr);
       const newDetails = [...editDetails];
       
@@ -1060,18 +1430,23 @@ function TimeTable({ isAdmin = false }) {
         initial="hidden"
         animate="visible"
         variants={fadeInUp}
-        className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3"
-        style={{ paddingTop: '1rem' }}
+        className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 no-print"
+        style={{ 
+          padding: '1rem',
+          minHeight: '82px',
+          borderBottom: '1px solid rgba(17, 24, 39, 0.08)'
+        }}
       >
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{
             width: '50px',
             height: '50px',
             borderRadius: '12px',
-            background: '#6941db',
+            background: 'var(--theme-color)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
             flexShrink: 0
           }}>
             <FaCalendarAlt style={{ fontSize: '1.5rem', color: 'white' }} />
@@ -1080,7 +1455,7 @@ function TimeTable({ isAdmin = false }) {
             <h2 style={{ 
               fontSize: '1.5rem',
               fontWeight: '800',
-              color: '#6941db',
+              color: 'var(--theme-color)',
               lineHeight: '1.2',
               margin: 0
             }}>
@@ -1088,7 +1463,7 @@ function TimeTable({ isAdmin = false }) {
             </h2>
             <p style={{ 
               fontSize: 'clamp(0.85rem, 1.8vw, 0.95rem)',
-              color: '#6941db',
+              color: 'var(--theme-color)',
               margin: 0,
               fontWeight: '600'
             }}>
@@ -1097,7 +1472,7 @@ function TimeTable({ isAdmin = false }) {
           </div>
         </div>
 
-        <div className="d-flex flex-wrap gap-2 no-print">
+        <div className="d-flex flex-wrap gap-2">
           {selected && !isEditMode && (
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
@@ -1114,7 +1489,7 @@ function TimeTable({ isAdmin = false }) {
                     boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)'
                   }}
                 >
-                  <FaPrint style={{ fontSize: '0.875rem' }} /> Print
+                  <FaFilePdf style={{ fontSize: '0.875rem' }} /> Download PDF
                 </Button>
               </motion.div>
             )}
@@ -1127,13 +1502,13 @@ function TimeTable({ isAdmin = false }) {
                       disabled={loading}
                       className="d-flex align-items-center gap-2"
                       style={{
-                        background: '#6941db',
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '10px',
                         fontWeight: 600,
                         fontSize: '0.875rem',
-                        boxShadow: '0 2px 8px rgba(105, 65, 219, 0.25)',
+                        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
                         opacity: loading ? 0.6 : 1
                       }}
                     >
@@ -1168,13 +1543,13 @@ function TimeTable({ isAdmin = false }) {
                         disabled={loading}
                         className="d-flex align-items-center gap-2"
                         style={{
-                          background: '#6941db',
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                           border: 'none',
                           padding: '8px 16px',
                           borderRadius: '10px',
                           fontWeight: 600,
                           fontSize: '0.875rem',
-                          boxShadow: '0 2px 8px rgba(105, 65, 219, 0.25)',
+                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
                           opacity: loading ? 0.6 : 1
                         }}
                       >
@@ -1304,30 +1679,6 @@ function TimeTable({ isAdmin = false }) {
             </Card>
           </motion.div>
         )}
-        {successMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="mb-4" style={{
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
-              border: '2px solid rgba(16, 185, 129, 0.3)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)'
-            }}>
-              <Card.Body className="p-3">
-                <p className="mb-0" style={{ color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  {successMessage}
-                </p>
-              </Card.Body>
-            </Card>
-          </motion.div>
-        )}
       </AnimatePresence>
 
       {/* Timetable Selector - Hide in Edit Mode */}
@@ -1348,7 +1699,7 @@ function TimeTable({ isAdmin = false }) {
             <Card.Body className="p-3 p-md-4">
               <Form.Group>
                 <Form.Label className="mb-2 d-flex align-items-center gap-2" style={{ fontWeight: 600, color: '#374151', fontSize: '0.9rem' }}>
-                  <FaCalendarAlt style={{ color: '#6941db', fontSize: '0.875rem' }} />
+                  <FaCalendarAlt style={{ color: 'var(--theme-color)', fontSize: '0.875rem' }} />
                   Select Timetable
                 </Form.Label>
                 <Form.Select
@@ -1361,27 +1712,27 @@ function TimeTable({ isAdmin = false }) {
                   style={{
                     padding: '10px 14px',
                     fontSize: '0.9rem',
-                    border: '2px solid #e5e7eb',
+                    border: '2px solid var(--theme-color)',
                     borderRadius: '10px',
                     backgroundColor: '#fff',
                     color: '#111827',
                     fontWeight: 500,
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    outline: 'none'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#6941db';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
+                    e.target.style.borderColor = 'var(--theme-color)';
+                    e.target.style.boxShadow = '0 0 0 2px var(--theme-color)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.borderColor = 'var(--theme-color)';
                     e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
                   }}
                 >
-                  {items.map(h => (
+                  {items.map((h, index) => (
                     <option key={h.instituteTimeTableID} value={h.instituteTimeTableID}>
-                      Timetable {h.instituteTimeTableID} - {h.session} • {h.year}
-                      {h.currentStatus ? ' ⭐ (Current)' : ''}
+                      {h.session} - Version {items.length - index}{h.currentStatus ? ' (Current)' : ''}
                     </option>
                   ))}
                 </Form.Select>
@@ -1409,7 +1760,7 @@ function TimeTable({ isAdmin = false }) {
             <Card.Body className="p-3 p-md-4">
               <Form.Group>
                 <Form.Label className="mb-2 d-flex align-items-center gap-2" style={{ fontWeight: 600, color: '#374151', fontSize: '0.9rem' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6941db" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--theme-color)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
                   </svg>
@@ -1432,7 +1783,7 @@ function TimeTable({ isAdmin = false }) {
                     transition: 'all 0.3s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#6941db';
+                    e.target.style.borderColor = 'var(--theme-color)';
                     e.target.style.boxShadow = '0 0 0 3px rgba(105, 65, 219, 0.1)';
                   }}
                   onBlur={(e) => {
@@ -1479,7 +1830,7 @@ function TimeTable({ isAdmin = false }) {
                   <Button
                     onClick={generateTimetable}
                     style={{
-                      background: '#6941db',
+                      background: 'var(--theme-color)',
                       border: 'none',
                       padding: '10px 24px',
                       borderRadius: '10px',
@@ -1505,6 +1856,22 @@ function TimeTable({ isAdmin = false }) {
           animate="visible"
           variants={fadeIn}
           id="timetable-print-content"
+          data-institute-name={(() => {
+            let displayName = instituteInfo?.instituteName || selected?.instituteName;
+            if (!displayName) {
+              try {
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                  const u = JSON.parse(userStr);
+                  displayName = u?.instituteName || displayName;
+                }
+              } catch {}
+            }
+            return displayName || 'Institute';
+          })()}
+          data-session={selected.session}
+          data-generated={new Date(selected.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          data-logo={instituteInfo?.instituteLogo || ''}
         >
           <Card className="glass-effect" style={{
             border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -1514,127 +1881,117 @@ function TimeTable({ isAdmin = false }) {
             background: 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(15px)'
           }}>
-            {/* Print Header with Institute Info */}
-            {(
-              () => {
-                let displayName = instituteInfo?.instituteName || selected?.instituteName;
-                if (!displayName) {
-                  try {
-                    const userStr = localStorage.getItem('user');
-                    if (userStr) {
-                      const u = JSON.parse(userStr);
-                      displayName = u?.instituteName || displayName;
-                    }
-                  } catch {}
-                }
-                if (!displayName) displayName = 'Institute';
-                const logoUrl = instituteInfo?.instituteLogo || '';
-                return (
-                  <div className="print-only" style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '2px solid #e5e7eb', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                      {logoUrl ? (
-                        <img src={logoUrl} alt="Institute Logo" style={{ height: '80px', width: '80px', borderRadius: '50%', objectFit: 'cover', marginRight: '18px' }} />
-                      ) : null}
-                      <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: 0 }}>{displayName}</h1>
-                    </div>
-                    <div style={{ fontSize: '16px', color: '#6b7280', margin: '18px 0 0 0', textAlign: 'center', width: '100%' }}>
-                      Academic Year: {selected.session}
-                    </div>
-                    <div style={{ position: 'absolute', right: 24, bottom: 8, fontSize: '14px', color: '#9ca3af', textAlign: 'right' }}>
-                      Generated on: {new Date(selected.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </div>
-                  </div>
-                );
-              }
-            )()}
 
             {/* Card Header */}
             <Card.Header className="no-print" style={{
-              background: '#6941db',
+              background: 'var(--theme-color-light)',
               border: 'none',
-              padding: '1.25rem 1.5rem'
+              borderRadius: '12px 12px 0 0',
+              padding: '1rem 1.5rem',
+              display: 'flex',
+              alignItems: 'center'
             }}>
-              <Row className="align-items-center">
+              <Row className="align-items-center w-100">
                 <Col xs={12} lg={6}>
                   <div className="d-flex align-items-center gap-3 mb-3 mb-lg-0">
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '10px',
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '20px'
-                    }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                      </svg>
-                    </div>
+                    <FaCalendarAlt style={{ fontSize: '1.5rem', color: 'var(--theme-color)' }} />
                     <div>
-                      <h4 className="mb-1" style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>
-                        Timetable #{selected.instituteTimeTableID}
+                      <h4 className="mb-1" style={{ color: 'var(--theme-color)', fontWeight: 700, fontSize: '1.25rem', lineHeight: '1.2', margin: 0 }}>
+                        Timetable - Version {items.length - items.findIndex(h => h.instituteTimeTableID === selected.instituteTimeTableID)}
                       </h4>
                       <div className="d-flex flex-wrap gap-2 align-items-center">
-                        <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', padding: '3px 8px', borderRadius: '6px' }}>
-                          <FaCalendarAlt className="me-1" style={{ fontSize: '0.75rem' }} />
-                          {selected.session} • {selected.year}
-                        </Badge>
-                        {selected.currentStatus && (
-                          <Badge style={{
-                            background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-                            fontSize: '0.8rem',
-                            padding: '3px 8px',
-                            borderRadius: '6px',
-                            border: 'none'
-                          }}>
-                            <FaStar className="me-1" style={{ fontSize: '0.75rem' }} />
-                            Current
-                          </Badge>
-                        )}
+                        <div style={{ 
+                          fontSize: '0.85rem', 
+                          padding: '6px 14px', 
+                          borderRadius: '8px', 
+                          fontWeight: 600, 
+                          color: 'var(--theme-color)', 
+                          background: '#ffffff',
+                          border: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}>
+                          <FaCalendarAlt style={{ fontSize: '0.75rem' }} />
+                          {selected.session}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </Col>
                 
-                {isAdmin && (
-                  <Col xs={12} lg={6}>
-                    <div className="d-flex flex-wrap gap-3 justify-content-lg-end">
-                      <Form.Check
+                <Col xs={12} lg={6}>
+                  <div className="d-flex flex-wrap gap-3 justify-content-lg-end align-items-center">
+                    {selected.currentStatus && (
+                      <div style={{
+                        background: 'var(--theme-color-light)',
+                        fontSize: '0.85rem',
+                        padding: '6px 14px',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        color: 'var(--theme-color)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <FaStar style={{ fontSize: '0.75rem' }} />
+                        Current
+                      </div>
+                    )}
+                    
+                    {isAdmin && (
+                      <>
+                        <style>
+                          {`
+                            #visibility-switch.form-check-input:checked,
+                            #current-switch.form-check-input:checked {
+                              background-color: var(--theme-color);
+                              border-color: var(--theme-color);
+                            }
+                            #visibility-switch.form-check-input:focus,
+                            #current-switch.form-check-input:focus {
+                              border-color: var(--theme-color);
+                              box-shadow: 0 0 0 0.25rem rgba(105, 65, 219, 0.25);
+                            }
+                          `}
+                        </style>
+                        <Form.Check
                         type="switch"
                         id="visibility-switch"
                         label={
-                          <span className="d-flex align-items-center gap-2" style={{ color: '#fff', fontWeight: 500, fontSize: '0.9rem' }}>
+                          <span className="d-flex align-items-center gap-2" style={{ color: 'var(--theme-color)', fontWeight: 600, fontSize: '0.9rem' }}>
                             {selected.visibility ? <FaEye style={{ fontSize: '0.875rem' }} /> : <FaEyeSlash style={{ fontSize: '0.875rem' }} />}
                             {selected.visibility ? 'Visible' : 'Hidden'}
                           </span>
                         }
                         checked={!!selected.visibility}
                         onChange={(e) => updateHeader(selected.instituteTimeTableID, { visibility: e.target.checked })}
+                        style={{ accentColor: 'var(--theme-color)' }}
                       />
                       <Form.Check
                         type="switch"
                         id="current-switch"
                         label={
-                          <span className="d-flex align-items-center gap-2" style={{ color: '#fff', fontWeight: 500, fontSize: '0.9rem' }}>
+                          <span className="d-flex align-items-center gap-2" style={{ color: 'var(--theme-color)', fontWeight: 600, fontSize: '0.9rem' }}>
                             <FaStar style={{ fontSize: '0.875rem' }} />
                             Current
                           </span>
                         }
                         checked={!!selected.currentStatus}
                         onChange={(e) => updateHeader(selected.instituteTimeTableID, { currentStatus: e.target.checked })}
+                        style={{ accentColor: 'var(--theme-color)' }}
                       />
-                    </div>
-                  </Col>
-                )}
+                      </>
+                    )}
+                  </div>
+                </Col>
               </Row>
             </Card.Header>
 
             <Card.Body className="p-3 p-md-4">
               {loading ? (
                 <div className="text-center py-5">
-                  <div className="spinner-border" style={{ color: '#6941db', width: '2.5rem', height: '2.5rem' }} role="status">
+                  <div className="spinner-border" style={{ color: 'var(--theme-color)', width: '2.5rem', height: '2.5rem' }} role="status">
                     <span className="visually-hidden">Loading...</span>
                   </div>
                   <p className="mt-3" style={{ color: '#6b7280', fontWeight: 500, fontSize: '0.9rem' }}>Loading timetable details...</p>
@@ -1648,6 +2005,31 @@ function TimeTable({ isAdmin = false }) {
                       animate={{ opacity: 1, y: 0 }}
                       className="mb-4"
                     >
+                      {/* Multi-selection hint */}
+                      {selectedCells.length > 1 && (
+                        <div style={{
+                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                          color: 'white',
+                          padding: '12px 16px',
+                          borderRadius: '12px',
+                          marginBottom: '16px',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+                        }}>
+                          <FaInfoCircle style={{ fontSize: '1rem' }} />
+                          <span>
+                            {selectedCells.length} cells selected. 
+                            {selectedCells.length === 2 && selectedCells[0].class === selectedCells[1].class 
+                              ? ' Click SWAP button or drag any selected cell to delete area below to remove all.' 
+                              : ' Drag any selected cell to delete area below to remove all selected cells.'}
+                          </span>
+                        </div>
+                      )}
+                      
                       <div className="d-flex align-items-center gap-2 mb-3">
                         <FaTrash style={{ color: '#ef4444', fontSize: '1.2rem' }} />
                         <h5 className="mb-0" style={{
@@ -1857,9 +2239,16 @@ function TimeTable({ isAdmin = false }) {
                     handleOpenCellModal={handleOpenCellModal}
                     searchQuery={searchQuery}
                     setEditDetails={(newDetails) => {
+                      saveToUndoStack();
                       setEditDetails(newDetails);
                       setRenderKey(prev => prev + 1);
                     }}
+                    saveToUndoStack={saveToUndoStack}
+                    handleUndo={handleUndo}
+                    handleRedo={handleRedo}
+                    undoStack={undoStack}
+                    redoStack={redoStack}
+                    undoRedoMessage={undoRedoMessage}
                   />
                 </>
               )}
@@ -2126,7 +2515,7 @@ function TimeTable({ isAdmin = false }) {
             >
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
-                  <FaPlus style={{ marginRight: '8px', color: '#6941db' }} />
+                  <FaPlus style={{ marginRight: '8px', color: 'var(--theme-color)' }} />
                   Add New Class
                 </h4>
                 <button
@@ -2146,7 +2535,7 @@ function TimeTable({ isAdmin = false }) {
               <Form>
                 <Form.Group className="mb-3">
                   <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaDoorOpen color="#6941db" />
+                    <FaDoorOpen color="var(--theme-color)" />
                     Class Name *
                   </Form.Label>
                   <Form.Control
@@ -2191,7 +2580,7 @@ function TimeTable({ isAdmin = false }) {
                       justifyContent: 'center',
                       gap: '8px',
                       fontWeight: 600,
-                      background: '#6941db',
+                      background: 'var(--theme-color)',
                       border: 'none',
                       opacity: (!newClassName || !newClassName.trim()) ? 0.5 : 1
                     }}
@@ -2287,7 +2676,7 @@ function TimeTable({ isAdmin = false }) {
               <Form>
                 <Form.Group className="mb-3">
                   <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaGraduationCap color="#6941db" />
+                    <FaGraduationCap color="var(--theme-color)" />
                     Course * ({allCourses.length} available)
                   </Form.Label>
                   <Form.Select
@@ -2386,43 +2775,356 @@ function TimeTable({ isAdmin = false }) {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Print Footer - appears on every printed page */}
+      <div className="print-footer" style={{ display: 'none' }}>
+        <span style={{ fontWeight: 600 }}>Generated by Schedule Hub</span>
+        {instituteInfo?.instituteLogo && (
+          <img 
+            src={instituteInfo.instituteLogo} 
+            alt="Logo" 
+            style={{ height: '20px', width: 'auto', objectFit: 'contain' }}
+          />
+        )}
+      </div>
+
+      {/* Print Preview Modal */}
+      <AnimatePresence>
+        {showPrintPreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowPrintPreview(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: '20px',
+              overflow: 'auto'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#fff',
+                borderRadius: '16px',
+                width: '95%',
+                maxWidth: '1400px',
+                maxHeight: '95vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 25px 70px rgba(0, 0, 0, 0.4)'
+              }}
+            >
+              {/* Modal Header */}
+              <div style={{
+                padding: '20px 24px',
+                borderBottom: '2px solid #e5e7eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'linear-gradient(135deg, var(--theme-color) 0%, #8b5cf6 100%)',
+                borderRadius: '16px 16px 0 0',
+                flexShrink: 0
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <FaFilePdf style={{ fontSize: '24px', color: '#fff' }} />
+                  <div>
+                    <h3 style={{ margin: 0, color: '#fff', fontWeight: 700, fontSize: '18px' }}>PDF Preview</h3>
+                    <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.9)', fontSize: '13px' }}>
+                      {details ? [...new Set(details.map(d => String(d.class || '')))].length : 1} page(s) - One timetable per page
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPrintPreview(false)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: 'none',
+                    color: '#fff',
+                    borderRadius: '8px',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Preview Content - Scrollable */}
+              <div style={{
+                padding: '24px',
+                overflow: 'auto',
+                flex: 1,
+                background: '#f9fafb'
+              }}>
+                <div style={{
+                  background: '#fff',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+                  transform: 'scale(0.75)',
+                  transformOrigin: 'top center',
+                  pointerEvents: 'none'
+                }}>
+                  {/* Render the actual timetable content */}
+                  <TimetableTables 
+                    details={details}
+                    header={selected}
+                    isEditMode={false}
+                    searchQuery={searchQuery}
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{
+                padding: '20px 24px',
+                borderTop: '2px solid #e5e7eb',
+                display: 'flex',
+                gap: '12px',
+                background: '#fff',
+                borderRadius: '0 0 16px 16px',
+                flexShrink: 0
+              }}>
+                <Button
+                  variant="success"
+                  onClick={confirmPrint}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    fontWeight: 600,
+                    fontSize: '15px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    border: 'none',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                  }}
+                >
+                  <FaFilePdf />
+                  Download PDF
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowPrintPreview(false)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    fontWeight: 600,
+                    fontSize: '15px',
+                    borderRadius: '10px'
+                  }}
+                >
+                  <FaTimes />
+                  Cancel
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Container>
   );
 }
 
 export default TimeTable;
 
-// Print styles injected via style tag
+// Print styles injected via style tag - reinsert on every render to ensure fresh styles
 if (typeof document !== 'undefined') {
   const styleId = 'timetable-print-styles';
-  if (!document.getElementById(styleId)) {
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = `
-      @media screen {
-        .print-only {
-          display: none !important;
-        }
-      }
-      @media print {
-        .no-print {
-          display: none !important;
-        }
-        .print-only {
-          display: block !important;
-        }
-        #timetable-print-content {
-          visibility: visible !important;
-          display: block !important;
-        }
-        @page {
-          size: landscape;
-          margin: 0.5cm;
-        }
-      }
-    `;
-    document.head.appendChild(style);
+  // Remove old style if exists to ensure latest version
+  const oldStyle = document.getElementById(styleId);
+  if (oldStyle) {
+    oldStyle.remove();
   }
+  
+  const style = document.createElement('style');
+  style.id = styleId;
+  style.textContent = `
+    @media screen {
+      .print-only {
+        display: none !important;
+      }
+      .print-footer {
+        display: none !important;
+      }
+    }
+    @media print {
+      /* Hide screen-only elements */
+      .no-print,
+      .no-print * {
+        display: none !important;
+        visibility: hidden !important;
+      }
+      
+      .print-footer {
+        display: flex !important;
+        visibility: visible !important;
+      }
+      
+      /* Page setup with smaller margins */
+      @page {
+        size: landscape;
+        margin: 0.5cm;
+      }
+      
+      body {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Page breaks */
+      .timetable-class-container {
+        page-break-before: always;
+        page-break-inside: avoid;
+        break-before: page;
+        break-inside: avoid;
+        margin-top: 70px !important;
+        position: relative;
+      }
+      
+      .timetable-class-container:first-of-type {
+        page-break-before: auto;
+        break-before: auto;
+        margin-top: 70px !important;
+      }
+      
+      /* Header on every page using pseudo-element */
+      .timetable-class-container::before {
+        content: '';
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 65px;
+        background: white;
+        z-index: 9998;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      
+      #timetable-print-content::before {
+        content: attr(data-institute-name);
+        display: block;
+        position: fixed;
+        top: 12px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 700;
+        color: #1f2937;
+        z-index: 9999;
+        background: white;
+        padding: 0 15px;
+      }
+      
+      #timetable-print-content::after {
+        content: 'Academic Year: ' attr(data-session);
+        display: block;
+        position: fixed;
+        top: 38px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 12px;
+        color: #6b7280;
+        z-index: 9999;
+        background: white;
+      }
+      
+      /* Footer on each page */
+      .print-footer {
+        position: fixed;
+        bottom: 8px;
+        right: 12px;
+        font-size: 9px;
+        color: #6b7280;
+        display: flex !important;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 6px;
+        background: white;
+        z-index: 9999;
+      }
+      
+      .print-footer img {
+        height: 16px;
+        width: auto;
+      }
+      
+      /* Reduce table sizes more aggressively */
+      .timetable-class-container {
+        font-size: 0.65rem !important;
+        transform: scale(0.72);
+        transform-origin: top left;
+        width: 138.9%;
+        margin-bottom: -50px !important;
+      }
+      
+      .timetable-class-container table,
+      .timetable-class-container div[style*="grid"] {
+        font-size: 0.65rem !important;
+      }
+      
+      .timetable-class-container h5 {
+        font-size: 0.95rem !important;
+        padding: 6px 10px !important;
+      }
+      
+      .timetable-class-container [style*="padding"] {
+        padding: 4px 6px !important;
+      }
+      
+      /* Reduce spacing in cells more */
+      .timetable-class-container > div > div > div > div {
+        min-height: 60px !important;
+        padding: 5px !important;
+      }
+      
+      /* Smaller font in cells */
+      .timetable-class-container div[style*="fontSize"] {
+        font-size: 0.6rem !important;
+      }
+      
+      /* Reduce gaps between elements */
+      .timetable-class-container div[style*="gap"] {
+        gap: 4px !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 
@@ -2467,7 +3169,13 @@ function TimetableTables({
   hoveredCell = null,
   setHoveredCell = null,
   handleOpenCellModal = null,
-  searchQuery = ''
+  searchQuery = '',
+  saveToUndoStack = null,
+  handleUndo = null,
+  handleRedo = null,
+  undoStack = [],
+  redoStack = [],
+  undoRedoMessage = { className: null, message: '' }
 }) {
   if (!Array.isArray(details) || details.length === 0) {
     return (
@@ -2596,6 +3304,8 @@ function TimetableTables({
         return (
           <motion.div
             key={klass}
+            className="timetable-class-container"
+            data-class-timetable={klass}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: classIndex * 0.1 }}
@@ -2609,34 +3319,89 @@ function TimetableTables({
           >
             {/* Class Title Header */}
             <div style={{
-              padding: '14px 18px',
-              background: 'linear-gradient(135deg, #6941db 0%, #a855f7 100%)',
-              borderBottom: '1px solid rgba(105, 65, 219, 0.2)',
+              padding: '1rem 1.5rem',
+              background: 'var(--theme-color-light)',
+              borderBottom: '1px solid var(--theme-color)',
+              border: '1px solid var(--theme-color)',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'space-between',
               gap: '10px'
             }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '18px'
-              }}>
-                <FaGraduationCap style={{ color: '#fff' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <FaGraduationCap style={{ color: 'var(--theme-color)', fontSize: '1.25rem' }} />
+                <h5 style={{
+                  margin: 0,
+                  color: 'var(--theme-color)',
+                  fontWeight: 700,
+                  fontSize: '1.25rem',
+                  letterSpacing: '0.3px'
+                }}>
+                  Class: {klass}
+                </h5>
               </div>
-              <h5 style={{
-                margin: 0,
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: 'clamp(0.95rem, 1.8vw, 1.1rem)',
-                letterSpacing: '0.3px'
-              }}>
-                Class: {klass}
-              </h5>
+              
+              {/* Success message - appears on the left of undo/redo buttons */}
+              {undoRedoMessage.className === klass && undoRedoMessage.message && (
+                <div style={{
+                  padding: '6px 12px',
+                  background: '#10b981',
+                  color: 'white',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
+                  animation: 'fadeIn 0.3s ease-in-out'
+                }}>
+                  ✓ {undoRedoMessage.message}
+                </div>
+              )}
+              
+              {/* Undo/Redo buttons - only in edit mode */}
+              {isEditMode && saveToUndoStack && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={handleUndo}
+                    disabled={!undoStack || undoStack.length === 0}
+                    style={{
+                      background: undoStack && undoStack.length > 0 ? 'var(--theme-color)' : '#9ca3af',
+                      border: 'none',
+                      color: 'white',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: undoStack && undoStack.length > 0 ? 'pointer' : 'not-allowed',
+                      opacity: undoStack && undoStack.length > 0 ? 1 : 0.5,
+                      boxShadow: '0 2px 6px rgba(105, 65, 219, 0.3)',
+                      transition: 'all 0.2s'
+                    }}
+                    title="Undo (Ctrl+Z)"
+                  >
+                    ↶ Undo
+                  </button>
+                  <button
+                    onClick={handleRedo}
+                    disabled={!redoStack || redoStack.length === 0}
+                    style={{
+                      background: redoStack && redoStack.length > 0 ? 'var(--theme-color)' : '#9ca3af',
+                      border: 'none',
+                      color: 'white',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: redoStack && redoStack.length > 0 ? 'pointer' : 'not-allowed',
+                      opacity: redoStack && redoStack.length > 0 ? 1 : 0.5,
+                      boxShadow: '0 2px 6px rgba(105, 65, 219, 0.3)',
+                      transition: 'all 0.2s'
+                    }}
+                    title="Redo (Ctrl+Y)"
+                  >
+                    ↷ Redo
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Responsive Table Wrapper */}
@@ -2654,7 +3419,7 @@ function TimetableTables({
                   color: '#374151',
                   fontSize: '0.8rem',
                   borderRight: '1px solid #e5e7eb',
-                  borderBottom: '2px solid #6941db',
+                  borderBottom: '2px solid var(--theme-color)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -2663,7 +3428,7 @@ function TimetableTables({
                   zIndex: 2,
                   boxShadow: '2px 0 4px rgba(0, 0, 0, 0.05)'
                 }}>
-                  <FaClock className="me-2" style={{ color: '#6941db', fontSize: '0.75rem' }} />
+                  <FaClock className="me-2" style={{ color: 'var(--theme-color)', fontSize: '0.75rem' }} />
                   Day / Time
                 </div>
 
@@ -2680,7 +3445,7 @@ function TimetableTables({
                       fontSize: '0.75rem',
                       textAlign: 'center',
                       borderRight: '1px solid #e5e7eb',
-                      borderBottom: '2px solid #6941db',
+                      borderBottom: '2px solid var(--theme-color)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -2713,7 +3478,7 @@ function TimetableTables({
                       zIndex: 1,
                       boxShadow: '2px 0 4px rgba(0, 0, 0, 0.03)'
                     }}>
-                      <FaCalendarAlt style={{ color: '#6941db', fontSize: '0.75rem' }} />
+                      <FaCalendarAlt style={{ color: 'var(--theme-color)', fontSize: '0.75rem' }} />
                       {day}
                     </div>
 
@@ -2768,23 +3533,45 @@ function TimetableTables({
                       
                       const isSelected = isEditMode && selectedCells.some(s => s.index === cellIndex);
                       const isSwapping = swappingCells && (swappingCells.cell1 === cellIndex || swappingCells.cell2 === cellIndex);
+                      const isSwappingCell1 = swappingCells && swappingCells.cell1 === cellIndex;
+                      
+                      // Get animation path based on actual positions
+                      let animationConfig = {};
+                      if (isSwapping && swappingCells.deltaX !== undefined && swappingCells.deltaY !== undefined) {
+                        const { deltaX, deltaY } = swappingCells;
+                        const arcHeight = 100; // Additional vertical arc height
+                        
+                        if (isSwappingCell1) {
+                          // Cell A: Arc up and over to Cell B's position
+                          animationConfig = {
+                            x: [0, deltaX * 0.3, deltaX * 0.7, deltaX],
+                            y: [0, -arcHeight, deltaY - arcHeight, deltaY],
+                            scale: [1, 1.15, 1.15, 1],
+                            zIndex: 100
+                          };
+                        } else {
+                          // Cell B: Arc up and over to Cell A's position
+                          animationConfig = {
+                            x: [0, -deltaX * 0.3, -deltaX * 0.7, -deltaX],
+                            y: [0, -arcHeight, -deltaY - arcHeight, -deltaY],
+                            scale: [1, 1.15, 1.15, 1],
+                            zIndex: 100
+                          };
+                        }
+                      }
                       
                       return (
                         <motion.div
                           key={`${day}-${i}`}
                           data-cell-index={cellIndex}
-                          animate={isSwapping ? {
-                            scale: [1, 1.08, 1],
-                            opacity: [1, 0.8, 1],
-                            backgroundColor: [
-                              'rgba(255, 255, 255, 0)',
-                              'rgba(16, 185, 129, 0.15)',
-                              'rgba(255, 255, 255, 0)'
-                            ]
-                          } : {}}
+                          animate={isSwapping ? animationConfig : {}}
                           transition={{
-                            duration: 0.8,
-                            ease: "easeInOut"
+                            duration: 1.2,
+                            ease: "easeInOut",
+                            times: [0, 0.35, 0.65, 1]
+                          }}
+                          style={{
+                            position: 'relative'
                           }}
                           draggable={isEditMode && !isEmpty}
                           onClick={() => {
@@ -2796,6 +3583,9 @@ function TimetableTables({
                             if (isEditMode && !isEmpty && onDragStart) {
                               onDragStart(e, row, cellIndex, klass);
                             }
+                          }}
+                          onDragEnd={(e) => {
+                            // Cleanup is handled in handleDragStart's cleanup function
                           }}
                           onDragOver={(e) => {
                             if (isEditMode && isEmpty) {
@@ -2826,48 +3616,48 @@ function TimetableTables({
                               : isSelected 
                               ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%)'
                               : isSwapping
-                              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%)'
+                              ? (isSwappingCell1 
+                                ? 'rgba(59, 130, 246, 0.2)'
+                                : 'rgba(16, 185, 129, 0.2)')
                               : isEmpty
                               ? '#f3f4f6'
                               : di % 2 === 0 ? '#ffffff' : '#fafafa',
                             borderRight: '1px solid #e5e7eb',
                             borderBottom: '2px solid rgba(105, 65, 219, 0.3)',
-                            borderBottomWidth: '2px',
-                            borderBottomColor: matchesSearch ? '#fbbf24' : isSelected ? '#f59e0b' : isSwapping ? '#10b981' : 'rgba(105, 65, 219, 0.3)',
-                            border: matchesSearch ? '2px solid #fbbf24' : isSelected ? '2px solid #f59e0b' : isSwapping ? '2px solid #10b981' : `1px solid #e5e7eb`,
-                            boxShadow: matchesSearch ? '0 0 0 3px rgba(251, 191, 36, 0.2)' : undefined,
+                            border: matchesSearch 
+                              ? '2px solid #fbbf24' 
+                              : isSelected 
+                              ? '2px solid #f59e0b' 
+                              : isSwapping 
+                              ? (isSwappingCell1 ? '2px solid #3b82f6' : '2px solid #10b981') 
+                              : `1px solid #e5e7eb`,
+                            boxShadow: matchesSearch 
+                              ? '0 0 0 3px rgba(251, 191, 36, 0.2)' 
+                              : isSwapping 
+                              ? (isSwappingCell1 
+                                ? '0 8px 16px rgba(59, 130, 246, 0.3)' 
+                                : '0 8px 16px rgba(16, 185, 129, 0.3)') 
+                              : undefined,
                             minHeight: isEmpty ? '80px' : '120px',
-                            transition: 'all 0.3s ease',
                             cursor: isEditMode && !isEmpty ? 'pointer' : 'default',
                             position: 'relative',
                             userSelect: 'none',
-                            zIndex: isSwapping ? 999 : isSelected ? 10 : matchesSearch ? 8 : 0
+                            zIndex: isSwapping ? 999 : isSelected ? 10 : matchesSearch ? 8 : 0,
+                            transition: isSwapping ? 'none' : undefined
                           }}
                           onMouseEnter={(e) => {
-                            if (isEditMode) {
+                            if (isEditMode && !isSwapping) {
                               setHoveredCell(cellIndex);
-                            }
-                            if (!isEmpty && !isSelected && !matchesSearch) {
-                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(105, 65, 219, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)';
-                              e.currentTarget.style.transform = 'scale(1.02)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(105, 65, 219, 0.15)';
-                              e.currentTarget.style.zIndex = '3';
                             }
                           }}
                           onMouseLeave={(e) => {
-                            setHoveredCell(null);
-                            if (!isEmpty && !isSelected && !matchesSearch) {
-                              e.currentTarget.style.background = di % 2 === 0 ? '#ffffff' : '#fafafa';
-                              e.currentTarget.style.transform = 'scale(1)';
-                              e.currentTarget.style.boxShadow = 'none';
-                              e.currentTarget.style.zIndex = '0';
-                            } else if (isEmpty && !isSelected) {
-                              e.currentTarget.style.background = '#f3f4f6';
+                            if (!isSwapping) {
+                              setHoveredCell(null);
                             }
                           }}
                         >
-                          {/* Add/Update Button on Hover - positioned above cell like swap button */}
-                          {isEditMode && hoveredCell === cellIndex && (
+                          {/* Add/Update Button on Hover - positioned at bottom center of cell */}
+                          {isEditMode && hoveredCell === cellIndex && !isSwapping && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -2875,7 +3665,7 @@ function TimetableTables({
                               }}
                               style={{
                                 position: 'absolute',
-                                top: '-20px',
+                                bottom: '8px',
                                 left: '50%',
                                 transform: 'translateX(-50%)',
                                 background: isEmpty ? '#10b981' : '#3b82f6',
@@ -2891,18 +3681,7 @@ function TimetableTables({
                                 fontWeight: 600,
                                 zIndex: 1000,
                                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                                transition: 'all 0.2s',
                                 whiteSpace: 'nowrap'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = isEmpty ? '#059669' : '#2563eb';
-                                e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
-                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = isEmpty ? '#10b981' : '#3b82f6';
-                                e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
-                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
                               }}
                             >
                               {isEmpty ? (
@@ -2943,16 +3722,7 @@ function TimetableTables({
                                   fontSize: '0.75rem',
                                   fontWeight: 'bold',
                                   zIndex: 10,
-                                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                                  transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = '#dc2626';
-                                  e.currentTarget.style.transform = 'scale(1.1)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = '#ef4444';
-                                  e.currentTarget.style.transform = 'scale(1)';
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                                 }}
                               >
                                 ×
@@ -2970,9 +3740,9 @@ function TimetableTables({
                                     fontSize: '0.65rem',
                                     fontWeight: 700
                                   }}>
-                                    SELECTED
+                                    {selectedCells.length > 1 ? `${selectedCells.length} SELECTED` : 'SELECTED'}
                                   </div>
-                                  {selectedCells.length === 2 && selectedCells[0].class === selectedCells[1].class && selectedCells[1].index === cellIndex && setEditDetails && (
+                                  {selectedCells.length === 2 && selectedCells.length <= 2 && selectedCells[0].class === selectedCells[1].class && selectedCells[1].index === cellIndex && setEditDetails && (
                                     <motion.button
                                       initial={{ scale: 0, opacity: 0 }}
                                       animate={{ scale: 1, opacity: 1 }}
@@ -2982,14 +3752,36 @@ function TimetableTables({
                                         
                                         const [cell1, cell2] = selectedCells;
                                         
-                                        // Trigger swap animation
-                                        setSwappingCells({ 
-                                          cell1: cell1.index, 
-                                          cell2: cell2.index
-                                        });
+                                        // Get actual DOM positions of both cells
+                                        const cell1Element = document.querySelector(`[data-cell-index="${cell1.index}"]`);
+                                        const cell2Element = document.querySelector(`[data-cell-index="${cell2.index}"]`);
                                         
-                                        // Swap data at midpoint of animation
+                                        if (cell1Element && cell2Element) {
+                                          const rect1 = cell1Element.getBoundingClientRect();
+                                          const rect2 = cell2Element.getBoundingClientRect();
+                                          
+                                          // Calculate distance between cells
+                                          const deltaX = rect2.left - rect1.left;
+                                          const deltaY = rect2.top - rect1.top;
+                                          
+                                          // Store positions for animation
+                                          setSwappingCells({ 
+                                            cell1: cell1.index, 
+                                            cell2: cell2.index,
+                                            deltaX,
+                                            deltaY
+                                          });
+                                        } else {
+                                          // Fallback without positions
+                                          setSwappingCells({ 
+                                            cell1: cell1.index, 
+                                            cell2: cell2.index
+                                          });
+                                        }
+                                        
+                                        // Clear animation state and swap data after animation completes
                                         setTimeout(() => {
+                                          saveToUndoStack();
                                           const newDetails = [...editDetails];
                                           
                                           const temp = {
@@ -3013,13 +3805,9 @@ function TimetableTables({
                                           };
                                           
                                           setEditDetails(newDetails);
-                                        }, 400);
-                                        
-                                        // Clear animation state
-                                        setTimeout(() => {
                                           setSwappingCells(null);
                                           if (setSelectedCells) setSelectedCells([]);
-                                        }, 800);
+                                        }, 1200);
                                       }}
                                       style={{
                                         position: 'absolute',
@@ -3072,7 +3860,7 @@ function TimetableTables({
                                 gap: '4px',
                                 fontSize: '0.7rem',
                                 fontWeight: 600,
-                                color: '#6941db',
+                                color: 'var(--theme-color)',
                                 background: 'rgba(105, 65, 219, 0.1)',
                                 padding: '3px 6px',
                                 borderRadius: '5px',

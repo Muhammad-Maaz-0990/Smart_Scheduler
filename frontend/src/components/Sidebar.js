@@ -20,7 +20,7 @@ import './Sidebar.css';
 
 const Sidebar = ({ activeMenu }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, instituteCache, loadInstituteOnce } = useAuth();
   const [instituteInfo, setInstituteInfo] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
@@ -56,36 +56,26 @@ const Sidebar = ({ activeMenu }) => {
     } catch {}
   }, [isCollapsed]);
 
+  // Update institute info when cache changes
+  useEffect(() => {
+    if (instituteCache) {
+      setInstituteInfo(instituteCache);
+    }
+  }, [instituteCache]);
+
   useEffect(() => {
     const fetchInstituteInfo = async () => {
       try {
-        const token = localStorage.getItem('token');
         const instituteRef = user?.instituteID;
         const instituteParam = typeof instituteRef === 'object'
           ? (instituteRef._id || instituteRef.instituteID || instituteRef)
           : instituteRef;
         if (!instituteParam) return;
         
-        // Check cache first
-        const cacheKey = `institute_${instituteParam}`;
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached) {
-          try {
-            setInstituteInfo(JSON.parse(cached));
-            return;
-          } catch {}
-        }
-        
-        const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(instituteParam)}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
+        // Use context cache loader
+        const data = await loadInstituteOnce(instituteParam);
+        if (data) {
           setInstituteInfo(data);
-          // Cache the result
-          try {
-            sessionStorage.setItem(cacheKey, JSON.stringify(data));
-          } catch {}
         }
       } catch (err) {
         console.error('Failed to fetch institute info:', err);
@@ -100,7 +90,7 @@ const Sidebar = ({ activeMenu }) => {
     if (instituteParam) {
       fetchInstituteInfo();
     }
-  }, [user?.instituteID]);
+  }, [user?.instituteID, loadInstituteOnce]);
 
   useEffect(() => {
     const body = document.body;
@@ -206,7 +196,7 @@ const Sidebar = ({ activeMenu }) => {
         }}
         title={isMobileOpen ? 'Close Menu' : 'Open Menu'}
       >
-        <FaBars style={{ color: '#7c3aed', fontSize: '1.25rem' }} />
+        <FaBars style={{ color: 'var(--theme-color)', fontSize: '1.25rem' }} />
       </motion.button>
 
       {/* Overlay for mobile */}
@@ -236,35 +226,47 @@ const Sidebar = ({ activeMenu }) => {
                 cursor: 'pointer',
                 background: '#ffffff',
                 borderBottom: '1px solid rgba(17, 24, 39, 0.08)',
-                boxShadow: '0 4px 12px rgba(17, 24, 39, 0.05)'
+                boxShadow: '0 4px 12px rgba(17, 24, 39, 0.05)',
+                padding: '1rem',
+                minHeight: '82px',
+                display: 'flex',
+                alignItems: 'center'
               }}
             >
               {role === 'Owner' ? (
                 /* Smart Scheduler Logo and Name for Owner */
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <motion.div
                     style={{
-                      width: 55,
-                      height: 55,
+                      width: 50,
+                      height: 50,
                       borderRadius: '12px',
-                      background: '#6941db',
+                      background: 'var(--theme-color)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 8px 16px rgba(124, 58, 237, 0.3)'
+                      boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
+                      flexShrink: 0
                     }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >
-                    <FaClockIcon style={{ fontSize: 28, color: 'white' }} />
+                    <FaClockIcon style={{ fontSize: '1.5rem', color: 'white' }} />
                   </motion.div>
                   {showLabels && (
                     <div>
-                      <div style={{ fontWeight: 800, fontSize: 18, color: '#111827', letterSpacing: '-0.5px' }}>
+                      <div style={{ 
+                        fontWeight: 800, 
+                        fontSize: '18px', 
+                        color: '#111827', 
+                        lineHeight: '1.2',
+                        margin: 0,
+                        letterSpacing: '-0.5px'
+                      }}>
                         Smart Scheduler
                       </div>
                       <div style={{
                         fontWeight: 600,
-                        fontSize: 13,
+                        fontSize: '13px',
                         color: '#4b5563',
                         marginTop: 4,
                         textTransform: 'uppercase',
@@ -277,17 +279,18 @@ const Sidebar = ({ activeMenu }) => {
                 </div>
               ) : (
                 /* Institute Logo, Name and Designation for Admin/Student/Teacher */
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <motion.div
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    style={{ flexShrink: 0 }}
                   >
                     {instituteInfo?.instituteLogo ? (
                       <img
                         src={`http://localhost:5000${instituteInfo.instituteLogo}`}
                         alt="Institute Logo"
                         style={{
-                          width: 55,
-                          height: 55,
+                          width: 50,
+                          height: 50,
                           borderRadius: '12px',
                           objectFit: 'cover',
                           border: '2px solid rgba(17, 24, 39, 0.08)',
@@ -296,13 +299,17 @@ const Sidebar = ({ activeMenu }) => {
                       />
                     ) : (
                       <div style={{
+                        width: 50,
+                        height: 50,
                         borderRadius: '12px',
-                        background: '#6941db',
+                        background: 'var(--theme-color)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: 24,
+                        fontSize: '1.5rem',
                         fontWeight: 'bold',
+                        color: 'white',
+                        boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)'
                       }}>
                         {instituteInfo?.instituteName?.charAt(0) || 'I'}
                       </div>
@@ -312,8 +319,10 @@ const Sidebar = ({ activeMenu }) => {
                     <div>
                       <div style={{
                         fontWeight: 800,
-                        fontSize: 18,
+                        fontSize: '18px',
                         color: '#111827',
+                        lineHeight: '1.2',
+                        margin: 0,
                         letterSpacing: '-0.5px',
                         maxWidth: 150,
                         whiteSpace: 'nowrap',
@@ -324,7 +333,7 @@ const Sidebar = ({ activeMenu }) => {
                       </div>
                       <div style={{
                         fontWeight: 600,
-                        fontSize: 13,
+                        fontSize: '13px',
                         color: '#4b5563',
                         marginTop: 4,
                         textTransform: 'uppercase',
@@ -349,8 +358,8 @@ const Sidebar = ({ activeMenu }) => {
                 const Icon = item.icon;
                 const isLogout = item.value === 'logout';
                 const isActive = !isLogout && activeMenu === item.value;
-                // Make icons inherit from button color so hover can switch to white
-                const iconColor = isActive ? '#4338CA' : 'currentColor';
+                // Use CSS variable for theme color
+                const iconColor = isActive ? 'var(--theme-color)' : 'currentColor';
                 return (
                   <motion.button
                     key={item.value}
@@ -399,4 +408,4 @@ const Sidebar = ({ activeMenu }) => {
   );
 };
 
-export default Sidebar;
+export default React.memo(Sidebar);

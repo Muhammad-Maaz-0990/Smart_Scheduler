@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence, } from 'framer-motion';
 import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
 import {
-  FaUsers, FaUserPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaFileImport,
+  FaUsers, FaUserPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaFileImport, FaFileExport,
   FaEnvelope, FaPhone, FaIdCard, FaTimes, FaDownload, FaUpload, FaUserShield, FaEye, FaEyeSlash
 } from 'react-icons/fa';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
@@ -35,10 +35,8 @@ const OwnerUsers = () => {
   const [importPreview, setImportPreview] = useState([]);
   const [importError, setImportError] = useState('');
   const fileInputRef = React.useRef(null);
-  // Filters
-  const [searchName, setSearchName] = useState('');
-  const [filterCNIC, setFilterCNIC] = useState('');
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  // Search
+  const [searchTerm, setSearchTerm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const tokenHeader = () => {
@@ -332,7 +330,7 @@ const OwnerUsers = () => {
                   width: '50px',
                   height: '50px',
                   borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+                  background: '#6941db',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -344,10 +342,7 @@ const OwnerUsers = () => {
                   <h2 style={{
                     fontSize: 'clamp(1.5rem, 3vw, 1.75rem)',
                     fontWeight: 700,
-                    background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
+                    color: '#6941db',
                     marginBottom: '0.25rem',
                     letterSpacing: '-0.5px'
                   }}>
@@ -364,47 +359,25 @@ const OwnerUsers = () => {
                 </div>
               </div>
               <div className="d-flex flex-wrap gap-2">
-                <Button onClick={openAdd} style={{
-                  background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '8px 16px',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  boxShadow: '0 1px 3px rgba(126, 34, 206, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
+                <Button
+                  onClick={openAdd}
+                  className="action-btn action-btn-purple"
+                >
                   <FaUserPlus /> Add Owner User
                 </Button>
-                <Button onClick={onImportClick} style={{
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '8px 16px',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  boxShadow: '0 1px 3px rgba(59, 130, 246, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
-                  <FaUpload /> Import CSV
+                
+                <Button
+                  onClick={onImportClick}
+                  className="action-btn action-btn-green"
+                >
+                  <FaFileImport /> Import
                 </Button>
-                <Button onClick={exportCSV} style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '8px 16px',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  boxShadow: '0 1px 3px rgba(16, 185, 129, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
-                  <FaDownload /> Export CSV
+                
+                <Button
+                  onClick={exportCSV}
+                  className="action-btn action-btn-blue"
+                >
+                  <FaFileExport /> Export
                 </Button>
                 <input type="file" accept=".csv,text/csv" ref={fileInputRef} style={{ display:'none' }} onChange={onFileSelected} />
               </div>
@@ -428,143 +401,28 @@ const OwnerUsers = () => {
               position: 'relative'
             }}>
               <Card.Body className="p-3">
-                <Row className="g-3">
-                  <Col md={8}>
-                    <div className="position-relative">
-                      <FaSearch style={{
-                        position: 'absolute',
-                        left: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: '#9ca3af',
-                        fontSize: '14px'
-                      }} />
-                      <Form.Control
-                        type="text"
-                        placeholder="Search by name..."
-                        value={searchName}
-                        onChange={(e) => setSearchName(e.target.value)}
-                        style={{
-                          paddingLeft: '36px',
-                          borderRadius: '8px',
-                          border: '1px solid #e5e7eb',
-                          fontSize: '0.9rem'
-                        }}
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div className="position-relative">
-                      <Button
-                        onClick={() => setShowFilterMenu(s => !s)}
-                        style={{
-                          width: '100%',
-                          background: showFilterMenu ? 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)' : '#f3f4f6',
-                          color: showFilterMenu ? '#fff' : '#374151',
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '8px 16px',
-                          fontWeight: 600,
-                          fontSize: '0.85rem',
-                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px'
-                        }}
-                      >
-                        <FaFilter /> Filter Options
-                      </Button>
-                      <AnimatePresence>
-                        {showFilterMenu && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            style={{
-                              position: 'absolute',
-                              right: 0,
-                              top: 'calc(100% + 8px)',
-                              zIndex: 9999,
-                              minWidth: '280px',
-                              background: '#fff',
-                              borderRadius: '12px',
-                              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-                              padding: '16px',
-                              border: '1px solid #e5e7eb'
-                            }}
-                          >
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827' }}>
-                                <FaFilter className="me-2" />Filters
-                              </span>
-                              <Button
-                                size="sm"
-                                onClick={() => setShowFilterMenu(false)}
-                                style={{
-                                  background: 'transparent',
-                                  border: 'none',
-                                  color: '#6b7280',
-                                  padding: '4px'
-                                }}
-                              >
-                                <FaTimes />
-                              </Button>
-                            </div>
-                            <Form.Group className="mb-3">
-                              <Form.Label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>
-                                <FaIdCard className="me-1" />National ID
-                              </Form.Label>
-                              <Form.Control
-                                size="sm"
-                                type="text"
-                                placeholder="Filter by CNIC/SSN"
-                                value={filterCNIC}
-                                onChange={(e) => setFilterCNIC(e.target.value)}
-                                style={{
-                                  borderRadius: '6px',
-                                  fontSize: '0.85rem'
-                                }}
-                              />
-                            </Form.Group>
-                            <div className="d-flex justify-content-end gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => { setFilterCNIC(''); setShowFilterMenu(false); }}
-                                style={{
-                                  background: '#f3f4f6',
-                                  color: '#374151',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  padding: '6px 12px',
-                                  fontSize: '0.8rem',
-                                  fontWeight: 600
-                                }}
-                              >
-                                Reset
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => setShowFilterMenu(false)}
-                                style={{
-                                  background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
-                                  color: '#fff',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  padding: '6px 12px',
-                                  fontSize: '0.8rem',
-                                  fontWeight: 600
-                                }}
-                              >
-                                Apply
-                              </Button>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </Col>
-                </Row>
+                <div className="position-relative">
+                  <FaSearch style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: '#9ca3af',
+                    fontSize: '14px'
+                  }} />
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by name or CNIC..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                      paddingLeft: '36px',
+                      borderRadius: '8px',
+                      border: '1px solid #e5e7eb',
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                </div>
               </Card.Body>
             </Card>
           </motion.div>
@@ -623,10 +481,10 @@ const OwnerUsers = () => {
                   <Card.Header style={{
                     background: 'rgba(79, 70, 229, 0.12)',
                     color: '#4338CA',
-                    fontWeight: 700,
-                    fontSize: '0.95rem',
-                    borderTopLeftRadius: '12px',
-                    borderTopRightRadius: '12px',
+                    fontWeight: 600,
+                    fontSize: '1.125rem',
+                    padding: '1.25rem 1.5rem',
+                    border: '1px solid rgba(79, 70, 229, 0.25)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
@@ -707,25 +565,22 @@ const OwnerUsers = () => {
               <Card.Body className="p-0">
                 <div className="table-responsive">
                   <Table hover style={{ marginBottom: 0 }}>
-                    <thead style={{
-                      background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
-                      color: '#fff'
-                    }}>
+                    <thead>
                       <tr>
-                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>#</th>
-                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--theme-color)', borderBottom: 'none', backgroundColor: 'var(--theme-color-light)', border: '1px solid var(--theme-color)' }}>#</th>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--theme-color)', borderBottom: 'none', backgroundColor: 'var(--theme-color-light)', border: '1px solid var(--theme-color)' }}>
                           <FaUserShield className="me-2" />Name
                         </th>
-                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--theme-color)', borderBottom: 'none', backgroundColor: 'var(--theme-color-light)', border: '1px solid var(--theme-color)' }}>
                           <FaEnvelope className="me-2" />Email
                         </th>
-                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--theme-color)', borderBottom: 'none', backgroundColor: 'var(--theme-color-light)', border: '1px solid var(--theme-color)' }}>
                           <FaIdCard className="me-2" />National ID
                         </th>
-                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none' }}>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--theme-color)', borderBottom: 'none', backgroundColor: 'var(--theme-color-light)', border: '1px solid var(--theme-color)' }}>
                           <FaPhone className="me-2" />Phone
                         </th>
-                        <th style={{ padding: '14px 16px', fontWeight: 600, fontSize: '0.85rem', borderBottom: 'none', textAlign: 'center' }}>Actions</th>
+                        <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--theme-color)', borderBottom: 'none', backgroundColor: 'var(--theme-color-light)', border: '1px solid var(--theme-color)', textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -744,75 +599,45 @@ const OwnerUsers = () => {
                         </tr>
                       ) : (
                         users
-                          .filter(u => String(u.userName || '').toLowerCase().includes(searchName.trim().toLowerCase()))
-                          .filter(u => filterCNIC.trim() ? String(u.cnic || '').toLowerCase().includes(filterCNIC.trim().toLowerCase()) : true)
+                          .filter(u => {
+                            const term = searchTerm.trim().toLowerCase();
+                            if (!term) return true;
+                            const userName = String(u.userName || '').toLowerCase();
+                            const cnic = String(u.cnic || '').toLowerCase();
+                            return userName.includes(term) || cnic.includes(term);
+                          })
                           .map((u, idx) => (
                           <motion.tr
                             key={u._id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
-                            style={{ borderBottom: '1px solid #e5e7eb' }}
+                            whileHover={{ 
+                              backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                              transition: { duration: 0.2 }
+                            }}
+                            style={{ borderBottom: '1px solid rgba(105, 65, 219, 0.1)' }}
                           >
-                            <td style={{ padding: '14px 16px', fontSize: '0.9rem', color: '#6b7280', fontWeight: 600 }}>{idx + 1}</td>
-                            <td style={{ padding: '14px 16px', fontSize: '0.9rem', color: '#111827', fontWeight: 600 }}>{u.userName}</td>
-                            <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#6b7280' }}>{u.email}</td>
-                            <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#6b7280' }}>{u.cnic === 'N/A' ? '-' : u.cnic}</td>
-                            <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#6b7280' }}>{u.phoneNumber === 'N/A' ? '-' : u.phoneNumber}</td>
-                            <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                            <td style={{ padding: '1rem', fontWeight: 400 }}>{idx + 1}</td>
+                            <td style={{ padding: '1rem', fontSize: '1.05rem', fontWeight: 400, color: '#374151' }}>{u.userName}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.95rem', color: '#6b7280' }}>{u.email}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.95rem', color: '#6b7280' }}>{u.cnic === 'N/A' ? '-' : u.cnic}</td>
+                            <td style={{ padding: '1rem', fontSize: '0.95rem', color: '#6b7280' }}>{u.phoneNumber === 'N/A' ? '-' : u.phoneNumber}</td>
+                            <td style={{ padding: '1rem', textAlign: 'center' }}>
                               <div className="d-flex justify-content-center gap-2">
-                                <MotionButton
-                                whileHover={{
-                                      background: 'linear-gradient(135deg, #7e22ce 0%, #3b82f6 100%)',
-                                      color: 'white',
-                                      borderColor: '#7e22ce',
-                                      scale: 1.1, y: -2
-                                    }}
-                                  whileTap={{ scale: 0.9 }}
-                                  size="sm"
+                                <Button
                                   onClick={() => openEdit(u)}
-                                  style={{
-                                    background: 'transparent',
-                                    border: '2px solid #7e22ce',
-                                    borderRadius: '6px',
-                                    padding: '6px 12px',
-                                    fontWeight: 600,
-                                    color: '#7e22ce',
-                                    fontSize: '0.8rem',
-                                    boxShadow: '0 1px 2px rgba(245, 158, 11, 0.2)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
+                                  className="table-action-btn table-action-edit"
                                 >
                                   <FaEdit /> Edit
-                                </MotionButton>
-                                <MotionButton
-                                whileHover={{
-                                       background: 'linear-gradient(135deg, #942f04 0%, #800343 100%)',
-                                      color: 'white',
-                                      borderColor: '#942f04',
-                                      scale: 1.1, y: -2
-                                    }}
-                                  whileTap={{ scale: 0.9 }}
-                                  size="sm"
+                                </Button>
+
+                                <Button
                                   onClick={() => handleDelete(u._id)}
-                                  style={{
-                                    background: 'transparent',
-                                    border: '2px solid #942f04',
-                                    borderRadius: '6px',
-                                    padding: '6px 12px',
-                                    fontWeight: 600,
-                                    fontSize: '0.8rem',
-                                    color: '#942f04',
-                                    boxShadow: '0 1px 2px rgba(239, 68, 68, 0.2)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
+                                  className="table-action-btn table-action-delete"
                                 >
                                   <FaTrash /> Delete
-                                </MotionButton>
+                                </Button>
                               </div>
                             </td>
                           </motion.tr>
@@ -828,8 +653,18 @@ const OwnerUsers = () => {
       </div>
 
       <Modal show={showModal} onHide={closeModal} centered>
+        <style>{`
+          .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 1;
+          }
+          .modal-header .btn-close:hover {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+          }
+        `}</style>
         <Modal.Header closeButton style={{
-          background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+          background: '#6941db',
           color: '#fff',
           borderBottom: 'none'
         }}>
@@ -857,14 +692,10 @@ const OwnerUsers = () => {
                   transition: 'all 0.2s ease'
                 }}
                 onFocus={(e) => {
-                  e.target.style.border = '2px solid transparent';
-                  e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
-                  e.target.style.backgroundOrigin = 'border-box';
-                  e.target.style.backgroundClip = 'padding-box, border-box';
+                  e.target.style.border = '2px solid #6941db';
                 }}
                 onBlur={(e) => {
                   e.target.style.border = '1px solid #d1d5db';
-                  e.target.style.backgroundImage = 'none';
                 }}
               />
             </Form.Group>
@@ -886,14 +717,10 @@ const OwnerUsers = () => {
                   transition: 'all 0.2s ease'
                 }}
                 onFocus={(e) => {
-                  e.target.style.border = '2px solid transparent';
-                  e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
-                  e.target.style.backgroundOrigin = 'border-box';
-                  e.target.style.backgroundClip = 'padding-box, border-box';
+                  e.target.style.border = '2px solid #6941db';
                 }}
                 onBlur={(e) => {
                   e.target.style.border = '1px solid #d1d5db';
-                  e.target.style.backgroundImage = 'none';
                 }}
               />
             </Form.Group>
@@ -918,14 +745,10 @@ const OwnerUsers = () => {
                       transition: 'all 0.2s ease'
                     }}
                     onFocus={(e) => {
-                      e.target.style.border = '2px solid transparent';
-                      e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
-                      e.target.style.backgroundOrigin = 'border-box';
-                      e.target.style.backgroundClip = 'padding-box, border-box';
+                      e.target.style.border = '2px solid #6941db';
                     }}
                     onBlur={(e) => {
                       e.target.style.border = '1px solid #d1d5db';
-                      e.target.style.backgroundImage = 'none';
                     }}
                   />
                   <Button
@@ -937,7 +760,7 @@ const OwnerUsers = () => {
                       transform: 'translateY(-50%)',
                       background: 'transparent',
                       border: 'none',
-                      color: '#7e22ce',
+                      color: '#6941db',
                       padding: '4px 8px',
                       cursor: 'pointer'
                     }}
@@ -985,14 +808,10 @@ const OwnerUsers = () => {
                   transition: 'all 0.2s ease'
                 }}
                 onFocus={(e) => {
-                  e.target.style.border = '2px solid transparent';
-                  e.target.style.backgroundImage = 'linear-gradient(white, white), linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)';
-                  e.target.style.backgroundOrigin = 'border-box';
-                  e.target.style.backgroundClip = 'padding-box, border-box';
+                  e.target.style.border = '2px solid #6941db';
                 }}
                 onBlur={(e) => {
                   e.target.style.border = '1px solid #d1d5db';
-                  e.target.style.backgroundImage = 'none';
                 }}
               />
               <Form.Text style={{ fontSize: '0.75rem', color: '#6b7280' }}>
@@ -1014,7 +833,7 @@ const OwnerUsers = () => {
                 Cancel
               </Button>
               <Button type="submit" style={{
-                background: 'linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%)',
+                background: '#6941db',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '8px 16px',

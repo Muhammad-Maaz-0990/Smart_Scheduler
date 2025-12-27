@@ -10,13 +10,26 @@ import '../Dashboard.css';
 const MotionCol = motion.create(Col);
 
 // Global purple color variable
-const PURPLE_COLOR = '#6941db';
+const PURPLE_COLOR = 'var(--theme-color)';
 
 const AdminDashboard = () => {
   const { user, instituteObjectId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [counts, setCounts] = useState({ teachers: 0, students: 0, courses: 0, schedules: 0, rooms: 0, classes: 0 });
+
+  // Debug: Log theme variables
+  useEffect(() => {
+    const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim();
+    const themeColorLight = getComputedStyle(document.documentElement).getPropertyValue('--theme-color-light').trim();
+    const themeColorDark = getComputedStyle(document.documentElement).getPropertyValue('--theme-color-dark').trim();
+    
+    console.log('🎨 Admin Dashboard Theme Colors:', {
+      main: themeColor,
+      light: themeColorLight,
+      dark: themeColorDark
+    });
+  }, []);
 
   useEffect(() => {
     const run = async () => {
@@ -99,10 +112,8 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <>
-      <Sidebar activeMenu="dashboard" />
-      <div className="dashboard-page">
-        <Container fluid className="dashboard-content">
+      <div style={{ padding: 0 }}>
+        <Container fluid style={{ maxWidth: 'none', paddingLeft: '2rem', paddingRight: '2rem' }}>
           {/* Title Section */}
           <motion.div 
             style={{ textAlign: 'center', marginBottom: '3rem' }}
@@ -201,67 +212,88 @@ const AdminDashboard = () => {
                     ease: [0.43, 0.13, 0.23, 0.96]
                   }}
                 >
-                  <OverlayTrigger
-                    placement="top"
-                    delay={{ show: 100, hide: 0 }}
-                    overlay={
-                      <Tooltip 
-                        id={`tooltip-${stat.label}`}
-                        className="custom-gradient-tooltip"
-                      >
-                        <div style={{
-                          background: PURPLE_COLOR,
-                          color: '#ffffff',
-                          borderRadius: '12px',
-                          padding: '0.5rem 1rem',
-                          fontSize: '0.85rem',
-                          fontWeight: 500,
-                          border: 'none',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                        }}>
-                          {stat.description}
-                        </div>
-                      </Tooltip>
-                    }
+                  <motion.div 
+                    whileHover={{ y: -9 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    style={{ height: '100%', position: 'relative' }}
                   >
-                    <motion.div 
-                      whileHover={{ scale: 1.01 }} 
-                      transition={{ duration: 0.15, ease: "easeOut" }}
+                    <Card style={{
+                      background: '#ffffff',
+                      border: `2px solid ${PURPLE_COLOR}20`,
+                      borderRadius: '24px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                      height: '100%',
+                      position: 'relative',
+                      overflow: 'visible',
+                      transition: 'box-shadow 0.3s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.16)';
+                      e.currentTarget.style.borderRadius = '0 0 24px 24px';
+                      e.currentTarget.style.border = `2px solid ${PURPLE_COLOR}`;
+                      const iconBg = e.currentTarget.querySelector('[data-icon-bg]');
+                      const icon = e.currentTarget.querySelector('svg');
+                      const valueText = e.currentTarget.querySelector('h3');
+                      const labelText = e.currentTarget.querySelector('p');
+                      const topBar = e.currentTarget.querySelector('[data-top-bar]');
+                      if (iconBg) iconBg.style.background = PURPLE_COLOR;
+                      if (icon) icon.style.color = '#ffffff';
+                      if (valueText) valueText.style.color = PURPLE_COLOR;
+                      if (labelText) labelText.style.color = PURPLE_COLOR;
+                      if (topBar) {
+                        topBar.style.transform = 'translateY(-20px)';
+                        topBar.style.opacity = '1';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+                      e.currentTarget.style.borderRadius = '24px';
+                      e.currentTarget.style.border = `2px solid ${PURPLE_COLOR}20`;
+                      const iconBg = e.currentTarget.querySelector('[data-icon-bg]');
+                      const icon = e.currentTarget.querySelector('svg');
+                      const valueText = e.currentTarget.querySelector('h3');
+                      const labelText = e.currentTarget.querySelector('p');
+                      const topBar = e.currentTarget.querySelector('[data-top-bar]');
+                      if (iconBg) iconBg.style.background = '#00000010';
+                      if (icon) icon.style.color = '#000000';
+                      if (valueText) valueText.style.color = '#000000';
+                      if (labelText) labelText.style.color = '#000000';
+                      if (topBar) {
+                        topBar.style.transform = 'translateY(100%)';
+                        topBar.style.opacity = '0';
+                      }
+                    }}
                     >
-                      <Card style={{
-                        background: '#ffffff',
-                        border: `2px solid ${PURPLE_COLOR}20`,
-                        borderRadius: '24px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                        height: '100%',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        transition: 'box-shadow 0.15s ease, transform 0.15s ease',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
-                        const iconBg = e.currentTarget.querySelector('[data-icon-bg]');
-                        const icon = e.currentTarget.querySelector('svg');
-                        const valueText = e.currentTarget.querySelector('h3');
-                        const labelText = e.currentTarget.querySelector('p');
-                        if (iconBg) iconBg.style.background = PURPLE_COLOR;
-                        if (icon) icon.style.color = '#ffffff';
-                        if (valueText) valueText.style.color = PURPLE_COLOR;
-                        if (labelText) labelText.style.color = PURPLE_COLOR;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
-                        const iconBg = e.currentTarget.querySelector('[data-icon-bg]');
-                        const icon = e.currentTarget.querySelector('svg');
-                        const valueText = e.currentTarget.querySelector('h3');
-                        const labelText = e.currentTarget.querySelector('p');
-                        if (iconBg) iconBg.style.background = '#00000010';
-                        if (icon) icon.style.color = '#000000';
-                        if (valueText) valueText.style.color = '#000000';
-                        if (labelText) labelText.style.color = '#000000';
-                      }}
-                      >
+                        {/* Purple bar that slides UP from bottom */}
+                        <div 
+                          data-top-bar
+                          style={{
+                            position: 'absolute',
+                            top: '5px',
+                            left: '-2px',
+                            right: '-2px',
+                            height: '36px',
+                            background: PURPLE_COLOR,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            padding: '0 1rem',
+                            borderRadius: '12px 12px 0 0',
+                            transform: 'translateY(100%)',
+                            opacity: 0,
+                            transition: 'all 0.4s ease',
+                            zIndex: 10,
+                            boxShadow: '0 2px 8px rgba(105, 65, 219, 0.3)'
+                          }}
+                        >
+                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {stat.description} • {stat.trend}
+                          </span>
+                        </div>
                         
                         <Card.Body style={{ 
                           textAlign: 'center', 
@@ -329,7 +361,8 @@ const AdminDashboard = () => {
                             textTransform: 'uppercase',
                             letterSpacing: '1px',
                             position: 'relative',
-                            paddingBottom: '0.75rem'
+                            paddingBottom: '0.75rem',
+                            transition: 'color 0.3s ease'
                           }}>
                             {stat.label}
                           </p>
@@ -338,7 +371,6 @@ const AdminDashboard = () => {
                         </Card.Body>
                       </Card>
                     </motion.div>
-                  </OverlayTrigger>
                 </MotionCol>
               ))}
             </Row>
@@ -346,7 +378,6 @@ const AdminDashboard = () => {
 
         </Container>
       </div>
-    </>
   );
 };
 
