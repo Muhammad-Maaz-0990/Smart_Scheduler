@@ -12,6 +12,7 @@ import {
   FaEnvelope, FaPhone, FaIdCard, FaTimes, FaDownload, FaUpload, FaUserShield, FaEye, FaEyeSlash
 } from 'react-icons/fa';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 const MotionButton = motion.create(Button);
@@ -48,7 +49,7 @@ const OwnerUsers = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/auth/owner-users', {
+      const res = await fetch(apiUrl('/api/auth/owner-users'), {
         headers: {
           'Content-Type': 'application/json',
           ...tokenHeader()
@@ -214,8 +215,8 @@ const OwnerUsers = () => {
 
     try {
       const url = mode === 'add' 
-        ? 'http://localhost:5000/api/auth/owner-users'
-        : `http://localhost:5000/api/auth/owner-users/${current._id}`;
+        ? apiUrl('/api/auth/owner-users')
+        : apiUrl(`/api/auth/owner-users/${current._id}`);
       const method = mode === 'add' ? 'POST' : 'PUT';
 
       const payload = mode === 'add'
@@ -263,7 +264,7 @@ const OwnerUsers = () => {
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`http://localhost:5000/api/auth/owner-users/${id}`, {
+      const res = await fetch(apiUrl(`/api/auth/owner-users/${id}`), {
         method: 'DELETE',
         headers: { ...tokenHeader() }
       });
@@ -296,7 +297,7 @@ const OwnerUsers = () => {
     try {
       for (const u of importPreview) {
         const payload = { userName: u.userName, email: u.email, password: 'ChangeMe123', phoneNumber: u.phoneNumber, cnic: u.cnic };
-        const res = await fetch('http://localhost:5000/api/auth/owner-users', { method: 'POST', headers: { 'Content-Type': 'application/json', ...tokenHeader() }, body: JSON.stringify(payload) });
+        const res = await fetch(apiUrl('/api/auth/owner-users'), { method: 'POST', headers: { 'Content-Type': 'application/json', ...tokenHeader() }, body: JSON.stringify(payload) });
         if (!res.ok) { const d = await res.json().catch(()=>({})); throw new Error(d.message || 'Failed to add some rows'); }
       }
       setSuccess('Imported owner users added successfully'); setImportPreview([]); await fetchUsers();

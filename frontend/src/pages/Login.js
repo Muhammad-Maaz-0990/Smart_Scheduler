@@ -48,6 +48,7 @@ const Login = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
+    import { apiUrl } from '../utils/api';
   const redirectToDashboard = (designation) => {
     const routes = {
       'Owner': '/owner',
@@ -59,7 +60,7 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:5000/api/auth/google';
+    window.location.href = apiUrl('/api/auth/google');
   };
 
   const validateEmail = (email) => {
@@ -97,7 +98,7 @@ const Login = () => {
       setEmailError(emailValidation);
       setPasswordError(passwordValidation);
       return;
-    }
+        window.location.href = apiUrl('/api/auth/google');
 
     setLoading(true);
 

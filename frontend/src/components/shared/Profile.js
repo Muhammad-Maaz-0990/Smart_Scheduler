@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { apiUrl } from '../../utils/api';
 import { Card, Badge, Button, Alert, Spinner, Container, Row, Col, Modal, Form } from 'react-bootstrap';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaEdit, FaLock, FaCheckCircle, FaExclamationCircle, FaUserCog, FaBuilding, FaMapMarkerAlt, FaImage, FaSave, FaTimes, FaMoneyBillAlt } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -151,8 +152,7 @@ const Profile = () => {
     if (logo.startsWith('data:') || logo.startsWith('http://') || logo.startsWith('https://')) {
       return logo;
     }
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-    return `${apiUrl}${logo.startsWith('/') ? '' : '/'}${logo}`;
+    return apiUrl(logo);
   };
 
   const handleEditClick = () => {

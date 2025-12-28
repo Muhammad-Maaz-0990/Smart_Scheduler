@@ -1,8 +1,9 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { API_BASE, apiUrl } from '../utils/api';
 
-// Configure axios baseURL
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// Configure axios baseURL (empty means use relative URLs + CRA proxy)
+axios.defaults.baseURL = API_BASE;
 
 const AuthContext = createContext();
 
@@ -106,7 +107,7 @@ export const AuthProvider = ({ children }) => {
         setInstituteObjectId(rawParam);
       } else {
         try {
-          const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(rawParam)}`, {
+          const response = await fetch(apiUrl(`/api/auth/institute/${encodeURIComponent(rawParam)}`), {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           });
           if (response.ok) {
@@ -146,7 +147,7 @@ export const AuthProvider = ({ children }) => {
         setInstituteObjectId(rawParam);
       } else {
         try {
-          const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(rawParam)}`, {
+          const response = await fetch(apiUrl(`/api/auth/institute/${encodeURIComponent(rawParam)}`), {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           });
           if (response.ok) {

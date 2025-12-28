@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Button, Form, Alert } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiUrl } from '../utils/api';
 import PhoneInput, { getCountryCallingCode, getCountries } from 'react-phone-number-input';
 import en from 'react-phone-number-input/locale/en.json';
 import 'react-phone-number-input/style.css';
@@ -359,7 +360,7 @@ const Register = () => {
       };
       
       // Submit registration data to backend
-      const response = await fetch('http://localhost:5000/api/auth/register-institute', {
+      const response = await fetch(apiUrl('/api/auth/register-institute'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

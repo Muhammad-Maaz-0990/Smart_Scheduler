@@ -7,13 +7,14 @@ import { FaBuilding, FaChalkboardTeacher, FaGraduationCap, FaTrophy, FaChartLine
 import '../Dashboard.css';
 import Sidebar from '../../components/Sidebar';
 import OwnerDashboardGraphs from './OwnerDashboardGraphs';
+import { apiUrl } from '../../utils/api';
 
 const OwnerDashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({ institutes: 0, teachers: 0, students: 0 });
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/auth/owner-stats', {
+    fetch(apiUrl('/api/auth/owner-stats'), {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
       .then(res => res.json())

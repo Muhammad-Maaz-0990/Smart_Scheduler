@@ -5,6 +5,7 @@ import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
 import { FaBuilding, FaEye, FaUsers, FaChalkboardTeacher, FaGraduationCap, FaEnvelope, FaBell } from 'react-icons/fa';
 import Sidebar from '../../components/Sidebar';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 const Institutes = () => {
@@ -17,7 +18,7 @@ const Institutes = () => {
 
   const fetchInstitutes = () => {
     setLoading(true);
-    fetch('http://localhost:5000/api/auth/institutes', {
+    fetch(apiUrl('/api/auth/institutes'), {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
       .then(res => res.json())
@@ -193,7 +194,7 @@ const Institutes = () => {
                                       setNotifying(prev => new Set([...prev, id]));
                                       try {
                                         const reason = String(inst.subscription || '').trim() === 'Trial' ? 'trial-ended' : 'payment-ended';
-                                        await fetch(`http://localhost:5000/api/payments/notify/${encodeURIComponent(inst.instituteID)}`, {
+                                        await fetch(apiUrl(`/api/payments/notify/${encodeURIComponent(inst.instituteID)}`), {
                                           method: 'POST',
                                           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
                                           body: JSON.stringify({ reason })

@@ -6,6 +6,7 @@ import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { useAuth } from '../../context/AuthContext';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 const MotionCard = motion.create(Card);
@@ -56,7 +57,7 @@ const Rooms = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(instituteObjectId)}`, {
+      const response = await fetch(apiUrl(`/api/rooms?instituteID=${encodeURIComponent(instituteObjectId)}`), {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (response.ok) {
@@ -112,7 +113,7 @@ const Rooms = () => {
           roomStatus: r.roomStatus || 'Class',
           instituteID: instituteObjectId
         };
-        const res = await fetch('http://localhost:5000/api/rooms', {
+        const res = await fetch(apiUrl('/api/rooms'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
           body: JSON.stringify(body)
@@ -172,7 +173,7 @@ const Rooms = () => {
     if (!roomToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/rooms/${roomToDelete._id}`, {
+      const response = await fetch(apiUrl(`/api/rooms/${roomToDelete._id}`), {
         method: 'DELETE'
       });
 
@@ -232,8 +233,8 @@ const Rooms = () => {
     try {
       const token = localStorage.getItem('token');
       const url = modalMode === 'add' 
-        ? 'http://localhost:5000/api/rooms'
-        : `http://localhost:5000/api/rooms/${currentRoom._id}`;
+        ? apiUrl('/api/rooms')
+        : apiUrl(`/api/rooms/${currentRoom._id}`);
       
       const method = modalMode === 'add' ? 'POST' : 'PUT';
       
@@ -268,7 +269,7 @@ const Rooms = () => {
           // For add operation, get the newly created room data after fetch
           setTimeout(async () => {
             const token = localStorage.getItem('token');
-            const roomsResponse = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(instituteObjectId)}`, {
+            const roomsResponse = await fetch(apiUrl(`/api/rooms?instituteID=${encodeURIComponent(instituteObjectId)}`), {
               headers: token ? { 'Authorization': `Bearer ${token}` } : {}
             });
             if (roomsResponse.ok) {
@@ -305,7 +306,7 @@ const Rooms = () => {
       // Check if it was a delete operation
       if (previousRoom.isDeleted) {
         // Restore deleted room by creating it again
-        const response = await fetch(`http://localhost:5000/api/rooms`, {
+        const response = await fetch(apiUrl('/api/rooms'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -328,7 +329,7 @@ const Rooms = () => {
         }
       } else if (previousRoom.isAdded) {
         // Undo add operation by deleting the newly added room
-        const response = await fetch(`http://localhost:5000/api/rooms/${previousRoom._id}`, {
+        const response = await fetch(apiUrl(`/api/rooms/${previousRoom._id}`), {
           method: 'DELETE',
           headers: {
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -345,7 +346,7 @@ const Rooms = () => {
         }
       } else {
         // Update operation undo
-        const response = await fetch(`http://localhost:5000/api/rooms/${previousRoom._id}`, {
+        const response = await fetch(apiUrl(`/api/rooms/${previousRoom._id}`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

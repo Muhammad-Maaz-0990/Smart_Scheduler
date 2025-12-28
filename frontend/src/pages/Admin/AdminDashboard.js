@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 const MotionCol = motion.create(Col);
@@ -43,7 +44,7 @@ const AdminDashboard = () => {
         // Users in institute
         let teachers = 0, students = 0;
         try {
-          const resUsers = await fetch('http://localhost:5000/api/users/institute', { headers });
+          const resUsers = await fetch(apiUrl('/api/users/institute'), { headers });
           if (resUsers.ok) {
             const users = await resUsers.json();
             teachers = users.filter(u => u.designation === 'Teacher').length;
@@ -54,7 +55,7 @@ const AdminDashboard = () => {
         // Rooms (query with institute ObjectId like Rooms page)
         let rooms = 0;
         try {
-          const resRooms = await fetch(`http://localhost:5000/api/rooms?instituteID=${encodeURIComponent(instituteObjectId || '')}`, { headers });
+          const resRooms = await fetch(apiUrl(`/api/rooms?instituteID=${encodeURIComponent(instituteObjectId || '')}`), { headers });
           if (resRooms.ok) {
             const list = await resRooms.json();
             rooms = Array.isArray(list) ? list.length : (Array.isArray(list?.items) ? list.items.length : 0);
@@ -64,7 +65,7 @@ const AdminDashboard = () => {
         // Classes (use institute ObjectId like Classes page)
         let classes = 0;
         try {
-          const resClasses = await fetch(`http://localhost:5000/api/classes/${encodeURIComponent(instituteObjectId || '')}`, { headers });
+          const resClasses = await fetch(apiUrl(`/api/classes/${encodeURIComponent(instituteObjectId || '')}`), { headers });
           if (resClasses.ok) {
             const list = await resClasses.json();
             classes = Array.isArray(list) ? list.length : (Array.isArray(list?.items) ? list.items.length : 0);
@@ -74,7 +75,7 @@ const AdminDashboard = () => {
         // Courses (use institute ObjectId like Courses page)
         let courses = 0;
         try {
-          const resCourses = await fetch(`http://localhost:5000/api/courses/${encodeURIComponent(instituteObjectId || '')}`, { headers });
+          const resCourses = await fetch(apiUrl(`/api/courses/${encodeURIComponent(instituteObjectId || '')}`), { headers });
           if (resCourses.ok) {
             const list = await resCourses.json();
             courses = Array.isArray(list) ? list.length : (Array.isArray(list?.items) ? list.items.length : 0);
@@ -84,7 +85,7 @@ const AdminDashboard = () => {
         // Timetables (schedules)
         let schedules = 0;
         try {
-          const resTT = await fetch('http://localhost:5000/api/timetables-gen/list', { headers });
+          const resTT = await fetch(apiUrl('/api/timetables-gen/list'), { headers });
           if (resTT.ok) {
             const data = await resTT.json();
             const items = Array.isArray(data?.items) ? data.items : [];

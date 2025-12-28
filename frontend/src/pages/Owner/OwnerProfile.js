@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaLock, FaEdit, FaSave, FaTimes, FaUserCircle, FaKey, FaEye, FaEyeSlash } from 'react-icons/fa';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 const OwnerProfile = () => {
@@ -31,7 +32,7 @@ const OwnerProfile = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/auth/owner-profile', {
+      const res = await fetch(apiUrl('/api/auth/owner-profile'), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -124,7 +125,7 @@ const OwnerProfile = () => {
   const handleSave = async () => {
     setError(''); setSuccess('');
     try {
-      const res = await fetch('http://localhost:5000/api/auth/owner-profile', {
+      const res = await fetch(apiUrl('/api/auth/owner-profile'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -158,7 +159,7 @@ const OwnerProfile = () => {
       return;
     }
     try {
-      const res = await fetch('http://localhost:5000/api/auth/owner-change-password', {
+      const res = await fetch(apiUrl('/api/auth/owner-change-password'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

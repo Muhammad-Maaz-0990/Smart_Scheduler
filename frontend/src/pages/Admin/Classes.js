@@ -6,6 +6,7 @@ import AdminPageHeader from '../../components/AdminPageHeader';
 import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUsers, FaLeaf, FaSnowflake, FaSeedling, FaBan, FaChalkboard } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 const MotionCard = motion.create(Card);
@@ -58,7 +59,7 @@ const Classes = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/classes/${instituteObjectId}`);
+      const response = await fetch(apiUrl(`/api/classes/${instituteObjectId}`));
       if (response.ok) {
         const data = await response.json();
         setClasses(data);
@@ -116,8 +117,8 @@ const Classes = () => {
 
     try {
       const url = modalMode === 'add'
-        ? 'http://localhost:5000/api/classes'
-        : `http://localhost:5000/api/classes/${currentClass._id}`;
+        ? apiUrl('/api/classes')
+        : apiUrl(`/api/classes/${currentClass._id}`);
 
       const method = modalMode === 'add' ? 'POST' : 'PUT';
 
@@ -146,7 +147,7 @@ const Classes = () => {
         } else {
           // For add operation, get the newly created class data after fetch
           setTimeout(async () => {
-            const classesResponse = await fetch(`http://localhost:5000/api/classes/${instituteObjectId}`);
+            const classesResponse = await fetch(apiUrl(`/api/classes/${instituteObjectId}`));
             if (classesResponse.ok) {
               const classesData = await classesResponse.json();
               const newlyAddedClass = classesData.find(c => 
@@ -188,7 +189,7 @@ const Classes = () => {
     if (!classToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/classes/${classToDelete._id}`, {
+      const response = await fetch(apiUrl(`/api/classes/${classToDelete._id}`), {
         method: 'DELETE'
       });
 
@@ -225,7 +226,7 @@ const Classes = () => {
       // Check if it was a delete operation
       if (previousClass.isDeleted) {
         // Restore deleted class by creating it again
-        const response = await fetch(`http://localhost:5000/api/classes`, {
+        const response = await fetch(apiUrl('/api/classes'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -249,7 +250,7 @@ const Classes = () => {
         }
       } else if (previousClass.isAdded) {
         // Undo add operation by deleting the newly added class
-        const response = await fetch(`http://localhost:5000/api/classes/${previousClass._id}`, {
+        const response = await fetch(apiUrl(`/api/classes/${previousClass._id}`), {
           method: 'DELETE'
         });
 
@@ -264,7 +265,7 @@ const Classes = () => {
         }
       } else {
         // Update operation undo
-        const response = await fetch(`http://localhost:5000/api/classes/${previousClass._id}`, {
+        const response = await fetch(apiUrl(`/api/classes/${previousClass._id}`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -309,7 +310,7 @@ const Classes = () => {
     setError(''); setSuccess('');
     try {
       for (const c of importPreview) {
-        const res = await fetch('http://localhost:5000/api/classes', {
+        const res = await fetch(apiUrl('/api/classes'), {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ degree: c.degree, session: c.session, section: c.section || '', year: c.year, rank: Number(c.rank) || 1, instituteID: instituteObjectId })
         });
