@@ -9,7 +9,7 @@ import {
   scaleIn
 } from '../components/shared/animation_variants';
 import { useAuth } from '../context/AuthContext';
-import { apiUrl } from '../utils/api';
+import { apiUrl, API_BASE } from '../utils/api';
 
 const MotionButton = motion.create(Button);
 
@@ -39,6 +39,16 @@ const Login = () => {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
     const designation = params.get('designation');
+    const oauthError = params.get('error');
+
+    if (oauthError) {
+      const messageByCode = {
+        oauth_failed: 'Google sign-in failed. Please try again.',
+        login_failed: 'Google sign-in succeeded but login failed. Please try again.',
+      };
+      setError(messageByCode[oauthError] || 'Google sign-in failed. Please try again.');
+      return;
+    }
 
     if (token && designation) {
       // Ensure AuthContext token state updates so axios headers and verification are set
@@ -59,6 +69,13 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
+    // In production (Cloudflare Pages), OAuth must go to the hosted backend.
+    // If REACT_APP_API_URL isn't set, apiUrl() will produce a relative /api/auth/google
+    // which Cloudflare will rewrite to index.html and it looks like "nothing happened".
+    if (!API_BASE && window.location.hostname !== 'localhost') {
+      setError('Google sign-in is not configured yet (missing REACT_APP_API_URL).');
+      return;
+    }
     window.location.href = apiUrl('/api/auth/google');
   };
 
