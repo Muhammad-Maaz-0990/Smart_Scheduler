@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button, Card } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fadeInUp, scaleIn } from '../components/shared/animation_variants';
 import { 
   FaCalendarAlt, 
   FaClock, 
@@ -1027,7 +1026,7 @@ const Footer = () => (
           <h5 style={{ fontWeight: 700, marginBottom: '16px' }}>Product</h5>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {['Features', 'Pricing', 'Demo', 'Updates'].map((item) => (
-              <a key={item} href="#" style={{ color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }}
+              <a key={item} href={`/#${item.toLowerCase()}`} style={{ color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }}
                 onMouseEnter={(e) => e.target.style.color = '#e5e7eb'}
                 onMouseLeave={(e) => e.target.style.color = '#9ca3af'}>
                 {item}
@@ -1040,7 +1039,7 @@ const Footer = () => (
           <h5 style={{ fontWeight: 700, marginBottom: '16px' }}>Company</h5>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {['About', 'Blog', 'Careers', 'Contact'].map((item) => (
-              <a key={item} href="#" style={{ color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }}
+              <a key={item} href={`/#${item.toLowerCase()}`} style={{ color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }}
                 onMouseEnter={(e) => e.target.style.color = '#e5e7eb'}
                 onMouseLeave={(e) => e.target.style.color = '#9ca3af'}>
                 {item}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Container, Row, Col, Form, Button, Card, Alert } from 'react-bootstrap';
 import { motion } from 'framer-motion';
-import { FaLock, FaKey, FaCheckCircle, FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa';
+import { FaLock, FaCheckCircle } from 'react-icons/fa';
 
 const MotionCard = motion(Card);
 const MotionButton = motion(Button);
@@ -15,8 +15,6 @@ const ChangePassword = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
   const [oldFocus, setOldFocus] = useState(false);
   const [newFocus, setNewFocus] = useState(false);
   const [passwordLengthError, setPasswordLengthError] = useState('');
@@ -175,15 +173,13 @@ const ChangePassword = () => {
                         Current Password
                       </motion.label>
                       <Form.Control
-                        type={showOldPassword ? 'text' : 'password'}
+                        type="password"
                         placeholder=""
                         value={oldPassword}
                         onChange={(e) => {
                           setOldPassword(e.target.value);
                           if (oldPasswordError) setOldPasswordError('');
                         }}
-                        onFocus={() => setOldFocus(true)}
-                        onBlur={() => setOldFocus(false)}
                         style={{
                           padding: 'clamp(0.875rem, 2.5vw, 1rem) clamp(1rem, 3vw, 1.25rem)',
                           fontSize: 'clamp(0.875rem, 2.5vw, 0.9375rem)',
@@ -193,10 +189,12 @@ const ChangePassword = () => {
                           boxShadow: oldPasswordError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)'
                         }}
                         onFocus={(e) => {
+                          setOldFocus(true);
                           e.currentTarget.style.borderColor = oldPasswordError ? '#ef4444' : 'var(--theme-color, #7e22ce)';
                           e.currentTarget.style.boxShadow = oldPasswordError ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px var(--theme-color-light)';
                         }}
                         onBlur={(e) => {
+                          setOldFocus(false);
                           e.currentTarget.style.borderColor = oldPasswordError ? '#ef4444' : '#e5e7eb';
                           e.currentTarget.style.boxShadow = oldPasswordError ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)';
                         }}
@@ -252,7 +250,7 @@ const ChangePassword = () => {
                         New Password
                       </motion.label>
                       <Form.Control
-                        type={showNewPassword ? 'text' : 'password'}
+                        type="password"
                         placeholder=""
                         value={newPassword}
                         onChange={(e) => {
@@ -264,8 +262,6 @@ const ChangePassword = () => {
                             setPasswordLengthError('');
                           }
                         }}
-                        onFocus={() => setNewFocus(true)}
-                        onBlur={() => setNewFocus(false)}
                         disabled={!oldPassword}
                         style={{
                           padding: 'clamp(0.875rem, 2.5vw, 1rem) clamp(1rem, 3vw, 1.25rem)',
@@ -278,10 +274,12 @@ const ChangePassword = () => {
                           cursor: !oldPassword ? 'not-allowed' : 'text'
                         }}
                         onFocus={(e) => {
+                          setNewFocus(true);
                           e.currentTarget.style.borderColor = (passwordLengthError || newPasswordError) ? '#ef4444' : 'var(--theme-color, #7e22ce)';
                           e.currentTarget.style.boxShadow = (passwordLengthError || newPasswordError) ? '0 4px 12px rgba(239, 68, 68, 0.25)' : '0 4px 12px var(--theme-color-light)';
                         }}
                         onBlur={(e) => {
+                          setNewFocus(false);
                           e.currentTarget.style.borderColor = (passwordLengthError || newPasswordError) ? '#ef4444' : '#e5e7eb';
                           e.currentTarget.style.boxShadow = (passwordLengthError || newPasswordError) ? '0 2px 8px rgba(239, 68, 68, 0.15)' : '0 2px 8px rgba(0,0,0,0.04)';
                         }}

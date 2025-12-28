@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Table, Modal, Form, Alert, Badge, InputGroup } from 'react-bootstrap';
+import { Row, Col, Card, Button, Table, Modal, Form, Alert, Badge, InputGroup } from 'react-bootstrap';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { useAuth } from '../../context/AuthContext';
 import AdminPageHeader from '../../components/AdminPageHeader';
-import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUsers, FaLeaf, FaSnowflake, FaSeedling, FaBan, FaChalkboard } from 'react-icons/fa';
+import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaLeaf, FaSnowflake, FaSeedling, FaBan, FaChalkboard } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { apiUrl } from '../../utils/api';

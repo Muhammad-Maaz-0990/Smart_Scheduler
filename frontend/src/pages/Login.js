@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  fadeIn,
   fadeInUp,
   heroReveal,
   staggerChildren,

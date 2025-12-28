@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { Container, Card, Table, Alert, Button, Modal, Form, Badge, InputGroup } from 'react-bootstrap';
+import { Card, Table, Alert, Button, Modal, Form, InputGroup } from 'react-bootstrap';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
@@ -18,7 +18,7 @@ const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satu
 const TimeSlots = () => {
   const { instituteObjectId } = useAuth();
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [, setSuccess] = useState('');
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);

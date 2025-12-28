@@ -120,13 +120,6 @@ const Feedback = () => {
   // ===== Simple chat helpers =====
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    // Disabled to prevent initial scroll jump
-    // try {
-    //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    // } catch {}
-  };
-
   // Disabled auto-scroll to prevent page jump on load
   // useEffect(() => {
   //   scrollToBottom();

@@ -1,6 +1,6 @@
-import { Container, Card, Button, Table, Modal, Form, Alert, InputGroup } from 'react-bootstrap';
-import React, { useState, useEffect } from 'react';
-import { FaDoorOpen, FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaFlask, FaChalkboard, FaChevronDown } from 'react-icons/fa';
+import { Card, Button, Table, Modal, Form, Alert, InputGroup } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FaDoorOpen, FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaFlask, FaChalkboard } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { useAuth } from '../../context/AuthContext';
@@ -30,7 +30,6 @@ const Rooms = () => {
   const [importPreview, setImportPreview] = useState([]);
   const [importError, setImportError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [previousRoom, setPreviousRoom] = useState(null);
@@ -384,7 +383,7 @@ const Rooms = () => {
     }
   };
 
-  const getSortedRooms = () => {
+  const getSortedRooms = useCallback(() => {
     let filtered = rooms.filter(r =>
       r.roomNumber?.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -427,7 +426,7 @@ const Rooms = () => {
     }
 
     return filtered;
-  };
+  }, [rooms, searchTerm, statusFilter, sortField, sortDirection]);
 
   // Reset visible count when filters/search/sort or data length changes
   useEffect(() => {
@@ -450,7 +449,7 @@ const Rooms = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [searchTerm, statusFilter, sortField, sortDirection, rooms.length]);
+  }, [getSortedRooms]);
 
   return (
     <>

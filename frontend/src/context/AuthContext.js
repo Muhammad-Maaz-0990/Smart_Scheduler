@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { API_BASE, apiUrl } from '../utils/api';
 
@@ -26,11 +26,13 @@ export const AuthProvider = ({ children }) => {
   const [paymentsHistoryCache, setPaymentsHistoryCache] = useState(null);
 
   // Color presets for theme
-  const colorPresets = [
-    { name: 'Purple', value: '#7c3aed', light: '#ede9fe', dark: '#5b21b6' },
-    { name: 'Blue', value: '#2563eb', light: '#dbeafe', dark: '#1e40af' },
-    { name: 'Emerald', value: '#059669', light: '#d1fae5', dark: '#047857' }
-  ];
+  const colorPresets = useMemo(() => (
+    [
+      { name: 'Purple', value: '#7c3aed', light: '#ede9fe', dark: '#5b21b6' },
+      { name: 'Blue', value: '#2563eb', light: '#dbeafe', dark: '#1e40af' },
+      { name: 'Emerald', value: '#059669', light: '#d1fae5', dark: '#047857' }
+    ]
+  ), []);
 
   // Apply theme from localStorage immediately on mount (before API calls)
   useEffect(() => {
@@ -85,46 +87,6 @@ export const AuthProvider = ({ children }) => {
 
     verifyToken();
   }, [token]);
-
-  // Resolve institute ObjectId once when user is set
-  useEffect(() => {
-    const resolveInstitute = async () => {
-      if (!user?.instituteID) {
-        setInstituteObjectId(null);
-        return;
-      }
-
-      const instituteRef = user.instituteID;
-      const rawParam = typeof instituteRef === 'object' && instituteRef !== null ? instituteRef._id : instituteRef;
-      
-      if (!rawParam) {
-        setInstituteObjectId(null);
-        return;
-      }
-
-      const looksLikeObjectId = /^[a-fA-F0-9]{24}$/.test(String(rawParam));
-      if (looksLikeObjectId) {
-        setInstituteObjectId(rawParam);
-      } else {
-        try {
-          const response = await fetch(apiUrl(`/api/auth/institute/${encodeURIComponent(rawParam)}`), {
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-          });
-          if (response.ok) {
-            const inst = await response.json();
-            setInstituteObjectId(inst?._id || null);
-          } else {
-            setInstituteObjectId(null);
-          }
-        } catch (err) {
-          console.error('Failed to resolve institute:', err);
-          setInstituteObjectId(null);
-        }
-      }
-    };
-
-    resolveInstitute();
-  }, [user, token]);
 
   // Resolve institute ObjectId once when user is set
   useEffect(() => {

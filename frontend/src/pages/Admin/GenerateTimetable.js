@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Container } from 'react-bootstrap';
-import Sidebar from '../../components/Sidebar';
 import TimetableGrid from '../../components/shared/TimetableGrid';
 import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
@@ -39,7 +38,6 @@ function GenerateTimetable() {
   const [activeCandidateTab, setActiveCandidateTab] = useState(0); // For Step 7 candidate tabs
   const [courseSearchQuery, setCourseSearchQuery] = useState(''); // Search query for courses
   const [courseSortBy, setCourseSortBy] = useState('title'); // 'title', 'code', 'credits'
-  const [teacherSearchQuery, setTeacherSearchQuery] = useState(''); // Search query for teachers
   const [modalMessage, setModalMessage] = useState(''); // Modal message
   const [showModal, setShowModal] = useState(false); // Show/hide modal
 

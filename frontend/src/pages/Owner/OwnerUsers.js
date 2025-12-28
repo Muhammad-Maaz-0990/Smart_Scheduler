@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Table, Alert, Button, Modal, Form, Badge, Row, Col } from 'react-bootstrap';
+import { Container, Card, Table, Alert, Button, Modal, Form, Badge } from 'react-bootstrap';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -8,14 +8,12 @@ import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence, } from 'framer-motion';
 import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
 import {
-  FaUsers, FaUserPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaFileImport, FaFileExport,
-  FaEnvelope, FaPhone, FaIdCard, FaTimes, FaDownload, FaUpload, FaUserShield, FaEye, FaEyeSlash
+  FaUsers, FaUserPlus, FaEdit, FaTrash, FaSearch, FaFileImport, FaFileExport,
+  FaEnvelope, FaPhone, FaIdCard, FaUserShield, FaEye, FaEyeSlash
 } from 'react-icons/fa';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
-
-const MotionButton = motion.create(Button);
 
 const OwnerUsers = () => {
   const { user } = useAuth();

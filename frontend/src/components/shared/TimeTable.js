@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Card, Button, Badge, Form, Row, Col,} from 'react-bootstrap';
+import { Container, Card, Button, Form, Row, Col } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeInUp, fadeIn, scaleIn } from './animation_variants';
-import { FaPrint, FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen, FaEdit, FaSave, FaTimes, FaExchangeAlt, FaFilePdf, FaInfoCircle } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen, FaEdit, FaSave, FaTimes, FaExchangeAlt, FaFilePdf, FaInfoCircle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { apiUrl } from '../../utils/api';
 import html2pdf from 'html2pdf.js';
@@ -99,7 +99,7 @@ function TimeTable({ isAdmin = false }) {
   const [redoStack, setRedoStack] = useState([]); // History for redo functionality
   const [swapBox, setSwapBox] = useState({}); // Organized by class: { className: [cells] }
   const [selectedCells, setSelectedCells] = useState([]); // Array of {index, class}
-  const [successMessage, setSuccessMessage] = useState('');
+  const [, setSuccessMessage] = useState('');
   const [undoRedoMessage, setUndoRedoMessage] = useState({ className: null, message: '' });
   const [renderKey, setRenderKey] = useState(0);
   const [swappingCells, setSwappingCells] = useState(null); // { cell1: index, cell2: index }
@@ -895,10 +895,6 @@ function TimeTable({ isAdmin = false }) {
             setTimeout(() => {
               animationStarted = true;
               otherCells.forEach(({ clone, initialX, initialY, rect }) => {
-                // Calculate offset relative to dragged cell's current cursor position
-                const targetX = cursorX - draggedRect.width / 2;
-                const targetY = cursorY - draggedRect.height / 2;
-                
                 // Position relative to dragged cell (maintain relative positions)
                 const offsetX = initialX - draggedRect.left;
                 const offsetY = initialY - draggedRect.top;
@@ -955,39 +951,27 @@ function TimeTable({ isAdmin = false }) {
       
       if (isMultiCell) {
         // Handle multiple selected cells deletion
-        console.log('🗑️ Multi-cell deletion - Current state before save:', {
-          editDetails: editDetails.slice(0, 3),
-          swapBox
-        });
         saveToUndoStack();
         const selectedCellsData = JSON.parse(e.dataTransfer.getData('selectedCells'));
-        console.log('🗑️ Multi-cell deletion - Selected cells:', selectedCellsData);
         const newDetails = [...editDetails];
-        const newSwapBox = { ...swapBox };
-        
-        selectedCellsData.forEach(({ index, class: className }) => {
-          const cellData = newDetails[index];
-          if (cellData && cellData.course) {
-            // Add to swap box
-            if (!newSwapBox[className]) newSwapBox[className] = [];
-            newSwapBox[className].push({ ...cellData });
-            
-            // Clear from timetable
-            newDetails[index] = {
-              ...newDetails[index],
-              course: '',
-              roomNumber: '',
-              instructorName: ''
-            };
-          }
+
+        setSwapBox(prev => {
+          const next = { ...prev };
+          selectedCellsData.forEach(({ index, class: className }) => {
+            const cellData = newDetails[index];
+            if (cellData && cellData.course) {
+              next[className] = [...(next[className] || []), { ...cellData }];
+              newDetails[index] = {
+                ...newDetails[index],
+                course: '',
+                roomNumber: '',
+                instructorName: ''
+              };
+            }
+          });
+          return next;
         });
-        
-        console.log('🗑️ Multi-cell deletion - New state:', {
-          newDetails: newDetails.slice(0, 3),
-          newSwapBox
-        });
-        
-        setSwapBox(newSwapBox);
+
         setEditDetails(newDetails);
         if (setSelectedCells) setSelectedCells([]);
         return;
@@ -1022,7 +1006,7 @@ function TimeTable({ isAdmin = false }) {
     } catch (error) {
       // Error dropping to swap box
     }
-  }, [editDetails, swapBox, saveToUndoStack]);
+  }, [editDetails, saveToUndoStack]);
 
   // Remove from swap box (just removes, doesn't put back)
   const handleRemoveFromSwapBox = useCallback((className, idx) => {
@@ -1088,7 +1072,8 @@ function TimeTable({ isAdmin = false }) {
     } catch (error) {
       // Error dropping to cell
     }
-  }, [editDetails]);
+  }, [editDetails, saveToUndoStack]);
+
 
   // Drag start from swap box
   const handleDragFromSwapBox = useCallback((e, cell, className, swapBoxIndex) => {
@@ -3570,9 +3555,6 @@ function TimetableTables({
                             duration: 1.2,
                             ease: "easeInOut",
                             times: [0, 0.35, 0.65, 1]
-                          }}
-                          style={{
-                            position: 'relative'
                           }}
                           draggable={isEditMode && !isEmpty}
                           onClick={() => {

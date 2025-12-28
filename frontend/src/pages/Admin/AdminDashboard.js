@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Alert, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Container, Row, Col, Card, Alert, Badge } from 'react-bootstrap';
 import { FaChalkboardTeacher, FaUserGraduate, FaBook, FaCalendarAlt, FaDoorOpen, FaUsers, FaTrophy } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import Sidebar from '../../components/Sidebar';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';

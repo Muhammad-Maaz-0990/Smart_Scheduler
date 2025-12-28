@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
-import { fadeInUp, scaleIn } from '../../components/shared/animation_variants';
+import { scaleIn } from '../../components/shared/animation_variants';
 import { FaBuilding, FaChalkboardTeacher, FaGraduationCap, FaTrophy, FaChartLine } from 'react-icons/fa';
 import '../Dashboard.css';
 import Sidebar from '../../components/Sidebar';
