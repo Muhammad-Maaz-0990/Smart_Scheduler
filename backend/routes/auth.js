@@ -299,16 +299,29 @@ router.post('/register-institute', [
 // @route   GET /api/auth/google
 // @desc    Google OAuth authentication
 // @access  Public
-router.get('/google',
-  passport.authenticate('google', { scope: ['profile', 'email'], session: false })
-);
+function getPublicBaseUrl(req) {
+  const forwardedProto = (req.get('x-forwarded-proto') || '').split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol;
+  const host = req.get('x-forwarded-host') || req.get('host');
+  return `${protocol}://${host}`;
+}
+
+router.get('/google', (req, res, next) => {
+  const callbackURL = `${getPublicBaseUrl(req)}/api/auth/google/callback`;
+  return passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false,
+    callbackURL,
+  })(req, res, next);
+});
 
 // @route   GET /api/auth/google/callback
 // @desc    Google OAuth callback
 // @access  Public
 router.get('/google/callback',
   (req, res, next) => {
-    passport.authenticate('google', { session: false }, (err, user, info) => {
+    const callbackURL = `${getPublicBaseUrl(req)}/api/auth/google/callback`;
+    passport.authenticate('google', { session: false, callbackURL }, (err, user, info) => {
       if (err) {
         return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
       }
