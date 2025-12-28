@@ -1,6 +1,10 @@
 {
   "name": "smart-scheduler-root",
   "private": true,
+  "engines": {
+    "node": "18.20.4",
+    "npm": "10.x"
+  },
   "dependencies": {
     "yaml": "2.8.2"
   },
