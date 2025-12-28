@@ -300,7 +300,7 @@ router.post('/register-institute', [
 // @desc    Google OAuth authentication
 // @access  Public
 router.get('/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
+  passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );
 
 // @route   GET /api/auth/google/callback
@@ -308,7 +308,7 @@ router.get('/google',
 // @access  Public
 router.get('/google/callback',
   (req, res, next) => {
-    passport.authenticate('google', (err, user, info) => {
+    passport.authenticate('google', { session: false }, (err, user, info) => {
       if (err) {
         return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
       }
@@ -319,20 +319,13 @@ router.get('/google/callback',
         const name = info?.name || '';
         return res.redirect(`${process.env.FRONTEND_URL}/register?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`);
       }
-      
-      // If user exists, log them in
-      req.logIn(user, (err) => {
-        if (err) {
-          return res.redirect(`${process.env.FRONTEND_URL}/login?error=login_failed`);
-        }
-        
-        // Generate JWT token
-        const token = generateToken(user);
-        
-        // Redirect to frontend with token and user info
-        const designation = user.designation || user.role || 'Student';
-        res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&designation=${designation}`);
-      });
+
+      // Generate JWT token (no session needed)
+      const token = generateToken(user);
+
+      // Redirect to frontend with token and user info
+      const designation = user.designation || user.role || 'Student';
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&designation=${designation}`);
     })(req, res, next);
   }
 );
