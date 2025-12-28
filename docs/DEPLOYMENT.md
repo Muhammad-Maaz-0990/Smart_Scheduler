@@ -41,9 +41,9 @@ git push -u origin main
 
 2) Decide your final URLs (examples)
 
-- Frontend: `https://smart-scheduler.pages.dev`
-- Backend: `https://smart-scheduler-api.onrender.com`
-- Python: `https://smart-scheduler-py.onrender.com`
+- Frontend: `https://smart-scheduler.com`
+- Backend: `https://smart-scheduler-backend.com`
+- Python: `https://smart-scheduler-py-api.com`
 
 ---
 
