@@ -10,6 +10,7 @@ import {
   scaleIn
 } from '../components/shared/animation_variants';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../utils/api';
 
 const MotionButton = motion.create(Button);
 
@@ -48,7 +49,6 @@ const Login = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
-    import { apiUrl } from '../utils/api';
   const redirectToDashboard = (designation) => {
     const routes = {
       'Owner': '/owner',
@@ -98,7 +98,7 @@ const Login = () => {
       setEmailError(emailValidation);
       setPasswordError(passwordValidation);
       return;
-        window.location.href = apiUrl('/api/auth/google');
+    }
 
     setLoading(true);
 

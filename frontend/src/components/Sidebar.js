@@ -159,7 +159,6 @@ const Sidebar = ({ activeMenu }) => {
 
   const teacherMenu = [
     { icon: FaCalendar, label: 'TimeTables', value: 'timetables' },
-                      src={apiUrl(instituteInfo.instituteLogo)}
     { icon: FaUserCog, label: 'Profile', value: 'profile' }
   ];
   
