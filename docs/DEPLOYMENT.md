@@ -41,9 +41,14 @@ git push -u origin main
 
 2) Decide your final URLs (examples)
 
-- Frontend: `https://smart-scheduler.com`
-- Backend: `https://smart-scheduler-backend.com`
-- Python: `https://smart-scheduler-py-api.com`
+- Frontend (free): `https://smart-scheduler.pages.dev` (Cloudflare Pages)
+- Backend (free): `https://smart-scheduler-api.onrender.com` (Render)
+- Python (free): `https://smart-scheduler-py.onrender.com` (Render)
+
+Note:
+
+- Custom domains like `smart-scheduler.com` are **not free** (you must buy the domain).
+- You can still use a custom domain later, but first deploy using the free provider URLs above.
 
 ---
 
