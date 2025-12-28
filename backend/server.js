@@ -6,7 +6,8 @@ const session = require('express-session');
 const passport = require('passport');
 
 // Load .env and override any pre-set env vars (avoids stale STRIPE keys in shell)
-dotenv.config({ override: true });
+// In hosted environments (Replit/Render/etc.), platform env vars should win.
+dotenv.config();
 // Env configured via .env (Stripe, FRONTEND_URL, etc.)
 
 const app = express();
