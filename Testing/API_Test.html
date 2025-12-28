@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FastAPI Tester</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+  textarea { width: 100%; height: 250px; font-family: monospace; margin-bottom: 20px; }
+  pre { background: #eee; padding: 15px; overflow-x: auto; }
+  button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>FastAPI JSON Tester</h1>
+
+<p>Paste your JSON here:</p>
+<textarea id="jsonInput">
+{
+  "instituteID": "TEST",
+  "session": "Fall",
+  "year": 2025,
+  "classes": ["A"],
+  "assignments": [{"class": "A", "course": "Math", "type": "Lecture", "creditHours": 1}],
+  "rooms": ["R1"],
+  "roomTypes": {"R1": "Class"},
+  "timeslots": [{"day": "Mon", "start": "09:00", "end": "10:00"}],
+  "breaks": {"mode": "none"},
+  "slotMinutes": 60,
+  "algorithms": ["csp"]
+}
+</textarea>
+
+<p>API URL:</p>
+<input type="text" id="apiUrl" value="https://maazmr-smart-scheduler-python.hf.space/timetables/generate" style="width:100%; margin-bottom:20px; padding:8px;" />
+
+<button onclick="sendRequest()">Send Request</button>
+
+<h2>Response:</h2>
+<pre id="responseOutput"></pre>
+
+<script>
+async function sendRequest() {
+    const url = document.getElementById('apiUrl').value;
+    let jsonData;
+    try {
+        jsonData = JSON.parse(document.getElementById('jsonInput').value);
+    } catch(e) {
+        alert("Invalid JSON! " + e.message);
+        return;
+    }
+
+    document.getElementById('responseOutput').textContent = "Loading...";
+
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(jsonData)
+        });
+        const data = await res.json();
+        document.getElementById('responseOutput').textContent = JSON.stringify(data, null, 2);
+    } catch(err) {
+        document.getElementById('responseOutput').textContent = "Error: " + err;
+    }
+}
+</script>
+</body>
+</html>
