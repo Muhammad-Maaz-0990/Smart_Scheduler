@@ -3639,7 +3639,6 @@ function TimetableTables({
                               : undefined,
                             minHeight: isEmpty ? '80px' : '120px',
                             cursor: isEditMode && !isEmpty ? 'pointer' : 'default',
-                            position: 'relative',
                             userSelect: 'none',
                             zIndex: isSwapping ? 999 : isSelected ? 10 : matchesSearch ? 8 : 0,
                             transition: isSwapping ? 'none' : undefined
