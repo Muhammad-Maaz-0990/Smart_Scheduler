@@ -6,10 +6,13 @@ const session = require('express-session');
 const passport = require('passport');
 
 // Load .env and override any pre-set env vars (avoids stale STRIPE keys in shell)
-dotenv.config({ override: true });
+// In hosted environments (Replit/Render/etc.), platform env vars should win.
+dotenv.config();
 // Env configured via .env (Stripe, FRONTEND_URL, etc.)
 
 const app = express();
+// Needed on hosted platforms (Replit/Render/etc.) so req.protocol uses x-forwarded-proto.
+app.set('trust proxy', 1);
 // Load payments webhook early with raw body (before JSON parser)
 const paymentsModule = require('./routes/payments');
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), paymentsModule.webhookHandler);

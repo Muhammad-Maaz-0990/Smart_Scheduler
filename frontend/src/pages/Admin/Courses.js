@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Table, Modal, Form, Alert, Badge, InputGroup } from 'react-bootstrap';
+import { Row, Col, Card, Button, Table, Modal, Form, Alert, Badge, InputGroup } from 'react-bootstrap';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { useAuth } from '../../context/AuthContext';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaBook } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 const MotionCard = motion.create(Card);
@@ -24,7 +25,7 @@ const Courses = () => {
     creditHours: 3
   });
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [filters, setFilters] = useState({ type: 'All', creditHours: '', });
@@ -56,7 +57,7 @@ const Courses = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/courses/${instituteObjectId}`);
+      const response = await fetch(apiUrl(`/api/courses/${instituteObjectId}`));
       if (response.ok) {
         const data = await response.json();
         setCourses(data);
@@ -115,8 +116,8 @@ const Courses = () => {
 
     try {
       const url = modalMode === 'add' 
-        ? 'http://localhost:5000/api/courses'
-        : `http://localhost:5000/api/courses/${currentCourse._id}`;
+        ? apiUrl('/api/courses')
+        : apiUrl(`/api/courses/${currentCourse._id}`);
       
       const method = modalMode === 'add' ? 'POST' : 'PUT';
       
@@ -146,7 +147,7 @@ const Courses = () => {
         } else {
           // For add operation, get the newly created course data after fetch
           setTimeout(async () => {
-            const coursesResponse = await fetch(`http://localhost:5000/api/courses/${instituteObjectId}`);
+            const coursesResponse = await fetch(apiUrl(`/api/courses/${instituteObjectId}`));
             if (coursesResponse.ok) {
               const coursesData = await coursesResponse.json();
               const newlyAddedCourse = coursesData.find(c => 
@@ -186,7 +187,7 @@ const Courses = () => {
     if (!courseToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/courses/${courseToDelete._id}`, {
+      const response = await fetch(apiUrl(`/api/courses/${courseToDelete._id}`), {
         method: 'DELETE'
       });
 
@@ -222,7 +223,7 @@ const Courses = () => {
       // Check if it was a delete operation
       if (previousCourse.isDeleted) {
         // Restore deleted course by creating it again
-        const response = await fetch(`http://localhost:5000/api/courses`, {
+        const response = await fetch(apiUrl('/api/courses'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -244,7 +245,7 @@ const Courses = () => {
         }
       } else if (previousCourse.isAdded) {
         // Undo add operation by deleting the newly added course
-        const response = await fetch(`http://localhost:5000/api/courses/${previousCourse._id}`, {
+        const response = await fetch(apiUrl(`/api/courses/${previousCourse._id}`), {
           method: 'DELETE'
         });
 
@@ -258,7 +259,7 @@ const Courses = () => {
         }
       } else {
         // Update operation undo
-        const response = await fetch(`http://localhost:5000/api/courses/${previousCourse._id}`, {
+        const response = await fetch(apiUrl(`/api/courses/${previousCourse._id}`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -302,7 +303,7 @@ const Courses = () => {
     try {
       for (const c of importPreview) {
         const body = { courseCode: c.courseCode, courseTitle: c.courseTitle, courseType: c.courseType, creditHours: Number(c.creditHours)|| (c.courseType==='Lab'?1:3), instituteID: instituteObjectId };
-        const res = await fetch('http://localhost:5000/api/courses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const res = await fetch(apiUrl('/api/courses'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         if (!res.ok) { const d = await res.json().catch(()=>({})); throw new Error(d.message || 'Failed to add some rows'); }
       }
       setSuccess('Imported courses added successfully'); setImportPreview([]); fetchCourses();

@@ -272,7 +272,7 @@ const Payments = () => {
                               <Badge bg="secondary">{p.paymentID}</Badge>
                             </td>
                             <td style={{ padding: '14px 16px' }}>{p.instituteName || p.instituteID}</td>
-                            <td style={{ padding: '14px 16px', color: '#6941db', fontWeight: 700 }}>Rs. {p.amount}</td>
+                            <td style={{ padding: '14px 16px', color: '#6941db', fontWeight: 700 }}>$. {p.amount}</td>
                             <td style={{ padding: '14px 16px' }}>{formatDate(p.paymentDate)}</td>
                           </motion.tr>
                         ))

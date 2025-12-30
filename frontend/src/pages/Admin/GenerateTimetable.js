@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Container } from 'react-bootstrap';
-import Sidebar from '../../components/Sidebar';
 import TimetableGrid from '../../components/shared/TimetableGrid';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 function GenerateTimetable() {
@@ -38,7 +38,6 @@ function GenerateTimetable() {
   const [activeCandidateTab, setActiveCandidateTab] = useState(0); // For Step 7 candidate tabs
   const [courseSearchQuery, setCourseSearchQuery] = useState(''); // Search query for courses
   const [courseSortBy, setCourseSortBy] = useState('title'); // 'title', 'code', 'credits'
-  const [teacherSearchQuery, setTeacherSearchQuery] = useState(''); // Search query for teachers
   const [modalMessage, setModalMessage] = useState(''); // Modal message
   const [showModal, setShowModal] = useState(false); // Show/hide modal
 
@@ -93,41 +92,41 @@ function GenerateTimetable() {
         };
 
         // Rooms
-        const roomsRes = await fetch(`http://localhost:5000/api/rooms/${instituteObjectId}`, { headers: commonHeaders });
+        const roomsRes = await fetch(apiUrl(`/api/rooms/${instituteObjectId}`), { headers: commonHeaders });
         if (roomsRes.ok) {
           const data = await roomsRes.json();
           setRooms(Array.isArray(data) ? data : (data?.rooms || []));
         } else {
           // fallback to query style
-          const roomsResQ = await fetch(`http://localhost:5000/api/rooms?instituteID=${instituteObjectId}`, { headers: commonHeaders });
+          const roomsResQ = await fetch(apiUrl(`/api/rooms?instituteID=${instituteObjectId}`), { headers: commonHeaders });
           const dataQ = roomsResQ.ok ? await roomsResQ.json() : [];
           setRooms(Array.isArray(dataQ) ? dataQ : (dataQ?.rooms || []));
         }
 
         // Classes
-        const classesRes = await fetch(`http://localhost:5000/api/classes/${instituteObjectId}`, { headers: commonHeaders });
+        const classesRes = await fetch(apiUrl(`/api/classes/${instituteObjectId}`), { headers: commonHeaders });
         if (classesRes.ok) {
           const data = await classesRes.json();
           setClasses(Array.isArray(data) ? data : (data?.classes || []));
         } else {
-          const classesResQ = await fetch(`http://localhost:5000/api/classes?instituteID=${instituteObjectId}`, { headers: commonHeaders });
+          const classesResQ = await fetch(apiUrl(`/api/classes?instituteID=${instituteObjectId}`), { headers: commonHeaders });
           const dataQ = classesResQ.ok ? await classesResQ.json() : [];
           setClasses(Array.isArray(dataQ) ? dataQ : (dataQ?.classes || []));
         }
 
         // Courses
-        const coursesRes = await fetch(`http://localhost:5000/api/courses/${instituteObjectId}`, { headers: commonHeaders });
+        const coursesRes = await fetch(apiUrl(`/api/courses/${instituteObjectId}`), { headers: commonHeaders });
         if (coursesRes.ok) {
           const data = await coursesRes.json();
           setCourses(Array.isArray(data) ? data : (data?.courses || []));
         } else {
-          const coursesResQ = await fetch(`http://localhost:5000/api/courses?instituteID=${instituteObjectId}`, { headers: commonHeaders });
+          const coursesResQ = await fetch(apiUrl(`/api/courses?instituteID=${instituteObjectId}`), { headers: commonHeaders });
           const dataQ = coursesResQ.ok ? await coursesResQ.json() : [];
           setCourses(Array.isArray(dataQ) ? dataQ : (dataQ?.courses || []));
         }
 
         // Teachers: backend exposes /api/users/institute for Admin; filter by designation
-        const teachersRes = await fetch(`http://localhost:5000/api/users/institute`, { headers: commonHeaders });
+        const teachersRes = await fetch(apiUrl('/api/users/institute'), { headers: commonHeaders });
         if (teachersRes.ok) {
           const data = await teachersRes.json();
           const list = Array.isArray(data) ? data : (data?.users || []);
@@ -432,7 +431,7 @@ function GenerateTimetable() {
           slotMinutes: selectedSlotMinutes,
         };
 
-        const res = await fetch('http://localhost:5000/api/timetables-gen/generate', {
+        const res = await fetch(apiUrl('/api/timetables-gen/generate'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -648,7 +647,7 @@ function GenerateTimetable() {
                         setError('');
                         const token = localStorage.getItem('token');
                         const chosen = candidates[selectedCandidateIndex];
-                        const res = await fetch('http://localhost:5000/api/timetables-gen/save', {
+                        const res = await fetch(apiUrl('/api/timetables-gen/save'), {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',

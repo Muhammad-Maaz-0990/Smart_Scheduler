@@ -4,6 +4,7 @@ import { Bar, Pie, Line } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
 import { scaleIn } from '../../components/shared/animation_variants';
 import { FaChartLine, FaChartPie, FaChartBar } from 'react-icons/fa';
+import { apiUrl } from '../../utils/api';
 
 import {
   Chart as ChartJS,
@@ -26,17 +27,17 @@ const OwnerDashboardGraphs = () => {
   const [growth, setGrowth] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/auth/owner-stats', {
+    fetch(apiUrl('/api/auth/owner-stats'), {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
       .then(res => res.json())
       .then(data => setStats(data));
-    fetch('http://localhost:5000/api/auth/institutes', {
+    fetch(apiUrl('/api/auth/institutes'), {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
       .then(res => res.json())
       .then(data => setInstitutes(Array.isArray(data) ? data : []));
-    fetch('http://localhost:5000/api/auth/institute-growth', {
+    fetch(apiUrl('/api/auth/institute-growth'), {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
       .then(res => res.json())

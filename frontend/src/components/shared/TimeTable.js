@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Container, Card, Button, Badge, Form, Row, Col,} from 'react-bootstrap';
+import { Container, Card, Button, Form, Row, Col } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeInUp, fadeIn, scaleIn } from './animation_variants';
-import { FaPrint, FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen, FaEdit, FaSave, FaTimes, FaExchangeAlt, FaFilePdf, FaInfoCircle } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaCalendarAlt, FaEye, FaEyeSlash, FaStar, FaClock, FaGraduationCap, FaChalkboardTeacher, FaDoorOpen, FaEdit, FaSave, FaTimes, FaExchangeAlt, FaFilePdf, FaInfoCircle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { apiUrl } from '../../utils/api';
 import html2pdf from 'html2pdf.js';
 
 // Function to expand common abbreviations to full names
@@ -99,7 +100,7 @@ function TimeTable({ isAdmin = false }) {
   const [redoStack, setRedoStack] = useState([]); // History for redo functionality
   const [swapBox, setSwapBox] = useState({}); // Organized by class: { className: [cells] }
   const [selectedCells, setSelectedCells] = useState([]); // Array of {index, class}
-  const [successMessage, setSuccessMessage] = useState('');
+  const [, setSuccessMessage] = useState('');
   const [undoRedoMessage, setUndoRedoMessage] = useState({ className: null, message: '' });
   const [renderKey, setRenderKey] = useState(0);
   const [swappingCells, setSwappingCells] = useState(null); // { cell1: index, cell2: index }
@@ -205,7 +206,7 @@ function TimeTable({ isAdmin = false }) {
         // Fetch courses - needs instituteID in URL path
         if (instituteParam) {
           try {
-            const coursesUrl = `http://localhost:5000/api/courses/${instituteParam}`;
+            const coursesUrl = apiUrl(`/api/courses/${instituteParam}`);
             const coursesRes = await fetch(coursesUrl, {
               headers: { Authorization: `Bearer ${token}` }
             });
@@ -226,7 +227,7 @@ function TimeTable({ isAdmin = false }) {
 
         // Fetch rooms
         try {
-          const roomsUrl = 'http://localhost:5000/api/rooms';
+          const roomsUrl = apiUrl('/api/rooms');
           const roomsRes = await fetch(roomsUrl, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -244,7 +245,7 @@ function TimeTable({ isAdmin = false }) {
 
         // Fetch teachers - use /institute endpoint with protection
         try {
-          const teachersUrl = 'http://localhost:5000/api/users/institute';
+          const teachersUrl = apiUrl('/api/users/institute');
           const teachersRes = await fetch(teachersUrl, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -283,14 +284,14 @@ function TimeTable({ isAdmin = false }) {
           ? (instituteRef._id || instituteRef.instituteID || instituteRef)
           : instituteRef;
         if (!instituteParam) return;
-        const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(instituteParam)}`, {
+        const response = await fetch(apiUrl(`/api/auth/institute/${encodeURIComponent(instituteParam)}`), {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
           const data = await response.json();
           // If instituteLogo is a path (not data URL), prepend base URL
           if (data.instituteLogo && !data.instituteLogo.startsWith('data:') && !data.instituteLogo.startsWith('http')) {
-            data.instituteLogo = `http://localhost:5000${data.instituteLogo}`;
+            data.instituteLogo = apiUrl(data.instituteLogo);
           }
           setInstituteInfo(data);
         }
@@ -306,7 +307,7 @@ function TimeTable({ isAdmin = false }) {
     setError('');
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/timetables-gen/list', {
+      const res = await fetch(apiUrl('/api/timetables-gen/list'), {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (!res.ok) throw new Error(await res.text());
@@ -339,7 +340,7 @@ function TimeTable({ isAdmin = false }) {
     setDetails([]); // Clear immediately to prevent stale data mixing
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/timetables-gen/details/${encodeURIComponent(header.instituteTimeTableID)}`, {
+      const res = await fetch(apiUrl(`/api/timetables-gen/details/${encodeURIComponent(header.instituteTimeTableID)}`), {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (!res.ok) throw new Error(await res.text());
@@ -355,7 +356,7 @@ function TimeTable({ isAdmin = false }) {
   const updateHeader = useCallback(async (id, updates) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/timetables-gen/header/${encodeURIComponent(id)}`, {
+      const res = await fetch(apiUrl(`/api/timetables-gen/header/${encodeURIComponent(id)}`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -388,13 +389,13 @@ function TimeTable({ isAdmin = false }) {
       try {
         const token = localStorage.getItem('token');
         const instId = selected.instituteID;
-        const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(instId)}`, {
+        const response = await fetch(apiUrl(`/api/auth/institute/${encodeURIComponent(instId)}`), {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
         if (response.ok) {
           const data = await response.json();
           if (data.instituteLogo && !String(data.instituteLogo).startsWith('http') && !String(data.instituteLogo).startsWith('data:')) {
-            data.instituteLogo = `http://localhost:5000${data.instituteLogo}`;
+            data.instituteLogo = apiUrl(data.instituteLogo);
           }
           setInstituteInfo(data);
         }
@@ -426,13 +427,13 @@ function TimeTable({ isAdmin = false }) {
             ? (instituteRef._id || instituteRef.instituteID || instituteRef)
             : instituteRef;
           if (instituteParam) {
-            const response = await fetch(`http://localhost:5000/api/auth/institute/${encodeURIComponent(instituteParam)}`, {
+            const response = await fetch(apiUrl(`/api/auth/institute/${encodeURIComponent(instituteParam)}`), {
               headers: token ? { 'Authorization': `Bearer ${token}` } : {}
             });
             if (response.ok) {
               const data = await response.json();
               if (data.instituteLogo && !String(data.instituteLogo).startsWith('http') && !String(data.instituteLogo).startsWith('data:')) {
-                data.instituteLogo = `http://localhost:5000${data.instituteLogo}`;
+                data.instituteLogo = apiUrl(data.instituteLogo);
               }
               setInstituteInfo(data);
             }
@@ -591,7 +592,7 @@ function TimeTable({ isAdmin = false }) {
       setSuccessMessage('');
       const token = localStorage.getItem('token');
       
-      const res = await fetch(`http://localhost:5000/api/timetables-gen/details/${encodeURIComponent(selected.instituteTimeTableID)}`, {
+      const res = await fetch(apiUrl(`/api/timetables-gen/details/${encodeURIComponent(selected.instituteTimeTableID)}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -895,10 +896,6 @@ function TimeTable({ isAdmin = false }) {
             setTimeout(() => {
               animationStarted = true;
               otherCells.forEach(({ clone, initialX, initialY, rect }) => {
-                // Calculate offset relative to dragged cell's current cursor position
-                const targetX = cursorX - draggedRect.width / 2;
-                const targetY = cursorY - draggedRect.height / 2;
-                
                 // Position relative to dragged cell (maintain relative positions)
                 const offsetX = initialX - draggedRect.left;
                 const offsetY = initialY - draggedRect.top;
@@ -955,39 +952,27 @@ function TimeTable({ isAdmin = false }) {
       
       if (isMultiCell) {
         // Handle multiple selected cells deletion
-        console.log('🗑️ Multi-cell deletion - Current state before save:', {
-          editDetails: editDetails.slice(0, 3),
-          swapBox
-        });
         saveToUndoStack();
         const selectedCellsData = JSON.parse(e.dataTransfer.getData('selectedCells'));
-        console.log('🗑️ Multi-cell deletion - Selected cells:', selectedCellsData);
         const newDetails = [...editDetails];
-        const newSwapBox = { ...swapBox };
-        
-        selectedCellsData.forEach(({ index, class: className }) => {
-          const cellData = newDetails[index];
-          if (cellData && cellData.course) {
-            // Add to swap box
-            if (!newSwapBox[className]) newSwapBox[className] = [];
-            newSwapBox[className].push({ ...cellData });
-            
-            // Clear from timetable
-            newDetails[index] = {
-              ...newDetails[index],
-              course: '',
-              roomNumber: '',
-              instructorName: ''
-            };
-          }
+
+        setSwapBox(prev => {
+          const next = { ...prev };
+          selectedCellsData.forEach(({ index, class: className }) => {
+            const cellData = newDetails[index];
+            if (cellData && cellData.course) {
+              next[className] = [...(next[className] || []), { ...cellData }];
+              newDetails[index] = {
+                ...newDetails[index],
+                course: '',
+                roomNumber: '',
+                instructorName: ''
+              };
+            }
+          });
+          return next;
         });
-        
-        console.log('🗑️ Multi-cell deletion - New state:', {
-          newDetails: newDetails.slice(0, 3),
-          newSwapBox
-        });
-        
-        setSwapBox(newSwapBox);
+
         setEditDetails(newDetails);
         if (setSelectedCells) setSelectedCells([]);
         return;
@@ -1022,7 +1007,7 @@ function TimeTable({ isAdmin = false }) {
     } catch (error) {
       // Error dropping to swap box
     }
-  }, [editDetails, swapBox, saveToUndoStack]);
+  }, [editDetails, saveToUndoStack]);
 
   // Remove from swap box (just removes, doesn't put back)
   const handleRemoveFromSwapBox = useCallback((className, idx) => {
@@ -1088,7 +1073,8 @@ function TimeTable({ isAdmin = false }) {
     } catch (error) {
       // Error dropping to cell
     }
-  }, [editDetails]);
+  }, [editDetails, saveToUndoStack]);
+
 
   // Drag start from swap box
   const handleDragFromSwapBox = useCallback((e, cell, className, swapBoxIndex) => {
@@ -1159,7 +1145,7 @@ function TimeTable({ isAdmin = false }) {
       const instituteParam = instituteObjectId || user?.instituteID;
       
       if (instituteParam) {
-        const response = await fetch(`http://localhost:5000/api/classes/${instituteParam}`, {
+        const response = await fetch(apiUrl(`/api/classes/${instituteParam}`), {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -1404,7 +1390,7 @@ function TimeTable({ isAdmin = false }) {
     try {
       const token = localStorage.getItem('token');
       if (selected && token) {
-        await fetch(`http://localhost:5000/api/timetables-gen/header/${encodeURIComponent(selected.instituteTimeTableID)}` , {
+        await fetch(apiUrl(`/api/timetables-gen/header/${encodeURIComponent(selected.instituteTimeTableID)}`) , {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -1626,7 +1612,7 @@ function TimeTable({ isAdmin = false }) {
                             const confirmDel = window.confirm(`Delete timetable ${selected.instituteTimeTableID}? This cannot be undone.`);
                             if (!confirmDel) return;
                             const token = localStorage.getItem('token');
-                            const res = await fetch(`http://localhost:5000/api/timetables-gen/${encodeURIComponent(selected.instituteTimeTableID)}`, {
+                            const res = await fetch(apiUrl(`/api/timetables-gen/${encodeURIComponent(selected.instituteTimeTableID)}`), {
                               method: 'DELETE',
                               headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                             });

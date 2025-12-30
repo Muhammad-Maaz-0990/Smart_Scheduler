@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Table, Alert, Button, Modal, Form, Badge, InputGroup } from 'react-bootstrap';
+import { Card, Table, Alert, Button, Modal, Form, InputGroup } from 'react-bootstrap';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import { useAuth } from '../../context/AuthContext';
-import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUserShield, FaUsers } from 'react-icons/fa';
+import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaFilter, FaEdit, FaTrash, FaUsers } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 const MotionCard = motion.create(Card);
@@ -53,7 +54,7 @@ const Users = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/users/institute', {
+      const res = await fetch(apiUrl('/api/users/institute'), {
         headers: {
           'Content-Type': 'application/json',
           ...tokenHeader()
@@ -232,8 +233,8 @@ const Users = () => {
     setSubmitting(true);
     try {
       const url = mode === 'add'
-        ? 'http://localhost:5000/api/users'
-        : `http://localhost:5000/api/users/${current._id}`;
+        ? apiUrl('/api/users')
+        : apiUrl(`/api/users/${current._id}`);
       const method = mode === 'add' ? 'POST' : 'PUT';
 
       const payload = mode === 'add'
@@ -282,7 +283,7 @@ const Users = () => {
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${id}`, {
+      const res = await fetch(apiUrl(`/api/users/${id}`), {
         method: 'DELETE',
         headers: { ...tokenHeader() }
       });
@@ -315,7 +316,7 @@ const Users = () => {
     try {
       for (const u of importPreview) {
         const payload = { userName: u.userName, email: u.email, password: 'ChangeMe123', designation: u.designation, phoneNumber: u.phoneNumber, cnic: u.cnic };
-        const res = await fetch('http://localhost:5000/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json', ...tokenHeader() }, body: JSON.stringify(payload) });
+        const res = await fetch(apiUrl('/api/users'), { method: 'POST', headers: { 'Content-Type': 'application/json', ...tokenHeader() }, body: JSON.stringify(payload) });
         if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.message || 'Failed to add some rows'); }
       }
       setSuccess('Imported users added successfully'); setImportPreview([]); await fetchUsers();

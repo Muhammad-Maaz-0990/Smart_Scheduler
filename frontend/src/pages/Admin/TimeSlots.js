@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { Container, Card, Table, Alert, Button, Modal, Form, Badge, InputGroup } from 'react-bootstrap';
+import { Card, Table, Alert, Button, Modal, Form, InputGroup } from 'react-bootstrap';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { parseCSV, toCSV, downloadCSV } from '../../utils/csv';
 import { FaPlus, FaFileImport, FaFileExport, FaSearch, FaEdit, FaTrash, FaClock } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import { apiUrl } from '../../utils/api';
 import '../Dashboard.css';
 
 const MotionCard = motion.create(Card);
@@ -17,7 +18,7 @@ const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satu
 const TimeSlots = () => {
   const { instituteObjectId } = useAuth();
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [, setSuccess] = useState('');
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
@@ -77,7 +78,7 @@ const TimeSlots = () => {
           endTime: t.endTime,
           instituteID: instituteObjectId
         };
-        const res = await fetch('http://localhost:5000/api/timeslots', {
+        const res = await fetch(apiUrl('/api/timeslots'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...tokenHeader() },
           body: JSON.stringify(body)
@@ -167,7 +168,7 @@ const TimeSlots = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/timeslots/institute', { headers: { ...tokenHeader() } });
+      const res = await fetch(apiUrl('/api/timeslots/institute'), { headers: { ...tokenHeader() } });
       const data = await res.json().catch(() => []);
       if (!res.ok) throw new Error(data.message || 'Failed to load time slots');
       setList(Array.isArray(data) ? data : []);
@@ -232,7 +233,7 @@ const TimeSlots = () => {
 
     setSubmitting(true);
     try {
-      const url = mode === 'add' ? 'http://localhost:5000/api/timeslots' : `http://localhost:5000/api/timeslots/${current._id}`;
+      const url = mode === 'add' ? apiUrl('/api/timeslots') : apiUrl(`/api/timeslots/${current._id}`);
       const method = mode === 'add' ? 'POST' : 'PUT';
       const res = await fetch(url, {
         method,
@@ -260,7 +261,7 @@ const TimeSlots = () => {
       } else {
         // For add operation, get the newly created timeslot data after fetch
         setTimeout(async () => {
-          const res = await fetch('http://localhost:5000/api/timeslots/institute', { headers: { ...tokenHeader() } });
+          const res = await fetch(apiUrl('/api/timeslots/institute'), { headers: { ...tokenHeader() } });
           if (res.ok) {
             const timeSlotsData = await res.json().catch(() => []);
             const newlyAddedTimeSlot = timeSlotsData.find(t => 
@@ -297,7 +298,7 @@ const TimeSlots = () => {
 
     setError(''); setSuccess('');
     try {
-      const res = await fetch(`http://localhost:5000/api/timeslots/${timeSlotToDelete._id}`, { method: 'DELETE', headers: { ...tokenHeader() } });
+      const res = await fetch(apiUrl(`/api/timeslots/${timeSlotToDelete._id}`), { method: 'DELETE', headers: { ...tokenHeader() } });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || 'Delete failed');
@@ -331,7 +332,7 @@ const TimeSlots = () => {
       // Check if it was a delete operation
       if (previousTimeSlot.isDeleted) {
         // Restore deleted timeslot by creating it again
-        const response = await fetch(`http://localhost:5000/api/timeslots`, {
+        const response = await fetch(apiUrl('/api/timeslots'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...tokenHeader() },
           body: JSON.stringify({
@@ -353,7 +354,7 @@ const TimeSlots = () => {
         }
       } else if (previousTimeSlot.isAdded) {
         // Undo add operation by deleting the newly added timeslot
-        const response = await fetch(`http://localhost:5000/api/timeslots/${previousTimeSlot._id}`, {
+        const response = await fetch(apiUrl(`/api/timeslots/${previousTimeSlot._id}`), {
           method: 'DELETE',
           headers: { ...tokenHeader() }
         });
@@ -369,7 +370,7 @@ const TimeSlots = () => {
         }
       } else {
         // Update operation undo
-        const response = await fetch(`http://localhost:5000/api/timeslots/${previousTimeSlot._id}`, {
+        const response = await fetch(apiUrl(`/api/timeslots/${previousTimeSlot._id}`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', ...tokenHeader() },
           body: JSON.stringify({

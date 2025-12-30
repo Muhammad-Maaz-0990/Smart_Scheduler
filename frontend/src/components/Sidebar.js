@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../utils/api';
 import {
   FaDoorOpen,
   FaBuilding,
@@ -158,7 +159,6 @@ const Sidebar = ({ activeMenu }) => {
 
   const teacherMenu = [
     { icon: FaCalendar, label: 'TimeTables', value: 'timetables' },
-    { icon: FaComments, label: 'Feedbacks', value: 'feedbacks' },
     { icon: FaUserCog, label: 'Profile', value: 'profile' }
   ];
   
@@ -286,7 +286,7 @@ const Sidebar = ({ activeMenu }) => {
                   >
                     {instituteInfo?.instituteLogo ? (
                       <img
-                        src={`http://localhost:5000${instituteInfo.instituteLogo}`}
+                                        src={apiUrl(instituteInfo.instituteLogo)}
                         alt="Institute Logo"
                         style={{
                           width: 50,

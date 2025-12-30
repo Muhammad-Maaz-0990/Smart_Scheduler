@@ -1,6 +1,5 @@
 import React from 'react';
 import { Container } from 'react-bootstrap';
-import { motion } from 'framer-motion';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
