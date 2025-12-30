@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Container, Card, Button, Badge, Form, Row, Col,} from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1424,6 +1425,7 @@ function TimeTable({ isAdmin = false }) {
   }, [timeSettings, editDetails, allClasses, selected]);
 
   return (
+    <>
     <Container fluid style={{ minHeight: '100vh', maxWidth: '1600px' }}>
       {/* Header Section */}
       <motion.div
@@ -2256,525 +2258,6 @@ function TimeTable({ isAdmin = false }) {
           </Card>
         </motion.div>
       )}
-
-      {/* Time Settings Modal */}
-      <AnimatePresence>
-        {showTimeSettingsModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 9999
-            }}
-            onClick={handleCloseTimeSettingsModal}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: 'white',
-                borderRadius: '12px',
-                padding: '24px',
-                maxWidth: '500px',
-                width: '90%',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
-              }}
-            >
-              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
-                  <FaClock style={{ marginRight: '8px', color: '#f59e0b' }} />
-                  Update Time Settings
-                </h4>
-                <button
-                  onClick={handleCloseTimeSettingsModal}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    fontSize: '1.5rem',
-                    cursor: 'pointer',
-                    color: '#6b7280'
-                  }}
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
-              <div style={{
-                padding: '16px',
-                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)',
-                borderRadius: '8px',
-                marginBottom: '20px',
-                border: '1px solid rgba(245, 158, 11, 0.2)'
-              }}>
-                <p style={{ margin: 0, fontSize: '0.875rem', color: '#92400e', fontWeight: 500 }}>
-                  ⚠️ This updates time slots for this timetable only. Existing cells try to keep their course/room/teacher by slot position.
-                </p>
-              </div>
-
-              <Form>
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FaClock color="#f59e0b" />
-                        Start Time *
-                      </Form.Label>
-                      <Form.Control
-                        type="time"
-                        value={timeSettings.startTime}
-                        onChange={(e) => setTimeSettings({ ...timeSettings, startTime: e.target.value })}
-                        style={{ borderColor: '#d1d5db' }}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FaClock color="#f59e0b" />
-                        End Time *
-                      </Form.Label>
-                      <Form.Control
-                        type="time"
-                        value={timeSettings.endTime}
-                        onChange={(e) => setTimeSettings({ ...timeSettings, endTime: e.target.value })}
-                        style={{ borderColor: '#d1d5db' }}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-
-                <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaClock color="#f59e0b" />
-                    Lecture Duration (minutes) *
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="30"
-                    max="180"
-                    step="5"
-                    value={timeSettings.lectureDuration}
-                    onChange={(e) => setTimeSettings({ ...timeSettings, lectureDuration: parseInt(e.target.value) || 60 })}
-                    style={{ borderColor: '#d1d5db' }}
-                  />
-                  <Form.Text className="text-muted">
-                    Common values: 30, 45, 60, 75, 90 minutes
-                  </Form.Text>
-                </Form.Group>
-
-                <hr style={{ margin: '24px 0', border: 'none', borderTop: '2px solid #e5e7eb' }} />
-
-                <Form.Group className="mb-3">
-                  <Form.Check
-                    type="switch"
-                    id="break-time-switch"
-                    label={
-                      <span style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FaClock color="#f59e0b" />
-                        Include Break Time
-                      </span>
-                    }
-                    checked={timeSettings.hasBreak}
-                    onChange={(e) => setTimeSettings({ ...timeSettings, hasBreak: e.target.checked })}
-                    style={{ fontSize: '1rem' }}
-                  />
-                  <Form.Text className="text-muted">
-                    Toggle to add or remove break time from the timetable
-                  </Form.Text>
-                </Form.Group>
-
-                {timeSettings.hasBreak && (
-                  <>
-                    <Row>
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label style={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
-                            Break After Lecture # *
-                          </Form.Label>
-                          <Form.Control
-                            type="number"
-                            min="1"
-                            max="10"
-                            value={timeSettings.breakAfterLecture}
-                            onChange={(e) => setTimeSettings({ ...timeSettings, breakAfterLecture: parseInt(e.target.value) || 3 })}
-                            style={{ borderColor: '#d1d5db' }}
-                          />
-                          <Form.Text className="text-muted">
-                            e.g., 3 = after 3rd lecture
-                          </Form.Text>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label style={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
-                            Break Duration (min) *
-                          </Form.Label>
-                          <Form.Control
-                            type="number"
-                            min="10"
-                            max="90"
-                            step="5"
-                            value={timeSettings.breakDuration}
-                            onChange={(e) => setTimeSettings({ ...timeSettings, breakDuration: parseInt(e.target.value) || 30 })}
-                            style={{ borderColor: '#d1d5db' }}
-                          />
-                          <Form.Text className="text-muted">
-                            Common: 15, 30, 45 min
-                          </Form.Text>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                  </>
-                )}
-
-                <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
-                  <Button
-                    onClick={handleUpdateTimeSettings}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      fontWeight: 600,
-                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                      border: 'none'
-                    }}
-                  >
-                    <FaSave />
-                    Apply To This Timetable
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={handleCloseTimeSettingsModal}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      fontWeight: 600
-                    }}
-                  >
-                    <FaTimes />
-                    Cancel
-                  </Button>
-                </div>
-              </Form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Add Class Modal */}
-      <AnimatePresence>
-        {showAddClassModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 9999
-            }}
-            onClick={handleCloseAddClassModal}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: 'white',
-                borderRadius: '12px',
-                padding: '24px',
-                maxWidth: '450px',
-                width: '90%',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
-              }}
-            >
-              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
-                  <FaPlus style={{ marginRight: '8px', color: 'var(--theme-color)' }} />
-                  Add New Class
-                </h4>
-                <button
-                  onClick={handleCloseAddClassModal}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    fontSize: '1.5rem',
-                    cursor: 'pointer',
-                    color: '#6b7280'
-                  }}
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
-              <Form>
-                <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaDoorOpen color="var(--theme-color)" />
-                    Class Name *
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="e.g., B203, CS-A, Grade 10A"
-                    value={newClassName}
-                    onChange={(e) => setNewClassName(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddNewClass();
-                      }
-                    }}
-                    list="existing-classes-list"
-                    style={{ borderColor: '#d1d5db' }}
-                    autoFocus
-                  />
-                  <datalist id="existing-classes-list">
-                    {existingClassesFromDB.map((className, idx) => (
-                      <option key={idx} value={className} />
-                    ))}
-                  </datalist>
-                  <Form.Text className="text-muted">
-                    {existingClassesFromDB.length > 0 ? (
-                      <>
-                        Showing {existingClassesFromDB.length} existing class{existingClassesFromDB.length !== 1 ? 'es' : ''} from database. Type to see suggestions or enter a new unique name.
-                      </>
-                    ) : (
-                      'Enter a unique name for the new class. A complete timetable grid will be created.'
-                    )}
-                  </Form.Text>
-                </Form.Group>
-
-                <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
-                  <Button
-                    onClick={handleAddNewClass}
-                    disabled={!newClassName || !newClassName.trim()}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      fontWeight: 600,
-                      background: 'var(--theme-color)',
-                      border: 'none',
-                      opacity: (!newClassName || !newClassName.trim()) ? 0.5 : 1
-                    }}
-                  >
-                    <FaPlus />
-                    Add Class
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={handleCloseAddClassModal}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      fontWeight: 600
-                    }}
-                  >
-                    <FaTimes />
-                    Cancel
-                  </Button>
-                </div>
-              </Form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cell Add/Update Modal */}
-      <AnimatePresence>
-        {showCellModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 9999
-            }}
-            onClick={handleCloseCellModal}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: 'white',
-                borderRadius: '12px',
-                padding: '24px',
-                maxWidth: '500px',
-                width: '90%',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
-              }}
-            >
-              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
-                  {modalCellData?.isEmpty ? (
-                    <>
-                      <FaPlus style={{ marginRight: '8px', color: '#10b981' }} />
-                      Add Class
-                    </>
-                  ) : (
-                    <>
-                      <FaEdit style={{ marginRight: '8px', color: '#3b82f6' }} />
-                      Update Class
-                    </>
-                  )}
-                </h4>
-                <button
-                  onClick={handleCloseCellModal}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    fontSize: '1.5rem',
-                    cursor: 'pointer',
-                    color: '#6b7280'
-                  }}
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
-              <Form>
-                <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaGraduationCap color="var(--theme-color)" />
-                    Course * ({allCourses.length} available)
-                  </Form.Label>
-                  <Form.Select
-                    value={modalForm.course}
-                    onChange={(e) => setModalForm({ ...modalForm, course: e.target.value })}
-                    style={{ borderColor: '#d1d5db' }}
-                  >
-                    <option value="">Select Course</option>
-                    {allCourses.map((course, idx) => {
-                      const displayText = course.courseCode && course.courseTitle 
-                        ? `${course.courseCode} - ${course.courseTitle}`
-                        : (course.courseTitle || course.courseCode || course.courseName || course.name || 'Unknown');
-                      const valueText = course.courseTitle || course.courseCode || course.courseName || course.name;
-                      return (
-                        <option key={course._id || idx} value={valueText}>
-                          {displayText}
-                        </option>
-                      );
-                    })}
-                  </Form.Select>
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaDoorOpen color="#059669" />
-                    Room ({allRooms.length} available)
-                  </Form.Label>
-                  <Form.Select
-                    value={modalForm.room}
-                    onChange={(e) => setModalForm({ ...modalForm, room: e.target.value })}
-                    style={{ borderColor: '#d1d5db' }}
-                  >
-                    <option value="">Select Room</option>
-                    {allRooms.map((room, idx) => (
-                      <option key={room._id || idx} value={room.roomNumber || room.number}>
-                        {room.roomNumber || room.number}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaChalkboardTeacher color="#3b82f6" />
-                    Instructor ({allTeachers.length} available)
-                  </Form.Label>
-                  <Form.Select
-                    value={modalForm.instructor}
-                    onChange={(e) => setModalForm({ ...modalForm, instructor: e.target.value })}
-                    style={{ borderColor: '#d1d5db' }}
-                  >
-                    <option value="">Select Instructor</option>
-                    {allTeachers.map((teacher, idx) => (
-                      <option key={teacher._id || idx} value={teacher.userName || teacher.name}>
-                        {teacher.userName || teacher.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-
-                <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
-                  <Button
-                    variant="success"
-                    onClick={handleSaveCellModal}
-                    disabled={!modalForm.course}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      fontWeight: 600
-                    }}
-                  >
-                    <FaSave />
-                    Save
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={handleCloseCellModal}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      fontWeight: 600
-                    }}
-                  >
-                    <FaTimes />
-                    Cancel
-                  </Button>
-                </div>
-              </Form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
       
       {/* Print Footer - appears on every printed page */}
       <div className="print-footer" style={{ display: 'none' }}>
@@ -2787,172 +2270,704 @@ function TimeTable({ isAdmin = false }) {
           />
         )}
       </div>
+    </Container>
 
-      {/* Print Preview Modal */}
-      <AnimatePresence>
-        {showPrintPreview && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowPrintPreview(false)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.75)',
-              backdropFilter: 'blur(8px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 9999,
-              padding: '20px',
-              overflow: 'auto'
-            }}
-          >
+      {/* Time Settings Modal - Portal */}
+      {ReactDOM.createPortal(
+        <AnimatePresence>
+          {showTimeSettingsModal && (
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               style={{
-                background: '#fff',
-                borderRadius: '16px',
-                width: '95%',
-                maxWidth: '1400px',
-                maxHeight: '95vh',
-                display: 'flex',
-                flexDirection: 'column',
-                boxShadow: '0 25px 70px rgba(0, 0, 0, 0.4)'
-              }}
-            >
-              {/* Modal Header */}
-              <div style={{
-                padding: '20px 24px',
-                borderBottom: '2px solid #e5e7eb',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.5)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                background: 'linear-gradient(135deg, var(--theme-color) 0%, #8b5cf6 100%)',
-                borderRadius: '16px 16px 0 0',
-                flexShrink: 0
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <FaFilePdf style={{ fontSize: '24px', color: '#fff' }} />
-                  <div>
-                    <h3 style={{ margin: 0, color: '#fff', fontWeight: 700, fontSize: '18px' }}>PDF Preview</h3>
-                    <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.9)', fontSize: '13px' }}>
-                      {details ? [...new Set(details.map(d => String(d.class || '')))].length : 1} page(s) - One timetable per page
-                    </p>
+                justifyContent: 'center',
+                zIndex: 9999
+              }}
+              onClick={handleCloseTimeSettingsModal}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  maxWidth: '500px',
+                  width: '90%',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
+                    <FaClock style={{ marginRight: '8px', color: '#f59e0b' }} />
+                    Update Time Settings
+                  </h4>
+                  <button
+                    onClick={handleCloseTimeSettingsModal}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      fontSize: '1.5rem',
+                      cursor: 'pointer',
+                      color: '#6b7280'
+                    }}
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div style={{
+                  padding: '16px',
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)',
+                  borderRadius: '8px',
+                  marginBottom: '20px',
+                  border: '1px solid rgba(245, 158, 11, 0.2)'
+                }}>
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#92400e', fontWeight: 500 }}>
+                    ⚠️ This updates time slots for this timetable only. Existing cells try to keep their course/room/teacher by slot position.
+                  </p>
+                </div>
+
+                <Form>
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <FaClock color="#f59e0b" />
+                          Start Time *
+                        </Form.Label>
+                        <Form.Control
+                          type="time"
+                          value={timeSettings.startTime}
+                          onChange={(e) => setTimeSettings({ ...timeSettings, startTime: e.target.value })}
+                          style={{ borderColor: '#d1d5db' }}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <FaClock color="#f59e0b" />
+                          End Time *
+                        </Form.Label>
+                        <Form.Control
+                          type="time"
+                          value={timeSettings.endTime}
+                          onChange={(e) => setTimeSettings({ ...timeSettings, endTime: e.target.value })}
+                          style={{ borderColor: '#d1d5db' }}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaClock color="#f59e0b" />
+                      Lecture Duration (minutes) *
+                    </Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="30"
+                      max="180"
+                      step="5"
+                      value={timeSettings.lectureDuration}
+                      onChange={(e) => setTimeSettings({ ...timeSettings, lectureDuration: parseInt(e.target.value) || 60 })}
+                      style={{ borderColor: '#d1d5db' }}
+                    />
+                    <Form.Text className="text-muted">
+                      Common values: 30, 45, 60, 75, 90 minutes
+                    </Form.Text>
+                  </Form.Group>
+
+                  <hr style={{ margin: '24px 0', border: 'none', borderTop: '2px solid #e5e7eb' }} />
+
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="switch"
+                      id="break-time-switch"
+                      label={
+                        <span style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <FaClock color="#f59e0b" />
+                          Include Break Time
+                        </span>
+                      }
+                      checked={timeSettings.hasBreak}
+                      onChange={(e) => setTimeSettings({ ...timeSettings, hasBreak: e.target.checked })}
+                      style={{ fontSize: '1rem' }}
+                    />
+                    <Form.Text className="text-muted">
+                      Toggle to add or remove break time from the timetable
+                    </Form.Text>
+                  </Form.Group>
+
+                  {timeSettings.hasBreak && (
+                    <>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label style={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
+                              Break After Lecture # *
+                            </Form.Label>
+                            <Form.Control
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={timeSettings.breakAfterLecture}
+                              onChange={(e) => setTimeSettings({ ...timeSettings, breakAfterLecture: parseInt(e.target.value) || 3 })}
+                              style={{ borderColor: '#d1d5db' }}
+                            />
+                            <Form.Text className="text-muted">
+                              e.g., 3 = after 3rd lecture
+                            </Form.Text>
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label style={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>
+                              Break Duration (min) *
+                            </Form.Label>
+                            <Form.Control
+                              type="number"
+                              min="10"
+                              max="90"
+                              step="5"
+                              value={timeSettings.breakDuration}
+                              onChange={(e) => setTimeSettings({ ...timeSettings, breakDuration: parseInt(e.target.value) || 30 })}
+                              style={{ borderColor: '#d1d5db' }}
+                            />
+                            <Form.Text className="text-muted">
+                              Common: 15, 30, 45 min
+                            </Form.Text>
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                    </>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+                    <Button
+                      onClick={handleUpdateTimeSettings}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontWeight: 600,
+                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                        border: 'none'
+                      }}
+                    >
+                      <FaSave />
+                      Apply To This Timetable
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={handleCloseTimeSettingsModal}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontWeight: 600
+                      }}
+                    >
+                      <FaTimes />
+                      Cancel
+                    </Button>
+                  </div>
+                </Form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Add Class Modal - Portal */}
+      {ReactDOM.createPortal(
+        <AnimatePresence>
+          {showAddClassModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 9999
+              }}
+              onClick={handleCloseAddClassModal}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  maxWidth: '450px',
+                  width: '90%',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
+                    <FaPlus style={{ marginRight: '8px', color: 'var(--theme-color)' }} />
+                    Add New Class
+                  </h4>
+                  <button
+                    onClick={handleCloseAddClassModal}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      fontSize: '1.5rem',
+                      cursor: 'pointer',
+                      color: '#6b7280'
+                    }}
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <Form>
+                  <Form.Group className="mb-3">
+                    <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaDoorOpen color="var(--theme-color)" />
+                      Class Name *
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="e.g., B203, CS-A, Grade 10A"
+                      value={newClassName}
+                      onChange={(e) => setNewClassName(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddNewClass();
+                        }
+                      }}
+                      list="existing-classes-list"
+                      style={{ borderColor: '#d1d5db' }}
+                      autoFocus
+                    />
+                    <datalist id="existing-classes-list">
+                      {existingClassesFromDB.map((className, idx) => (
+                        <option key={idx} value={className} />
+                      ))}
+                    </datalist>
+                    <Form.Text className="text-muted">
+                      {existingClassesFromDB.length > 0 ? (
+                        <>
+                          Showing {existingClassesFromDB.length} existing class{existingClassesFromDB.length !== 1 ? 'es' : ''} from database. Type to see suggestions or enter a new unique name.
+                        </>
+                      ) : (
+                        'Enter a unique name for the new class. A complete timetable grid will be created.'
+                      )}
+                    </Form.Text>
+                  </Form.Group>
+
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+                    <Button
+                      onClick={handleAddNewClass}
+                      disabled={!newClassName || !newClassName.trim()}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontWeight: 600,
+                        background: 'var(--theme-color)',
+                        border: 'none',
+                        opacity: (!newClassName || !newClassName.trim()) ? 0.5 : 1
+                      }}
+                    >
+                      <FaPlus />
+                      Add Class
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={handleCloseAddClassModal}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontWeight: 600
+                      }}
+                    >
+                      <FaTimes />
+                      Cancel
+                    </Button>
+                  </div>
+                </Form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Cell Add/Update Modal - Portal */}
+      {ReactDOM.createPortal(
+        <AnimatePresence>
+          {showCellModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 9999
+              }}
+              onClick={handleCloseCellModal}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  maxWidth: '500px',
+                  width: '90%',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 style={{ margin: 0, color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
+                    {modalCellData?.isEmpty ? (
+                      <>
+                        <FaPlus style={{ marginRight: '8px', color: '#10b981' }} />
+                        Add Class
+                      </>
+                    ) : (
+                      <>
+                        <FaEdit style={{ marginRight: '8px', color: '#3b82f6' }} />
+                        Update Class
+                      </>
+                    )}
+                  </h4>
+                  <button
+                    onClick={handleCloseCellModal}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      fontSize: '1.5rem',
+                      cursor: 'pointer',
+                      color: '#6b7280'
+                    }}
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <Form>
+                  <Form.Group className="mb-3">
+                    <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaGraduationCap color="var(--theme-color)" />
+                      Course * ({allCourses.length} available)
+                    </Form.Label>
+                    <Form.Select
+                      value={modalForm.course}
+                      onChange={(e) => setModalForm({ ...modalForm, course: e.target.value })}
+                      style={{ borderColor: '#d1d5db' }}
+                    >
+                      <option value="">Select Course</option>
+                      {allCourses.map((course, idx) => {
+                        const displayText = course.courseCode && course.courseTitle 
+                          ? `${course.courseCode} - ${course.courseTitle}`
+                          : (course.courseTitle || course.courseCode || course.courseName || course.name || 'Unknown');
+                        const valueText = course.courseTitle || course.courseCode || course.courseName || course.name;
+                        return (
+                          <option key={course._id || idx} value={valueText}>
+                            {displayText}
+                          </option>
+                        );
+                      })}
+                    </Form.Select>
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaDoorOpen color="#059669" />
+                      Room ({allRooms.length} available)
+                    </Form.Label>
+                    <Form.Select
+                      value={modalForm.room}
+                      onChange={(e) => setModalForm({ ...modalForm, room: e.target.value })}
+                      style={{ borderColor: '#d1d5db' }}
+                    >
+                      <option value="">Select Room</option>
+                      {allRooms.map((room, idx) => (
+                        <option key={room._id || idx} value={room.roomNumber || room.number}>
+                          {room.roomNumber || room.number}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label style={{ fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaChalkboardTeacher color="#3b82f6" />
+                      Instructor ({allTeachers.length} available)
+                    </Form.Label>
+                    <Form.Select
+                      value={modalForm.instructor}
+                      onChange={(e) => setModalForm({ ...modalForm, instructor: e.target.value })}
+                      style={{ borderColor: '#d1d5db' }}
+                    >
+                      <option value="">Select Instructor</option>
+                      {allTeachers.map((teacher, idx) => (
+                        <option key={teacher._id || idx} value={teacher.userName || teacher.name}>
+                          {teacher.userName || teacher.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+                    <Button
+                      variant="success"
+                      onClick={handleSaveCellModal}
+                      disabled={!modalForm.course}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontWeight: 600
+                      }}
+                    >
+                      <FaSave />
+                      Save
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={handleCloseCellModal}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        fontWeight: 600
+                      }}
+                    >
+                      <FaTimes />
+                      Cancel
+                    </Button>
+                  </div>
+                </Form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Print Preview Modal - Portal */}
+      {ReactDOM.createPortal(
+        <AnimatePresence>
+          {showPrintPreview && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPrintPreview(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.75)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 9999,
+                padding: '20px',
+                overflow: 'auto'
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: '#fff',
+                  borderRadius: '16px',
+                  width: '95%',
+                  maxWidth: '1400px',
+                  maxHeight: '95vh',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: '0 25px 70px rgba(0, 0, 0, 0.4)'
+                }}
+              >
+                {/* Modal Header */}
+                <div style={{
+                  padding: '20px 24px',
+                  borderBottom: '2px solid #e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: 'linear-gradient(135deg, var(--theme-color) 0%, #8b5cf6 100%)',
+                  borderRadius: '16px 16px 0 0',
+                  flexShrink: 0
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <FaFilePdf style={{ fontSize: '24px', color: '#fff' }} />
+                    <div>
+                      <h3 style={{ margin: 0, color: '#fff', fontWeight: 700, fontSize: '18px' }}>PDF Preview</h3>
+                      <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.9)', fontSize: '13px' }}>
+                        {details ? [...new Set(details.map(d => String(d.class || '')))].length : 1} page(s) - One timetable per page
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowPrintPreview(false)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      border: 'none',
+                      color: '#fff',
+                      borderRadius: '8px',
+                      width: '36px',
+                      height: '36px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      fontSize: '20px',
+                      fontWeight: 'bold',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {/* Preview Content - Scrollable */}
+                <div style={{
+                  padding: '24px',
+                  overflow: 'auto',
+                  flex: 1,
+                  background: '#f9fafb'
+                }}>
+                  <div style={{
+                    background: '#fff',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+                    transform: 'scale(0.75)',
+                    transformOrigin: 'top center',
+                    pointerEvents: 'none'
+                  }}>
+                    {/* Render the actual timetable content */}
+                    <TimetableTables 
+                      details={details}
+                      header={selected}
+                      isEditMode={false}
+                      searchQuery={searchQuery}
+                    />
                   </div>
                 </div>
-                <button
-                  onClick={() => setShowPrintPreview(false)}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    border: 'none',
-                    color: '#fff',
-                    borderRadius: '8px',
-                    width: '36px',
-                    height: '36px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    fontSize: '20px',
-                    fontWeight: 'bold',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-                >
-                  ×
-                </button>
-              </div>
 
-              {/* Preview Content - Scrollable */}
-              <div style={{
-                padding: '24px',
-                overflow: 'auto',
-                flex: 1,
-                background: '#f9fafb'
-              }}>
+                {/* Modal Footer */}
                 <div style={{
+                  padding: '20px 24px',
+                  borderTop: '2px solid #e5e7eb',
+                  display: 'flex',
+                  gap: '12px',
                   background: '#fff',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-                  transform: 'scale(0.75)',
-                  transformOrigin: 'top center',
-                  pointerEvents: 'none'
+                  borderRadius: '0 0 16px 16px',
+                  flexShrink: 0
                 }}>
-                  {/* Render the actual timetable content */}
-                  <TimetableTables 
-                    details={details}
-                    header={selected}
-                    isEditMode={false}
-                    searchQuery={searchQuery}
-                  />
+                  <Button
+                    variant="success"
+                    onClick={confirmPrint}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      fontWeight: 600,
+                      fontSize: '15px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      border: 'none',
+                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                    }}
+                  >
+                    <FaFilePdf />
+                    Download PDF
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowPrintPreview(false)}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      fontWeight: 600,
+                      fontSize: '15px',
+                      borderRadius: '10px'
+                    }}
+                  >
+                    <FaTimes />
+                    Cancel
+                  </Button>
                 </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div style={{
-                padding: '20px 24px',
-                borderTop: '2px solid #e5e7eb',
-                display: 'flex',
-                gap: '12px',
-                background: '#fff',
-                borderRadius: '0 0 16px 16px',
-                flexShrink: 0
-              }}>
-                <Button
-                  variant="success"
-                  onClick={confirmPrint}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    fontWeight: 600,
-                    fontSize: '15px',
-                    borderRadius: '10px',
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    border: 'none',
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                  }}
-                >
-                  <FaFilePdf />
-                  Download PDF
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowPrintPreview(false)}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    fontWeight: 600,
-                    fontSize: '15px',
-                    borderRadius: '10px'
-                  }}
-                >
-                  <FaTimes />
-                  Cancel
-                </Button>
-              </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Container>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+    </>
   );
 }
 
@@ -3570,9 +3585,6 @@ function TimetableTables({
                             ease: "easeInOut",
                             times: [0, 0.35, 0.65, 1]
                           }}
-                          style={{
-                            position: 'relative'
-                          }}
                           draggable={isEditMode && !isEmpty}
                           onClick={() => {
                             if (isEditMode && !isEmpty && onCellClick) {
@@ -3610,6 +3622,7 @@ function TimetableTables({
                             }
                           }}
                           style={{
+                            position: 'relative',
                             padding: isEmpty ? '16px' : '14px',
                             background: matchesSearch
                               ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)'
