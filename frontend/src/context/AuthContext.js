@@ -310,7 +310,11 @@ export const AuthProvider = ({ children }) => {
   const loginWithToken = (newToken, userData) => {
     if (!newToken) return;
     localStorage.setItem('token', newToken);
+    // Force a brief auth-loading state so routes don't render with partial user data
+    // (e.g. OAuth callback provides only designation) before /api/auth/verify finishes.
+    setLoading(true);
     setToken(newToken);
+    setInstituteObjectId(null);
     if (userData) {
       setUser(userData);
     }

@@ -14,7 +14,7 @@ const PURPLE_COLOR = 'var(--theme-color)';
 
 const AdminDashboard = () => {
   const { user, instituteObjectId } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [counts, setCounts] = useState({ teachers: 0, students: 0, courses: 0, schedules: 0, rooms: 0, classes: 0 });
 
@@ -33,7 +33,18 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const run = async () => {
-      if (!user?.instituteID && !user?.instituteObjectId) return;
+      const hasInstituteRef = !!(user?.instituteID || user?.instituteObjectId);
+      if (!hasInstituteRef) {
+        setLoading(false);
+        return;
+      }
+
+      // Many admin endpoints expect an institute ObjectId. While AuthContext resolves it,
+      // keep showing the loader to avoid a brief "0s" dashboard.
+      if (!instituteObjectId) {
+        setLoading(true);
+        return;
+      }
       setLoading(true);
       setError('');
       try {

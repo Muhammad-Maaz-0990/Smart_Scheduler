@@ -16,11 +16,17 @@ const TeacherDashboard = () => {
   const { user } = useAuth();
   const [todaySlot, setTodaySlot] = useState(null);
   const [allDetails, setAllDetails] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterDay, setFilterDay] = useState(''); // '' means all days
   const [showMine, setShowMine] = useState(true); // default show my classes
   const [searchQuery, setSearchQuery] = useState(''); // search across course/instructor (highlight in grid)
+  const [resolvedThemeColor, setResolvedThemeColor] = useState('#7c3aed');
+
+  useEffect(() => {
+    const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim();
+    if (themeColor) setResolvedThemeColor(themeColor);
+  }, []);
 
   const to12hAmpm = (hhmm) => {
     if (!hhmm || typeof hhmm !== 'string') return hhmm;
@@ -421,7 +427,7 @@ const TeacherDashboard = () => {
                                 display: 'inline-block',
                                 cursor: 'pointer',
                                 backgroundImage: showMine
-                                  ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='${encodeURIComponent(PURPLE_COLOR)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M3.2 8.6l2.6 2.7L12.8 4.6'/%3E%3C/svg%3E")`
+                                  ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='${encodeURIComponent(resolvedThemeColor)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M3.2 8.6l2.6 2.7L12.8 4.6'/%3E%3C/svg%3E")`
                                   : 'none',
                                 backgroundRepeat: 'no-repeat',
                                 backgroundPosition: 'center',

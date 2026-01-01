@@ -84,7 +84,7 @@ const StudentDashboard = () => {
   const [classOptions, setClassOptions] = useState([]);
   const [selectedClass, setSelectedClass] = useState(''); // '' means all classes
   const [searchQuery, setSearchQuery] = useState(''); // search across course/instructor
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const to12hAmpm = (hhmm) => {

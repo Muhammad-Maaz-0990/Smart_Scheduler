@@ -8,12 +8,15 @@ import '../Dashboard.css';
 import Sidebar from '../../components/Sidebar';
 import OwnerDashboardGraphs from './OwnerDashboardGraphs';
 import { apiUrl } from '../../utils/api';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 
 const OwnerDashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({ institutes: 0, teachers: 0, students: 0 });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     fetch(apiUrl('/api/auth/owner-stats'), {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
@@ -25,7 +28,8 @@ const OwnerDashboard = () => {
           students: data.students ?? 0
         });
       })
-      .catch(() => setStats({ institutes: 0, teachers: 0, students: 0 }));
+      .catch(() => setStats({ institutes: 0, teachers: 0, students: 0 }))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -83,6 +87,10 @@ const OwnerDashboard = () => {
             </p>
           </motion.div>
 
+          {/* Loading Spinner */}
+          {loading && <LoadingSpinner message="Loading dashboard" />}
+
+          {!loading && (
           <Row className="g-3 g-md-4 mb-4">
             <Col xs={12} md={6} lg={4}>
               <motion.div
@@ -251,8 +259,9 @@ const OwnerDashboard = () => {
               </motion.div>
             </Col>
           </Row>
+          )}
 
-          <OwnerDashboardGraphs />
+          {!loading && <OwnerDashboardGraphs />}
         </Container>
       </div>
     </>
