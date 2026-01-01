@@ -3,10 +3,10 @@ import { Spinner } from 'react-bootstrap';
 import { motion } from 'framer-motion';
 import './LoadingSpinner.css';
 
-const LoadingSpinner = ({ message = 'Loading...', size = 'large' }) => {
+const LoadingSpinner = ({ message = 'Loading...', size = 'large', fullScreen = false }) => {
   return (
     <motion.div 
-      className="loading-spinner-container"
+      className={`loading-spinner-container${fullScreen ? ' fullscreen' : ''}`}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}

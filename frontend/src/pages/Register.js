@@ -85,13 +85,6 @@ const Register = () => {
     }
   }, [location]);
 
-  // Scroll to top whenever step changes
-  useEffect(() => {
-    if (currentStep >= 0) {
-      window.scrollTo(0, 0);
-    }
-  }, [currentStep]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -140,19 +133,6 @@ const Register = () => {
     if (phone.startsWith('+44')) return 10;  // UK
     if (phone.startsWith('+1')) return 10;   // US/Canada
     return 10; // Default
-  };
-
-  // Get total max length for phone input (country code + digits)
-  const getPhoneMaxLength = (countryCode) => {
-    const maxLengthMap = {
-      'PK': 13,  // +92 (3) + 10 digits
-      'IN': 13,  // +91 (3) + 10 digits
-      'GB': 13,  // +44 (3) + 10 digits
-      'US': 12,  // +1 (2) + 10 digits
-      'AE': 13,  // +971 (4) + 9 digits
-      'SA': 13,  // +966 (4) + 9 digits
-    };
-    return maxLengthMap[countryCode] || 15;
   };
 
   const getCountryCodeLength = (phone) => {
@@ -402,12 +382,20 @@ const Register = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => prev + 1);
       setError('');
+      // Force immediate scroll to top
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
     }
   };
 
   const handlePrevious = () => {
     setCurrentStep(prev => prev - 1);
     setError('');
+    // Force immediate scroll to top
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   };
 
   const handleSubmit = async () => {

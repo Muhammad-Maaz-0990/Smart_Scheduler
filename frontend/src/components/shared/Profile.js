@@ -358,6 +358,30 @@ const Profile = () => {
             </MotionButton>
           </div>
         )}
+        
+        {(user?.designation === 'Teacher' || user?.designation === 'Student') && (
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <MotionButton
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate(`/${user.designation.toLowerCase()}/profile/password`)}
+              style={{
+                borderRadius: '10px',
+                padding: '0.625rem 1.25rem',
+                fontWeight: '600',
+                fontSize: '0.875rem',
+                border: 'none',
+                background: 'var(--theme-color)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <FaLock /> Change Password
+            </MotionButton>
+          </div>
+        )}
       </Container>
 
       <Container style={{ maxWidth: 'none', paddingLeft: '2rem', paddingRight: '2rem' }}>

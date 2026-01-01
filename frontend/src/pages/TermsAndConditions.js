@@ -1,11 +1,9 @@
 import React from 'react';
-import { Container, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { Container } from 'react-bootstrap';
 import { motion } from 'framer-motion';
 import './TermsAndConditions.css';
 
 const TermsAndConditions = () => {
-  const navigate = useNavigate();
 
   return (
     <div className="terms-page">

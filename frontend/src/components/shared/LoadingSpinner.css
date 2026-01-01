@@ -6,6 +6,11 @@
   width: 100%;
 }
 
+.loading-spinner-container.fullscreen {
+  min-height: 100vh;
+  padding: 0;
+}
+
 .loading-content {
   display: flex;
   flex-direction: column;

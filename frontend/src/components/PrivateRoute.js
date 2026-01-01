@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Spinner, Container } from 'react-bootstrap';
+import LoadingSpinner from './shared/LoadingSpinner';
 import axios from 'axios';
 
 const PrivateRoute = ({ children, allowedRoles, allowWhenExpired = false }) => {
@@ -39,11 +39,7 @@ const PrivateRoute = ({ children, allowedRoles, allowWhenExpired = false }) => {
   }, [shouldGate, user?.instituteID]);
 
   if (loading) {
-    return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <Spinner animation="border" variant="light" />
-      </Container>
-    );
+    return <LoadingSpinner message="Loading..." fullScreen />;
   }
 
   if (!user) {
@@ -55,11 +51,7 @@ const PrivateRoute = ({ children, allowedRoles, allowWhenExpired = false }) => {
   }
 
   if (subLoading) {
-    return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <Spinner animation="border" variant="light" />
-      </Container>
-    );
+    return <LoadingSpinner message="Loading..." fullScreen />;
   }
 
   if (shouldGate && expired && !allowWhenExpired) {

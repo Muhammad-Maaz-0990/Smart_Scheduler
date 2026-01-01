@@ -25,6 +25,8 @@ import AdminFeedbacksPage from './pages/Admin/Feedbacks';
 import AdminProfilePage from './pages/Admin/Profile';
 
 import ChangePassword from './pages/Admin/ChangePassword';
+import StudentChangePasswordPage from './pages/Student/ChangePassword';
+import TeacherChangePasswordPage from './pages/Teacher/ChangePassword';
 import StudentDashboard from './pages/Student/StudentDashboard';
 import TeacherDashboard from './pages/Teacher/TeacherDashboard';
 import TeacherFeedbacksPage from './pages/Teacher/Feedbacks';
@@ -123,7 +125,7 @@ function App() {
                 path="profile/password" 
                 element={
                   <PrivateRoute allowedRoles={['Admin']} allowWhenExpired={true}>
-                    <ChangePassword />
+                    <ChangePassword embedded />
                   </PrivateRoute>
                 } 
               />
@@ -150,6 +152,14 @@ function App() {
               element={
                 <PrivateRoute allowedRoles={['Student']} allowWhenExpired={true}>
                   <StudentProfilePage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/student/profile/password" 
+              element={
+                <PrivateRoute allowedRoles={['Student']} allowWhenExpired={true}>
+                  <StudentChangePasswordPage />
                 </PrivateRoute>
               } 
             />
@@ -187,6 +197,14 @@ function App() {
               } 
             />
             <Route 
+              path="/teacher/profile/password" 
+              element={
+                <PrivateRoute allowedRoles={['Teacher']} allowWhenExpired={true}>
+                  <TeacherChangePasswordPage />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
               path="/teacher/timetables" 
               element={
                 <PrivateRoute allowedRoles={['Teacher']}>
@@ -199,6 +217,7 @@ function App() {
       </Router>
     </AuthProvider>
   );
+
 }
 
 export default App;
