@@ -85,6 +85,13 @@ const Register = () => {
     }
   }, [location]);
 
+  // Scroll to top whenever step changes
+  useEffect(() => {
+    if (currentStep >= 0) {
+      window.scrollTo(0, 0);
+    }
+  }, [currentStep]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -395,16 +402,12 @@ const Register = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => prev + 1);
       setError('');
-      // Scroll to top of page when moving to next step
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevious = () => {
     setCurrentStep(prev => prev - 1);
     setError('');
-    // Scroll to top of page when moving to previous step
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async () => {
