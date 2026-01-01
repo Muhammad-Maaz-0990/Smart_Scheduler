@@ -1,0 +1,10 @@
+{
+  "name": "smart-scheduler",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm -w frontend run build"
+  }
+}
