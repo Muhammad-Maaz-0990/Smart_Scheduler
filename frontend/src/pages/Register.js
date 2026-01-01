@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Button, Form, Alert } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,6 +67,8 @@ const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { loginWithToken } = useAuth();
+  const logoInputRef = useRef(null);
+  const formCardRef = useRef(null);
 
   // Get user info from Google OAuth if available
   useEffect(() => {
@@ -122,37 +124,58 @@ const Register = () => {
     reader.readAsDataURL(file);
   };
 
+  const getPhoneDigitLength = (phone) => {
+    // Check for specific country codes (longer codes first to avoid partial match)
+    if (phone.startsWith('+971')) return 9;  // UAE
+    if (phone.startsWith('+966')) return 9;  // Saudi Arabia
+    if (phone.startsWith('+92')) return 10;  // Pakistan
+    if (phone.startsWith('+91')) return 10;  // India
+    if (phone.startsWith('+44')) return 10;  // UK
+    if (phone.startsWith('+1')) return 10;   // US/Canada
+    return 10; // Default
+  };
+
+  // Get total max length for phone input (country code + digits)
+  const getPhoneMaxLength = (countryCode) => {
+    const maxLengthMap = {
+      'PK': 13,  // +92 (3) + 10 digits
+      'IN': 13,  // +91 (3) + 10 digits
+      'GB': 13,  // +44 (3) + 10 digits
+      'US': 12,  // +1 (2) + 10 digits
+      'AE': 13,  // +971 (4) + 9 digits
+      'SA': 13,  // +966 (4) + 9 digits
+    };
+    return maxLengthMap[countryCode] || 15;
+  };
+
+  const getCountryCodeLength = (phone) => {
+    // Return length of country code for each country
+    if (phone.startsWith('+971')) return 4;  // UAE
+    if (phone.startsWith('+966')) return 4;  // Saudi Arabia
+    if (phone.startsWith('+92')) return 3;   // Pakistan
+    if (phone.startsWith('+91')) return 3;   // India
+    if (phone.startsWith('+44')) return 3;   // UK
+    if (phone.startsWith('+1')) return 2;    // US/Canada
+    return 0;
+  };
+
   const handlePhoneChange = (value) => {
-    // Remove any non-digit characters except the + sign at the start
-    if (value) {
-      const cleaned = value.replace(/[^\d+]/g, '');
-      setFormData(prev => ({
-        ...prev,
-        phoneNumber: cleaned
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        phoneNumber: ''
-      }));
-    }
+    if (typeof value !== 'string') value = '';
+    const cleaned = value.replace(/[^\d+]/g, '');
+    setFormData(prev => ({
+      ...prev,
+      phoneNumber: cleaned
+    }));
     setError('');
   };
 
   const handleContactNumberChange = (value) => {
-    // Remove any non-digit characters except the + sign at the start
-    if (value) {
-      const cleaned = value.replace(/[^\d+]/g, '');
-      setFormData(prev => ({
-        ...prev,
-        contactNumber: cleaned
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        contactNumber: ''
-      }));
-    }
+    if (typeof value !== 'string') value = '';
+    const cleaned = value.replace(/[^\d+]/g, '');
+    setFormData(prev => ({
+      ...prev,
+      contactNumber: cleaned
+    }));
     setError('');
   };
 
@@ -270,12 +293,18 @@ const Register = () => {
   useEffect(() => {
     if (formData.phoneNumber) {
       const country = getCountryFromPhone(formData.phoneNumber);
-      setFormData(prev => ({
-        ...prev,
-        country
-      }));
+      const prevCountry = formData.country;
+      
+      // Only reset CNIC if country actually changed
+      if (prevCountry !== country) {
+        setFormData(prev => ({
+          ...prev,
+          country,
+          cnic: '' // Clear CNIC when country changes
+        }));
+      }
     }
-  }, [formData.phoneNumber]);
+  }, [formData.phoneNumber, formData.country]);
 
   const validateStep = (step) => {
     switch(step) {
@@ -286,6 +315,20 @@ const Register = () => {
         }
         if (!formData.phoneNumber) {
           setError('Please enter phone number');
+          return false;
+        }
+        // Validate phone number length
+        const codeLen = getCountryCodeLength(formData.phoneNumber);
+        if (codeLen > 0) {
+          const digits = formData.phoneNumber.slice(codeLen);
+          const requiredLength = getPhoneDigitLength(formData.phoneNumber);
+          if (digits.length !== requiredLength) {
+            const countryCode = formData.phoneNumber.slice(0, codeLen);
+            setError(`Phone number must have exactly ${requiredLength} digits after ${countryCode}`);
+            return false;
+          }
+        } else {
+          setError('Invalid phone number format');
           return false;
         }
         if (!formData.cnic) {
@@ -313,6 +356,18 @@ const Register = () => {
         // Require logo upload
         if (!formData.instituteLogo) {
           setError('Please upload your institute logo');
+          // Scroll to logo upload section
+          setTimeout(() => {
+            const logoLabel = document.querySelector('.logo-upload-label');
+            if (logoLabel) {
+              logoLabel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Add shake animation to draw attention
+              logoLabel.style.animation = 'shake 0.5s';
+              setTimeout(() => {
+                logoLabel.style.animation = '';
+              }, 500);
+            }
+          }, 100);
           return false;
         }
         if (!formData.instituteType) {
@@ -340,12 +395,16 @@ const Register = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => prev + 1);
       setError('');
+      // Scroll to top of page when moving to next step
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevious = () => {
     setCurrentStep(prev => prev - 1);
     setError('');
+    // Scroll to top of page when moving to previous step
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async () => {
@@ -478,7 +537,6 @@ const Register = () => {
                     }}
                     className="phone-input-custom"
                     placeholder="Enter phone number"
-                    smartCaret={true}
                     countryCallingCodeEditable={false}
                     limitMaxLength={true}
                     labels={en}
@@ -611,6 +669,7 @@ const Register = () => {
                   accept="image/*"
                   onChange={handleLogoUpload}
                   className="logo-input-hidden"
+                  ref={logoInputRef}
                 />
               </div>
               <Form.Text className="text-light-muted text-center d-block">
@@ -675,7 +734,6 @@ const Register = () => {
                     }}
                     className="phone-input-custom"
                     placeholder="Enter institute contact number"
-                    smartCaret={true}
                     countryCallingCodeEditable={false}
                     limitMaxLength={true}
                     labels={en}
@@ -735,7 +793,7 @@ const Register = () => {
                   className="custom-checkbox-terms"
                   label={
                     <span className="terms-label">
-                      I agree to the <button type="button" className="terms-link btn btn-link p-0" onClick={(e) => e.preventDefault()}>Terms and Conditions</button>
+                      I agree to the <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="terms-link">Terms and Conditions</a>
                     </span>
                   }
                 />
@@ -749,7 +807,7 @@ const Register = () => {
                   className="custom-checkbox-terms"
                   label={
                     <span className="terms-label">
-                      I agree to the <button type="button" className="terms-link btn btn-link p-0" onClick={(e) => e.preventDefault()}>Privacy Policy</button>
+                      I agree to the <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="terms-link">Privacy Policy</a>
                     </span>
                   }
                 />
@@ -952,6 +1010,7 @@ const Register = () => {
         <Row className="justify-content-center align-items-center min-vh-100">
           <Col xs={12} sm={11} md={10} lg={8} xl={7}>
             <MotionDiv 
+              ref={formCardRef}
               className="register-form-card position-relative"
               variants={blurIn}
               initial="hidden"
@@ -1100,6 +1159,9 @@ const Register = () => {
                 className="back-to-login mt-3 d-block text-center"
                 onClick={handleSkip}
                 style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
                   color: 'var(--theme-color)',
                   fontWeight: '600',
                   fontSize: 'clamp(0.8125rem, 1.8vw, 0.9375rem)',

@@ -365,7 +365,18 @@ const Hero = ({ onSignUp }) => (
                     fontSize: '1.1rem',
                     borderWidth: 2,
                     borderColor: 'var(--theme-color)',
-                    color: 'var(--theme-color)'
+                    color: 'var(--theme-color)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)';
+                    e.target.style.color = 'white';
+                    e.target.style.borderColor = 'transparent';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'transparent';
+                    e.target.style.color = 'var(--theme-color)';
+                    e.target.style.borderColor = 'var(--theme-color)';
                   }}
                 >
                   Watch Demo

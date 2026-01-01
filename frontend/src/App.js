@@ -6,6 +6,8 @@ import AdminLayout from './components/AdminLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Landing from './pages/Landing';
+import TermsAndConditions from './pages/TermsAndConditions';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import OwnerDashboard from './pages/Owner/OwnerDashboard';
 import Institutes from './pages/Owner/Institutes';
 import OwnerUsers from './pages/Owner/OwnerUsers';
@@ -47,6 +49,8 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/auth/callback" element={<Login />} />
             
             <Route 

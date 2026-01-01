@@ -426,29 +426,20 @@ input:-webkit-autofill:active {
   flex-direction: row;
   align-items: stretch;
   background: #ffffff;
-  border: 2px solid rgba(126, 34, 206, 0.3);
-  border-radius: 14px;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  border-radius: 12px;
+  overflow: visible;
+  transition: all 0.3s ease;
 }
 
 .phone-input-custom:focus-within {
-  border: 2px solid var(--theme-color);
-  box-shadow: 0 0 0 3px rgba(126, 34, 206, 0.2), 0 4px 12px rgba(126, 34, 206, 0.25);
+  border: none;
+  box-shadow: none;
 }
 
 /* Country name display */
 .country-name-display {
-  position: absolute;
-  left: 3.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #1f2937;
-  font-size: 0.9rem;
-  font-weight: 500;
-  pointer-events: none;
-  white-space: nowrap;
-  z-index: 5;
+  display: none;
 }
 
 /* Country Selector Section (Left) */
@@ -494,12 +485,13 @@ input:-webkit-autofill:active {
 
 /* Phone Number Input Section (Right) */
 .phone-input-custom .PhoneInputInput {
-  background: transparent;
-  border: none;
-  padding: 0.75rem 1rem;
+  background: white;
+  border: 2px solid #e0e0e0 !important;
+  border-radius: 12px !important;
+  padding: 0.75rem 1rem !important;
   color: #1f2937;
-  font-size: 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.875rem;
+  transition: all 0.3s ease !important;
   font-weight: 500;
   width: 100%;
   flex: 1;
@@ -510,10 +502,13 @@ input:-webkit-autofill:active {
 }
 
 .phone-input-custom .PhoneInputInput:focus {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  outline: none;
+  border: 2px solid transparent !important;
+  border-radius: 12px !important;
+  background: 
+    linear-gradient(white, white) padding-box,
+    linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%) border-box !important;
+  box-shadow: 0 0 0 3px rgba(105, 65, 219, 0.15) !important;
+  outline: none !important;
 }
 
 .phone-input-custom .PhoneInputCountry {
@@ -819,6 +814,7 @@ input:-webkit-autofill:active {
   text-decoration: underline;
   font-weight: 600;
   transition: color 0.3s ease;
+  cursor: pointer;
 }
 
 .terms-link:hover {
