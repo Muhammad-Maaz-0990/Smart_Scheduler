@@ -52,6 +52,27 @@ export function parseCSV(text) {
 }
 
 export function toCSV(headers, rows) {
+  const formatForExcel = (header, val) => {
+    const s = String(val ?? '');
+    if (!s) return s;
+
+    // Excel commonly converts long numbers to scientific notation. For identifiers like
+    // phone/cnic/nic/contact numbers, force Excel to treat the cell as text.
+    const headerKey = String(header ?? '').toLowerCase();
+    const looksLikeIdentifierColumn = /(phone|mobile|contact|cnic|nic)/i.test(headerKey);
+    const digitsOnly = s.replace(/\D/g, '');
+    const looksLikeLongNumber = /^\d+$/.test(s) && s.length >= 11;
+    const hasLeadingZero = /^0\d+$/.test(s);
+
+    if (looksLikeIdentifierColumn && digitsOnly.length >= 6) {
+      return `="${digitsOnly}"`;
+    }
+    if (looksLikeLongNumber || hasLeadingZero) {
+      return `="${s}"`;
+    }
+    return s;
+  };
+
   const escape = (val) => {
     const s = String(val ?? '');
     if (s.includes('"') || s.includes(',') || s.includes('\n')) {
@@ -59,13 +80,15 @@ export function toCSV(headers, rows) {
     }
     return s;
   };
+
   const headerLine = headers.map(escape).join(',');
-  const lines = rows.map(r => headers.map(h => escape(r[h])).join(','));
+  const lines = rows.map(r => headers.map(h => escape(formatForExcel(h, r[h]))).join(','));
   return [headerLine, ...lines].join('\r\n');
 }
 
 export function downloadCSV(filename, csvString) {
-  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const withBom = csvString?.startsWith('\uFEFF') ? csvString : '\uFEFF' + (csvString ?? '');
+  const blob = new Blob([withBom], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

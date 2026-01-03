@@ -9,3 +9,7 @@ dist/
 build/
 .vscode/
 .idea/
+
+# Python caches
+__pycache__/
+*.py[cod]

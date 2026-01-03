@@ -3,6 +3,7 @@ import { Card, ListGroup, Modal, Form, Overlay } from 'react-bootstrap';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import LoadingSpinner from './LoadingSpinner';
 import { FaComments, FaPlus, FaSearch, FaFilter, FaCheck, FaTimes, FaPaperPlane } from 'react-icons/fa';
 
 const Feedback = () => {
@@ -16,6 +17,7 @@ const Feedback = () => {
   const [error, setError] = useState('');
   const [active, setActive] = useState(null); // feedbackID
   const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [text, setText] = useState('');
   const [showNew, setShowNew] = useState(false);
@@ -32,30 +34,39 @@ const Feedback = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const loadThreads = useCallback(async () => {
+  const loadThreads = useCallback(async (opts = { autoSelectActive: true }) => {
     setLoading(true);
     setError('');
     try {
       const res = await axios.get('/api/feedback/threads');
-      setThreads(Array.isArray(res.data) ? res.data : []);
-      // auto-select first if none active
-      if (!active && res.data && res.data.length) {
-        setActive(res.data[0].feedbackID);
+      const list = Array.isArray(res.data) ? res.data : [];
+      setThreads(list);
+
+      if (opts?.autoSelectActive) {
+        setActive((prevActive) => {
+          if (!list.length) return null;
+          if (prevActive && list.some((t) => t.feedbackID === prevActive)) return prevActive;
+          return list[0].feedbackID;
+        });
       }
     } catch (e) {
       setError(e?.response?.data?.message || 'Failed to load feedback list');
     } finally {
       setLoading(false);
     }
-  }, [active]);
+  }, []);
 
   const loadMessages = async (feedbackID) => {
     if (!feedbackID) return;
+    setMessagesLoading(true);
+    setMessages([]);
     try {
       const res = await axios.get(`/api/feedback/threads/${feedbackID}/messages`);
       setMessages(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       setMessages([]);
+    } finally {
+      setMessagesLoading(false);
     }
   };
 
@@ -87,7 +98,7 @@ const Feedback = () => {
       setShowNew(false);
       setNewIssue('');
       setTargetUserID('');
-      await loadThreads();
+      await loadThreads({ autoSelectActive: false });
       setActive(res.data.feedbackID);
     } catch (e) {
       // keep modal open for correction
@@ -119,11 +130,31 @@ const Feedback = () => {
 
   // ===== Simple chat helpers =====
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
-  // Disabled auto-scroll to prevent page jump on load
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages, active]);
+  const scrollMessagesToBottom = useCallback((behavior = 'auto') => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    // Ensure layout is up to date before measuring scrollHeight
+    requestAnimationFrame(() => {
+      try {
+        el.scrollTo({ top: el.scrollHeight, behavior });
+      } catch {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+  }, []);
+
+  // Auto-scroll chat to show latest message
+  useEffect(() => {
+    if (!active || messagesLoading) return;
+    scrollMessagesToBottom('auto');
+  }, [active, messagesLoading, scrollMessagesToBottom]);
+
+  useEffect(() => {
+    if (!active || messagesLoading) return;
+    scrollMessagesToBottom('smooth');
+  }, [messages.length, active, messagesLoading, scrollMessagesToBottom]);
 
   const formatDateLabel = (d) => {
     const date = new Date(d);
@@ -692,8 +723,17 @@ const Feedback = () => {
               gap: '0.75rem',
               background: '#ffffff',
               flex: 1
-            }}>
-              {(!messages || messages.length === 0) ? (
+            }} ref={messagesContainerRef}>
+              {messagesLoading ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%'
+                }}>
+                  <LoadingSpinner message="Reloading conversation" size="small" />
+                </div>
+              ) : (!messages || messages.length === 0) ? (
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
