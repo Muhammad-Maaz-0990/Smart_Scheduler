@@ -77,8 +77,8 @@ const TopBar = ({ onSignIn, onSignUp }) => {
 
           {/* Desktop Navigation */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <nav style={{ 
-              display: window.innerWidth > 768 ? 'flex' : 'none', 
+            <nav className="desktop-nav" style={{ 
+              display: 'flex', 
               gap: '24px', 
               fontWeight: 600,
               fontSize: '0.95rem'
@@ -86,12 +86,23 @@ const TopBar = ({ onSignIn, onSignUp }) => {
               {['Home', 'Features', 'How It Works', 'Pricing'].map((item) => (
                 <motion.a 
                   key={item}
-                  href={`#${item.toLowerCase().replace(' ', '-')}`}
+                  href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
                   whileHover={{ y: -2 }}
                   style={{ 
                     color: '#374151', 
                     textDecoration: 'none',
-                    transition: 'color 0.2s'
+                    transition: 'color 0.2s',
+                    cursor: 'pointer'
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const id = item.toLowerCase().replace(/\s+/g, '-');
+                    const element = document.getElementById(id);
+                    if (element) {
+                      const yOffset = -80;
+                      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                      window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
                   }}
                   onMouseEnter={(e) => e.target.style.color = 'var(--theme-color)'}
                   onMouseLeave={(e) => e.target.style.color = '#374151'}
@@ -101,8 +112,8 @@ const TopBar = ({ onSignIn, onSignUp }) => {
               ))}
             </nav>
             
-            <div style={{ 
-              display: window.innerWidth > 768 ? 'flex' : 'none', 
+            <div className="desktop-nav" style={{ 
+              display: 'flex', 
               gap: '12px' 
             }}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -151,10 +162,11 @@ const TopBar = ({ onSignIn, onSignUp }) => {
 
             {/* Mobile Menu Toggle */}
             <motion.button
+              className="mobile-menu-toggle"
               whileTap={{ scale: 0.9 }}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{
-                display: window.innerWidth <= 768 ? 'flex' : 'none',
+                display: 'flex',
                 background: 'transparent',
                 border: 'none',
                 fontSize: '1.5rem',
@@ -171,11 +183,12 @@ const TopBar = ({ onSignIn, onSignUp }) => {
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
+              className="mobile-menu"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               style={{
-                display: window.innerWidth <= 768 ? 'block' : 'none',
+                display: 'block',
                 paddingBottom: '16px'
               }}
             >
@@ -183,14 +196,25 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                 {['Home', 'Features', 'How It Works', 'Pricing'].map((item) => (
                   <a 
                     key={item}
-                    href={`#${item.toLowerCase().replace(' ', '-')}`}
+                    href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
                     style={{ 
                       color: '#374151', 
                       textDecoration: 'none',
                       fontWeight: 600,
-                      padding: '8px 0'
+                      padding: '8px 0',
+                      cursor: 'pointer'
                     }}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const id = item.toLowerCase().replace(/\s+/g, '-');
+                      const element = document.getElementById(id);
+                      if (element) {
+                        const yOffset = -80;
+                        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                      }
+                      setMobileMenuOpen(false);
+                    }}
                   >
                     {item}
                   </a>
@@ -357,7 +381,14 @@ const Hero = ({ onSignUp }) => (
                 <Button
                   size="lg"
                   variant="outline-primary"
-                  href="#how-it-works"
+                  onClick={() => {
+                    const element = document.getElementById('how-it-works');
+                    if (element) {
+                      const yOffset = -80;
+                      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                      window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                  }}
                   style={{
                     fontWeight: 700,
                     padding: '14px 32px',
@@ -366,7 +397,8 @@ const Hero = ({ onSignUp }) => (
                     borderWidth: 2,
                     borderColor: 'var(--theme-color)',
                     color: 'var(--theme-color)',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)';
@@ -424,7 +456,8 @@ const Hero = ({ onSignUp }) => (
               borderRadius: '24px',
               padding: '32px',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
-              border: '1px solid rgba(126, 34, 206, 0.1)'
+              border: '1px solid rgba(126, 34, 206, 0.1)',
+              marginBottom: '32px'
             }}>
               <div style={{
                 background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
@@ -467,7 +500,7 @@ const Hero = ({ onSignUp }) => (
               
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
                 gap: '12px'
               }}>
                 {[
@@ -516,7 +549,8 @@ const FeatureCard = ({ icon, title, description, color }) => (
       border: '1px solid rgba(126, 34, 206, 0.1)',
       boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
       overflow: 'hidden',
-      background: 'white'
+      background: 'white',
+      marginTop: '20px'
     }}>
       <Card.Body style={{ padding: '32px' }}>
         <div style={{
@@ -748,7 +782,7 @@ const HowItWorks = () => (
 
 const Pricing = ({ onSignUp }) => (
   <section id="pricing" style={{
-    padding: '100px 0',
+    padding: 'clamp(60px, 10vw, 100px) 0',
     background: 'white'
   }}>
     <Container>
@@ -804,18 +838,18 @@ const Pricing = ({ onSignUp }) => (
                 }}>
                   MOST POPULAR
                 </div>
-                <h3 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Pro Plan</h3>
+                <h3 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 900, margin: 0 }}>Pro Plan</h3>
               </div>
               
-              <Card.Body style={{ padding: '48px' }}>
-                <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '3.5rem', fontWeight: 900, color: '#111827' }}>$49 </span>
-                    <span style={{ fontSize: '1.2rem', color: '#6b7280' }}>/month</span>
-                    <span style={{ fontSize: '3.5rem', fontWeight: 900, color: '#111827' }}> / $300 </span>
-                    <span style={{ fontSize: '1.2rem', color: '#6b7280' }}>/year</span>
+              <Card.Body style={{ padding: 'clamp(24px, 5vw, 48px)' }}>
+                <div style={{ textAlign: 'center', marginBottom: 'clamp(24px, 5vw, 40px)' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 'clamp(4px, 2vw, 8px)', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 'clamp(2.5rem, 7vw, 3.5rem)', fontWeight: 900, color: '#111827' }}>$49</span>
+                    <span style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', color: '#6b7280' }}>/month</span>
+                    <span style={{ fontSize: 'clamp(2.5rem, 7vw, 3.5rem)', fontWeight: 900, color: '#111827' }}>/ $300</span>
+                    <span style={{ fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', color: '#6b7280' }}>/year</span>
                   </div>
-                  <p style={{ color: '#6b7280', marginTop: '8px' }}>Billed monthly or yearly, cancel anytime</p>
+                  <p style={{ color: '#6b7280', marginTop: '8px', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>Billed monthly or yearly, cancel anytime</p>
                 </div>
 
                 <div style={{ marginBottom: '40px' }}>
@@ -835,8 +869,8 @@ const Pricing = ({ onSignUp }) => (
                       padding: '12px 0',
                       borderBottom: idx < 6 ? '1px solid #e5e7eb' : 'none'
                     }}>
-                      <FaCheckCircle style={{ color: '#10b981', fontSize: '1.2rem', flexShrink: 0 }} />
-                      <span style={{ color: '#374151', fontSize: '1rem', fontWeight: 500 }}>
+                      <FaCheckCircle style={{ color: '#10b981', fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', flexShrink: 0 }} />
+                      <span style={{ color: '#374151', fontSize: 'clamp(0.875rem, 2vw, 1rem)', fontWeight: 500 }}>
                         {feature}
                       </span>
                     </div>
@@ -852,9 +886,9 @@ const Pricing = ({ onSignUp }) => (
                       background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                       border: 'none',
                       fontWeight: 700,
-                      padding: '16px',
+                      padding: 'clamp(12px, 3vw, 16px)',
                       borderRadius: '12px',
-                      fontSize: '1.1rem',
+                      fontSize: 'clamp(1rem, 2.5vw, 1.1rem)',
                       boxShadow: '0 10px 30px rgba(126, 34, 206, 0.3)',
                       display: 'flex',
                       alignItems: 'center',
@@ -906,9 +940,20 @@ const Pricing = ({ onSignUp }) => (
             borderRadius: '10px',
             borderWidth: 2,
             borderColor: 'var(--theme-color)',
-            color: 'var(--theme-color)'
+            color: 'var(--theme-color)',
+            transition: 'all 0.3s ease'
           }}
           href="mailto:mbsofficalgroup@gmail.com"
+          onMouseEnter={(e) => {
+            e.target.style.background = 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)';
+            e.target.style.color = 'white';
+            e.target.style.borderColor = 'transparent';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'transparent';
+            e.target.style.color = 'var(--theme-color)';
+            e.target.style.borderColor = 'var(--theme-color)';
+          }}
         >
           Contact Sales
         </Button>
@@ -1102,20 +1147,91 @@ const Landing = () => {
   const goSignUp = () => navigate('/register');
 
   return (
-    <div style={{
-      scrollBehavior: 'smooth',
-      width: '100%',
-      minHeight: '100vh',
-      overflowX: 'hidden'
-    }}>
-      <TopBar onSignIn={goSignIn} onSignUp={goSignUp} />
-      <Hero onSignUp={goSignUp} />
-      <Features />
-      <HowItWorks />
-      <Pricing onSignUp={goSignUp} />
-      <CTA onSignUp={goSignUp} />
-      <Footer />
-    </div>
+    <>
+      <style>{`
+        /* Responsive Navigation */
+        @media (max-width: 768px) {
+          .desktop-nav {
+            display: none !important;
+          }
+          .mobile-menu-toggle {
+            display: flex !important;
+          }
+        }
+        
+        @media (min-width: 769px) {
+          .desktop-nav {
+            display: flex !important;
+          }
+          .mobile-menu-toggle {
+            display: none !important;
+          }
+          .mobile-menu {
+            display: none !important;
+          }
+        }
+
+        /* Responsive Typography */
+        @media (max-width: 576px) {
+          body {
+            font-size: 14px;
+          }
+        }
+
+        /* Responsive Containers */
+        @media (max-width: 768px) {
+          .container {
+            padding-left: 16px;
+            padding-right: 16px;
+          }
+        }
+
+        /* Animation keyframes */
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
+        }
+
+        /* Ensure no horizontal overflow */
+        body, html {
+          overflow-x: hidden;
+          max-width: 100vw;
+        }
+
+        /* Responsive images and cards */
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+
+        .card {
+          word-wrap: break-word;
+        }
+
+        /* Smooth scroll */
+        html {
+          scroll-behavior: smooth;
+        }
+      `}</style>
+      <div style={{
+        scrollBehavior: 'smooth',
+        width: '100%',
+        minHeight: '100vh',
+        overflowX: 'hidden'
+      }}>
+        <TopBar onSignIn={goSignIn} onSignUp={goSignUp} />
+        <Hero onSignUp={goSignUp} />
+        <Features />
+        <HowItWorks />
+        <Pricing onSignUp={goSignUp} />
+        <CTA onSignUp={goSignUp} />
+        <Footer />
+      </div>
+    </>
   );
 };
 
