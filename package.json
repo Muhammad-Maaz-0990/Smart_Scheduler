@@ -2,8 +2,7 @@
   "name": "smart-scheduler",
   "private": true,
   "workspaces": [
-    "frontend",
-    "backend"
+    "frontend"
   ],
   "scripts": {
     "build": "npm -w frontend run build",
