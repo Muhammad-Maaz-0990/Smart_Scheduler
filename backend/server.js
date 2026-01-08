@@ -44,25 +44,29 @@ app.use(passport.session());
 // Passport configuration
 require('./config/passport')(passport);
 
-// MongoDB Connection with retry logic
+// MongoDB Connection with retry logic (non-blocking)
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smart_scheduler', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
     });
     console.log('✅ MongoDB Connected Successfully');
   } catch (err) {
     console.error('❌ MongoDB Connection Error:', err.message);
     console.log('⚠️  Please check:');
     console.log('   1. Your internet connection');
-    console.log('   2. MongoDB Atlas IP whitelist settings');
+    console.log('   2. MongoDB Atlas IP whitelist settings (add 0.0.0.0/0)');
     console.log('   3. MongoDB credentials in .env file');
-    console.log('   Retrying in 5 seconds...');
-    setTimeout(connectDB, 5000);
+    console.log('   4. MONGODB_URI format: mongodb+srv://user:pass@cluster.mongodb.net/dbname');
+    console.log('   Retrying in 10 seconds...');
+    setTimeout(connectDB, 10000);
   }
 };
+
+// Start MongoDB connection (non-blocking - server starts immediately)
 connectDB();
 
 // Routes
@@ -77,13 +81,41 @@ app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/timetables-gen', require('./routes/timetables_gen'));
 app.use('/api/payments', paymentsModule.router);
 
+// Root endpoint for health checks (Replit requirement)
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK',
+    message: 'Smart Scheduler API is running',
+    timestamp: new Date(),
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      users: '/api/users',
+      rooms: '/api/rooms',
+      classes: '/api/classes',
+      courses: '/api/courses',
+      timeslots: '/api/timeslots',
+      feedback: '/api/feedback',
+      subscription: '/api/subscription',
+      timetables: '/api/timetables-gen',
+      payments: '/api/payments'
+    }
+  });
+});
+
 // Health Check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running', timestamp: new Date() });
+  res.json({ 
+    status: 'Server is running', 
+    timestamp: new Date(),
+    mongodb: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+  });
 });
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📍 Health check available at http://localhost:${PORT}/`);
+  console.log(`📍 API endpoints at http://localhost:${PORT}/api/*`);
 });
