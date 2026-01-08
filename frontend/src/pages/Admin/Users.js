@@ -43,6 +43,8 @@ const Users = () => {
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [sortField, setSortField] = useState('_id'); // Default sort by ID
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const tokenHeader = () => {
     const token = localStorage.getItem('token');
@@ -278,12 +280,17 @@ const Users = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this user?')) return;
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(apiUrl(`/api/users/${id}`), {
+      const res = await fetch(apiUrl(`/api/users/${userToDelete._id}`), {
         method: 'DELETE',
         headers: { ...tokenHeader() }
       });
@@ -296,7 +303,15 @@ const Users = () => {
       setTimeout(() => setSuccess(''), 1200);
     } catch (e) {
       setError(e.message || 'Delete failed');
+    } finally {
+      setShowDeleteModal(false);
+      setUserToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setUserToDelete(null);
   };
 
   const onImportClick = () => { setImportError(''); fileInputRef.current?.click(); };
@@ -979,7 +994,7 @@ const Users = () => {
                                 </Button>
 
                                 <Button
-                                  onClick={() => handleDelete(u._id)}
+                                  onClick={() => handleDeleteClick(u)}
                                   disabled={u.designation === 'Admin'}
                                   className="table-action-btn table-action-delete"
                                   style={{
@@ -1316,6 +1331,118 @@ const Users = () => {
                 </MotionButton>
               </motion.div>
             </Form>
+          </Modal.Body>
+        </motion.div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteModal}
+        onHide={handleCancelDelete}
+        centered
+        style={{ zIndex: 10000 }}
+        backdrop="static"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Modal.Header 
+            closeButton
+            style={{
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px 12px 0 0',
+              padding: '0.75rem 1rem'
+            }}
+            closeVariant="white"
+          >
+            <Modal.Title style={{ 
+              fontWeight: 600, 
+              fontSize: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <FaTrash size={18} />
+              Confirm Delete
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{
+              background: '#ffffff',
+              padding: '2rem',
+              border: 'none',
+              borderRadius: '0 0 12px 12px',
+              overflow: 'visible'
+            }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ 
+                fontSize: '1rem', 
+                color: '#374151',
+                marginBottom: '1rem',
+                lineHeight: 1.6
+              }}>
+                Are you sure you want to delete user <strong style={{ color: '#ef4444' }}>{userToDelete?.userName}</strong>?
+              </p>
+              <p style={{ 
+                fontSize: '0.875rem', 
+                color: '#6b7280',
+                marginBottom: 0
+              }}>
+                This action cannot be undone.
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+              <MotionButton
+                type="button"
+                whileHover={{ 
+                  background: '#ffffff',
+                  color: '#6b7280',
+                  borderColor: '#6b7280'
+                }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                onClick={handleCancelDelete}
+                style={{
+                  background: '#6b7280',
+                  border: '2px solid #6b7280',
+                  borderRadius: '12px',
+                  padding: '0.5rem 1rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: '#ffffff'
+                }}
+              >
+                Cancel
+              </MotionButton>
+              <MotionButton
+                type="button"
+                whileHover={{ 
+                  background: '#fff',
+                  color: '#ef4444',
+                  borderColor: '#ef4444'
+                }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                onClick={handleConfirmDelete}
+                style={{
+                  background: '#ef4444',
+                  border: '2px solid #ef4444',
+                  borderRadius: '12px',
+                  padding: '0.5rem 1rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)'
+                }}
+              >
+                Delete
+              </MotionButton>
+            </div>
           </Modal.Body>
         </motion.div>
       </Modal>
