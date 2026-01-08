@@ -1,11 +1,21 @@
 # Replit Backend Deployment - Quick Fix Guide
 
-## Issue: "Deployment is failing health checks"
+## Latest Issue: "crash loop detected" with module loading errors
 
 ### Root Cause
-Replit sends health check requests to the `/` endpoint and expects a fast 200 response. Your server needs to respond immediately, even if MongoDB isn't connected yet.
+Dependencies aren't being properly installed in the backend folder during Replit deployment, causing Express and other modules to fail loading.
 
-### What I Fixed
+### What I Fixed (Latest Update)
+
+1. **Created deployment script** (`deploy.sh`) - Handles installation and startup properly
+2. **Added engine requirements** - Specifies Node.js 18+ in package.json
+3. **Added .npmrc** - Optimizes npm behavior for deployment
+4. **Added .replitignore** - Excludes unnecessary files from deployment
+5. **Fixed .replit config** - Uses proper deployment command
+6. **Added root `/` endpoint** - Returns 200 OK for health checks
+7. **Server listens on `0.0.0.0`** - Makes server accessible to Replit
+
+### Files Updated
 
 1. **Added root `/` endpoint** - Returns 200 OK immediately
 2. **Listen on `0.0.0.0`** - Makes server accessible to Replit's health checker

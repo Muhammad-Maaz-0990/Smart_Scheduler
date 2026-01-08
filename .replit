@@ -1,4 +1,4 @@
-run = "bash start.sh"
+run = "cd backend && npm install && npm start"
 
 hidden = [".config", "package-lock.json"]
 
@@ -6,9 +6,10 @@ hidden = [".config", "package-lock.json"]
 channel = "stable-22_11"
 
 [deployment]
-run = ["sh", "-c", "cd backend && npm install && npm start"]
+run = ["bash", "deploy.sh"]
 deploymentTarget = "cloudrun"
 
 [env]
 PATH = "/home/runner/$REPL_SLUG/.config/npm/node_global/bin:/home/runner/$REPL_SLUG/node_modules/.bin:$PATH"
 npm_config_prefix = "/home/runner/$REPL_SLUG/.config/npm/node_global"
+NODE_ENV = "production"
