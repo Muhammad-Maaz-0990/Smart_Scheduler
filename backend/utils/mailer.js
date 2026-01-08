@@ -69,7 +69,75 @@ async function sendInstituteUserWelcome({ to, userName, designation, institute, 
   return info;
 }
 
-module.exports = { sendInstituteUserWelcome };
+async function sendSelfRegistrationWelcome({ to, userName, designation, institute, loginEmail }) {
+  const transporter = await getTransporter();
+  const from = process.env.SMTP_FROM || 'Schedule Hub <no-reply@smart-scheduler.local>';
+  const subject = institute && institute.name
+    ? `Welcome to ${institute.name} on Schedule Hub`
+    : 'Welcome to Schedule Hub';
+  const html = renderSelfRegistrationWelcomeHtml({ userName, designation, institute, loginEmail });
+
+  const info = await transporter.sendMail({ from, to, subject, html });
+
+  if (nodemailer.getTestMessageUrl && info && info.messageId) {
+    const preview = nodemailer.getTestMessageUrl(info);
+    if (preview) console.log('Self-registration email preview URL:', preview);
+  }
+  return info;
+}
+
+async function sendNewInstituteWelcome({ to, userName, institute }) {
+  const transporter = await getTransporter();
+  const from = process.env.SMTP_FROM || 'Schedule Hub <no-reply@smart-scheduler.local>';
+  const subject = `Welcome to Schedule Hub - ${institute.name} Registered`;
+  const html = renderNewInstituteWelcomeHtml({ userName, institute });
+
+  const info = await transporter.sendMail({ from, to, subject, html });
+
+  if (nodemailer.getTestMessageUrl && info && info.messageId) {
+    const preview = nodemailer.getTestMessageUrl(info);
+    if (preview) console.log('New institute email preview URL:', preview);
+  }
+  return info;
+}
+
+async function sendAdminNotification({ to, newUserName, designation, newUserEmail, instituteName }) {
+  const transporter = await getTransporter();
+  const from = process.env.SMTP_FROM || 'Schedule Hub <no-reply@smart-scheduler.local>';
+  const subject = `New ${designation} Registration - ${instituteName}`;
+  const html = renderAdminNotificationHtml({ newUserName, designation, newUserEmail });
+
+  const info = await transporter.sendMail({ from, to, subject, html });
+
+  if (nodemailer.getTestMessageUrl && info && info.messageId) {
+    const preview = nodemailer.getTestMessageUrl(info);
+    if (preview) console.log('Admin notification email preview URL:', preview);
+  }
+  return info;
+}
+
+async function sendOwnerNotification({ to, instituteName, instituteID, instituteType, adminName, adminEmail }) {
+  const transporter = await getTransporter();
+  const from = process.env.SMTP_FROM || 'Schedule Hub <no-reply@smart-scheduler.local>';
+  const subject = `New Institute Registered - ${instituteName}`;
+  const html = renderOwnerNotificationHtml({ instituteName, instituteID, instituteType, adminName, adminEmail });
+
+  const info = await transporter.sendMail({ from, to, subject, html });
+
+  if (nodemailer.getTestMessageUrl && info && info.messageId) {
+    const preview = nodemailer.getTestMessageUrl(info);
+    if (preview) console.log('Owner notification email preview URL:', preview);
+  }
+  return info;
+}
+
+module.exports = { 
+  sendInstituteUserWelcome,
+  sendSelfRegistrationWelcome,
+  sendNewInstituteWelcome,
+  sendAdminNotification,
+  sendOwnerNotification
+};
 
 function renderPaymentReminderHtml({ instituteName, reason }) {
   const appUrl = process.env.FRONTEND_URL || 'http://localhost:3000';

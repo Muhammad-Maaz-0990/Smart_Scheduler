@@ -8,6 +8,7 @@ const OwnerUser = require('../models/OwnerUser');
 const InstituteInformation = require('../models/InstituteInformation');
 const { protect, authorizeRoles } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
+const { sendSelfRegistrationWelcome, sendNewInstituteWelcome, sendAdminNotification, sendOwnerNotification } = require('../utils/mailer');
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -157,6 +158,45 @@ router.post('/register', [
 
     const token = generateToken(newUser);
 
+    // Send welcome email to new user (non-fatal on failure)
+    try {
+      await sendSelfRegistrationWelcome({
+        to: newUser.email,
+        userName: newUser.userName,
+        designation: newUser.designation,
+        institute: {
+          name: institute.instituteName,
+          id: institute.instituteID,
+          address: institute.address,
+          contactNumber: institute.contactNumber,
+          type: institute.instituteType
+        },
+        loginEmail: newUser.email
+      });
+    } catch (mailErr) {
+      console.error('Welcome email failed:', mailErr.message || mailErr);
+    }
+
+    // Send notification to admin (non-fatal on failure)
+    try {
+      const adminUser = await Users.findOne({ 
+        instituteID: institute.instituteID, 
+        designation: 'Admin' 
+      }).select('email userName');
+      
+      if (adminUser && adminUser.email) {
+        await sendAdminNotification({
+          to: adminUser.email,
+          newUserName: newUser.userName,
+          designation: newUser.designation,
+          newUserEmail: newUser.email,
+          instituteName: institute.instituteName
+        });
+      }
+    } catch (mailErr) {
+      console.error('Admin notification email failed:', mailErr.message || mailErr);
+    }
+
     res.status(201).json({
       token,
       user: {
@@ -275,6 +315,46 @@ router.post('/register-institute', [
 
     // Generate token for Admin user
     const token = generateToken(newAdmin);
+
+    // Send welcome email to new admin (non-fatal on failure)
+    try {
+      await sendNewInstituteWelcome({
+        to: newAdmin.email,
+        userName: newAdmin.userName,
+        institute: {
+          name: newInstitute.instituteName,
+          id: newInstitute.instituteID,
+          type: newInstitute.instituteType
+        }
+      });
+    } catch (mailErr) {
+      console.error('Institute welcome email failed:', mailErr.message || mailErr);
+    }
+
+    // Send notification to all owners (non-fatal on failure)
+    try {
+      const owners = await OwnerUser.find({}).select('email userName');
+      
+      if (owners && owners.length > 0) {
+        const ownerEmailPromises = owners.map(owner => 
+          sendOwnerNotification({
+            to: owner.email,
+            instituteName: newInstitute.instituteName,
+            instituteID: newInstitute.instituteID,
+            instituteType: newInstitute.instituteType,
+            adminName: newAdmin.userName,
+            adminEmail: newAdmin.email
+          }).catch(err => {
+            console.error(`Failed to send notification to owner ${owner.email}:`, err.message);
+          })
+        );
+        
+        await Promise.allSettled(ownerEmailPromises);
+        console.log(`Sent institute registration notifications to ${owners.length} owner(s)`);
+      }
+    } catch (mailErr) {
+      console.error('Owner notification emails failed:', mailErr.message || mailErr);
+    }
 
     res.status(201).json({
       success: true,
