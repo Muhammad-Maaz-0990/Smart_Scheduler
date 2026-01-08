@@ -70,7 +70,7 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                 WebkitTextFillColor: 'transparent',
                 fontWeight: 800
               }}>
-                Smart Scheduler
+                Schedule Hub
               </strong>
             </div>
           </div>
@@ -1010,7 +1010,7 @@ const CTA = ({ onSignUp }) => (
           margin: '0 auto 40px',
           opacity: 0.95
         }}>
-          Join hundreds of institutions saving time and eliminating conflicts with Smart Scheduler
+          Join hundreds of institutions saving time and eliminating conflicts with Schedule Hub
         </p>
         
         <motion.div
@@ -1071,7 +1071,7 @@ const Footer = () => (
             }}>
               <FaCalendarAlt style={{ fontSize: 22, color: 'white' }} />
             </div>
-            <strong style={{ fontSize: '1.3rem', fontWeight: 800 }}>Smart Scheduler</strong>
+            <strong style={{ fontSize: '1.3rem', fontWeight: 800 }}>Schedule Hub</strong>
           </div>
           <p style={{ color: '#9ca3af', lineHeight: 1.6 }}>
             Intelligent timetable scheduling for modern educational institutions. Save time, eliminate conflicts, and focus on what matters.
@@ -1134,7 +1134,7 @@ const Footer = () => (
         textAlign: 'center'
       }}>
         <p style={{ color: '#9ca3af', margin: 0, fontSize: '0.9rem' }}>
-          © 2025 Smart Scheduler. All rights reserved.
+          © 2025 Schedule Hub. All rights reserved.
         </p>
       </div>
     </Container>

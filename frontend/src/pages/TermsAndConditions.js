@@ -22,19 +22,19 @@ const TermsAndConditions = () => {
             <section className="terms-section">
               <h2>1. Acceptance of Terms</h2>
               <p>
-                By accessing and using Smart Scheduler ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                By accessing and using Schedule Hub ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
               </p>
             </section>
 
             <section className="terms-section">
               <h2>2. Use License</h2>
               <p>
-                Permission is granted to temporarily use Smart Scheduler for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+                Permission is granted to temporarily use Schedule Hub for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
               </p>
               <ul>
                 <li>Modify or copy the materials</li>
                 <li>Use the materials for any commercial purpose or for any public display</li>
-                <li>Attempt to reverse engineer any software contained in Smart Scheduler</li>
+                <li>Attempt to reverse engineer any software contained in Schedule Hub</li>
                 <li>Remove any copyright or other proprietary notations from the materials</li>
                 <li>Transfer the materials to another person or "mirror" the materials on any other server</li>
               </ul>
@@ -43,7 +43,7 @@ const TermsAndConditions = () => {
             <section className="terms-section">
               <h2>3. Service Description</h2>
               <p>
-                Smart Scheduler is an automated timetable scheduling system designed to help educational institutes create conflict-free timetables efficiently. The Service includes:
+                Schedule Hub is an automated timetable scheduling system designed to help educational institutes create conflict-free timetables efficiently. The Service includes:
               </p>
               <ul>
                 <li>Automated timetable generation for schools, colleges, and universities</li>
@@ -67,7 +67,7 @@ const TermsAndConditions = () => {
             <section className="terms-section">
               <h2>5. Free Trial</h2>
               <p>
-                Smart Scheduler offers a 7-day free trial period for new institute registrations. During the trial period, you will have access to all features of the Service. After the trial period expires, continued use of the Service requires a valid subscription.
+                Schedule Hub offers a 7-day free trial period for new institute registrations. During the trial period, you will have access to all features of the Service. After the trial period expires, continued use of the Service requires a valid subscription.
               </p>
               <ul>
                 <li>The free trial is available only once per institute</li>
@@ -80,7 +80,7 @@ const TermsAndConditions = () => {
             <section className="terms-section">
               <h2>6. Subscription and Payment</h2>
               <p>
-                After the free trial period, continued access to Smart Scheduler requires a paid subscription. Subscription fees are billed in advance on a monthly or annual basis depending on your chosen plan.
+                After the free trial period, continued access to Schedule Hub requires a paid subscription. Subscription fees are billed in advance on a monthly or annual basis depending on your chosen plan.
               </p>
               <ul>
                 <li>Subscriptions automatically renew unless cancelled before the renewal date</li>
@@ -93,7 +93,7 @@ const TermsAndConditions = () => {
             <section className="terms-section">
               <h2>7. Data and Privacy</h2>
               <p>
-                Your use of Smart Scheduler is also governed by our Privacy Policy. We collect and process data necessary to provide the Service, including institute information, user details, timetable data, and feedback.
+                Your use of Schedule Hub is also governed by our Privacy Policy. We collect and process data necessary to provide the Service, including institute information, user details, timetable data, and feedback.
               </p>
               <ul>
                 <li>We do not sell or share your data with third parties for marketing purposes</li>
@@ -106,7 +106,7 @@ const TermsAndConditions = () => {
             <section className="terms-section">
               <h2>8. Institute Responsibilities</h2>
               <p>
-                As an institute using Smart Scheduler, you agree to:
+                As an institute using Schedule Hub, you agree to:
               </p>
               <ul>
                 <li>Provide accurate information about your institute, classes, courses, and schedules</li>
@@ -133,7 +133,7 @@ const TermsAndConditions = () => {
             <section className="terms-section">
               <h2>10. Limitation of Liability</h2>
               <p>
-                Smart Scheduler and its suppliers will not be held accountable for any damages that arise from the use or inability to use the Service, including but not limited to:
+                Schedule Hub and its suppliers will not be held accountable for any damages that arise from the use or inability to use the Service, including but not limited to:
               </p>
               <ul>
                 <li>Errors or inaccuracies in generated timetables</li>
@@ -163,7 +163,7 @@ const TermsAndConditions = () => {
             <section className="terms-section">
               <h2>12. Intellectual Property</h2>
               <p>
-                The Service and its original content (excluding user-provided content), features, and functionality are and will remain the exclusive property of Smart Scheduler. The Service is protected by copyright, trademark, and other laws.
+                The Service and its original content (excluding user-provided content), features, and functionality are and will remain the exclusive property of Schedule Hub. The Service is protected by copyright, trademark, and other laws.
               </p>
             </section>
 

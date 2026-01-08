@@ -924,7 +924,7 @@ const Register = () => {
                     fontWeight: '800',
                     margin: 0,
                     letterSpacing: '-0.5px'
-                  }}>Welcome To<br/>Smart Scheduler</h1>
+                  }}>Welcome To<br/>Schedule Hub</h1>
                 </motion.div>
 
                 <motion.div 

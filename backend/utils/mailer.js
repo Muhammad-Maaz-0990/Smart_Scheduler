@@ -41,7 +41,7 @@ function renderWelcomeHtml({ userName, designation, institute, createdBy, loginE
   ` : '';
   return `
   <div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#1f2937">
-    <h2 style="color:#111827;margin:0 0 12px">Welcome to Smart Scheduler</h2>
+    <h2 style="color:#111827;margin:0 0 12px">Welcome to Schedule Hub</h2>
     <p style="margin:0 0 12px">Hi ${userName},</p>
     <p style="margin:0 0 12px">Your ${designation} account has been created by <strong>${createdBy}</strong>.</p>
     <table style="margin:12px 0 16px">${instBlock}</table>
@@ -54,10 +54,10 @@ function renderWelcomeHtml({ userName, designation, institute, createdBy, loginE
 
 async function sendInstituteUserWelcome({ to, userName, designation, institute, createdBy, loginEmail }) {
   const transporter = await getTransporter();
-  const from = process.env.SMTP_FROM || 'Smart Scheduler <no-reply@smart-scheduler.local>';
+  const from = process.env.SMTP_FROM || 'Schedule Hub <no-reply@smart-scheduler.local>';
   const subject = institute && institute.name
-    ? `Welcome to ${institute.name} on Smart Scheduler`
-    : 'Welcome to Smart Scheduler';
+    ? `Welcome to ${institute.name} on Schedule Hub`
+    : 'Welcome to Schedule Hub';
   const html = renderWelcomeHtml({ userName, designation, institute, createdBy, loginEmail });
 
   const info = await transporter.sendMail({ from, to, subject, html });
@@ -76,7 +76,7 @@ function renderPaymentReminderHtml({ instituteName, reason }) {
   const isTrial = String(reason).toLowerCase() === 'trial-ended';
   const isExpired = String(reason).toLowerCase() === 'payment-ended' || String(reason).toLowerCase() === 'expired';
   const message = isTrial
-    ? `The trial for <strong>${instituteName || 'your institute'}</strong> has ended. Please upgrade to continue using Smart Scheduler without interruption.`
+    ? `The trial for <strong>${instituteName || 'your institute'}</strong> has ended. Please upgrade to continue using Schedule Hub without interruption.`
     : `The subscription for <strong>${instituteName || 'your institute'}</strong> has expired. Please renew to avoid interruption.`;
   return `
   <div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#1f2937">
@@ -91,7 +91,7 @@ function renderPaymentReminderHtml({ instituteName, reason }) {
 
 async function sendPaymentReminder({ to, instituteName, reason }) {
   const transporter = await getTransporter();
-  const from = process.env.SMTP_FROM || 'Smart Scheduler <no-reply@smart-scheduler.local>';
+  const from = process.env.SMTP_FROM || 'Schedule Hub <no-reply@smart-scheduler.local>';
   const subject = String(reason).toLowerCase() === 'trial-ended'
     ? `Trial Ended: ${instituteName || 'Institute'}`
     : `Subscription Expired: ${instituteName || 'Institute'}`;

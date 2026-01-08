@@ -22,7 +22,7 @@ const PrivacyPolicy = () => {
             <section className="privacy-section">
               <h2>1. Introduction</h2>
               <p>
-                Smart Scheduler ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our automated timetable scheduling service.
+                Schedule Hub ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our automated timetable scheduling service.
               </p>
               <p>
                 Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the service.
@@ -32,7 +32,7 @@ const PrivacyPolicy = () => {
             <section className="privacy-section">
               <h2>2. Information We Collect</h2>
               <p>
-                We collect information that you provide directly to us when using Smart Scheduler:
+                We collect information that you provide directly to us when using Schedule Hub:
               </p>
               
               <h3 style={{ fontSize: '1.125rem', marginTop: '1rem', marginBottom: '0.75rem', color: 'var(--theme-color)', fontWeight: '600' }}>
@@ -86,7 +86,7 @@ const PrivacyPolicy = () => {
                 We use the information we collect for the following purposes:
               </p>
               <ul>
-                <li><strong>Service Provision:</strong> To provide, maintain, and improve Smart Scheduler's timetable generation and management features</li>
+                <li><strong>Service Provision:</strong> To provide, maintain, and improve Schedule Hub's timetable generation and management features</li>
                 <li><strong>Account Management:</strong> To create and manage your user account and authenticate your identity</li>
                 <li><strong>Communication:</strong> To send you service updates, security alerts, and support messages</li>
                 <li><strong>Timetable Generation:</strong> To process your academic data and generate conflict-free timetables</li>
@@ -124,7 +124,7 @@ const PrivacyPolicy = () => {
                 <li><strong>Service Providers:</strong> With trusted third-party service providers who assist in operating our service (e.g., payment processors, cloud hosting)</li>
                 <li><strong>Legal Requirements:</strong> When required by law, court order, or government regulations</li>
                 <li><strong>Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets</li>
-                <li><strong>Security:</strong> To protect the rights, property, or safety of Smart Scheduler, our users, or others</li>
+                <li><strong>Security:</strong> To protect the rights, property, or safety of Schedule Hub, our users, or others</li>
               </ul>
               <p>
                 Within your institute, data visibility is role-based:
@@ -186,7 +186,7 @@ const PrivacyPolicy = () => {
             <section className="privacy-section">
               <h2>9. Third-Party Services</h2>
               <p>
-                Smart Scheduler integrates with certain third-party services:
+                Schedule Hub integrates with certain third-party services:
               </p>
               <ul>
                 <li><strong>Google OAuth:</strong> For optional social login (subject to Google's privacy policy)</li>
@@ -201,7 +201,7 @@ const PrivacyPolicy = () => {
             <section className="privacy-section">
               <h2>10. Children's Privacy</h2>
               <p>
-                Smart Scheduler is designed for educational institutes and is not intended for use by individuals under 13 years of age. While students may access timetables through the service, account creation and data input must be performed by authorized institute personnel who are 18 years or older.
+                Schedule Hub is designed for educational institutes and is not intended for use by individuals under 13 years of age. While students may access timetables through the service, account creation and data input must be performed by authorized institute personnel who are 18 years or older.
               </p>
               <p>
                 If we discover that we have collected personal information from a child under 13 without proper authorization, we will delete that information immediately.
@@ -214,7 +214,7 @@ const PrivacyPolicy = () => {
                 Your information may be transferred to and processed in countries other than your country of residence. These countries may have data protection laws different from your jurisdiction.
               </p>
               <p>
-                By using Smart Scheduler, you consent to the transfer of your information to our facilities and service providers globally. We ensure appropriate safeguards are in place for international transfers.
+                By using Schedule Hub, you consent to the transfer of your information to our facilities and service providers globally. We ensure appropriate safeguards are in place for international transfers.
               </p>
             </section>
 
@@ -252,7 +252,7 @@ const PrivacyPolicy = () => {
             <section className="privacy-section">
               <h2>14. Your Consent</h2>
               <p>
-                By using Smart Scheduler, you consent to our Privacy Policy and agree to its terms. If you do not agree with this policy, please do not use our service.
+                By using Schedule Hub, you consent to our Privacy Policy and agree to its terms. If you do not agree with this policy, please do not use our service.
               </p>
             </section>
           </div>

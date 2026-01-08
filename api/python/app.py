@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any, Tuple, Set
 import random
 from collections import defaultdict
 
-app = FastAPI(title="Smart Scheduler CSP API")
+app = FastAPI(title="Schedule Hub CSP API")
 
 app.add_middleware(
     CORSMiddleware,

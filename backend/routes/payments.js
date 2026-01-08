@@ -83,7 +83,7 @@ router.post('/checkout', protect, async (req, res) => {
             price_data: {
               currency: CURRENCY,
               product_data: {
-                name: `Smart Scheduler ${plan} Subscription`,
+                name: `Schedule Hub ${plan} Subscription`,
                 description: `${plan} plan for institute ${instituteID}`,
               },
               unit_amount: amount,

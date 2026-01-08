@@ -234,7 +234,7 @@ const Sidebar = ({ activeMenu }) => {
               }}
             >
               {role === 'Owner' ? (
-                /* Smart Scheduler Logo and Name for Owner */
+                /* Schedule Hub Logo and Name for Owner */
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <motion.div
                     style={{
@@ -262,7 +262,7 @@ const Sidebar = ({ activeMenu }) => {
                         margin: 0,
                         letterSpacing: '-0.5px'
                       }}>
-                        Smart Scheduler
+                        Schedule Hub
                       </div>
                       <div style={{
                         fontWeight: 600,
