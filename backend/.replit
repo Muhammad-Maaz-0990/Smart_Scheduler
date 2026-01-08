@@ -1,0 +1,13 @@
+run = "npm install && npm start"
+
+hidden = [".config"]
+
+[nix]
+channel = "stable-22_11"
+
+[deployment]
+run = ["bash", "start-replit.sh"]
+deploymentTarget = "cloudrun"
+
+[env]
+NODE_ENV = "production"
