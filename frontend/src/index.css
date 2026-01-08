@@ -1,3 +1,26 @@
+/**
+ * THEME CONFIGURATION
+ * ====================
+ * The app now supports dynamic logo switching based on theme color.
+ * 
+ * Available logos in public/assets/:
+ * - purple.png (default)
+ * - green.png
+ * - blue.png
+ * 
+ * To change the theme color:
+ * 1. Uncomment one of the theme color sets below
+ * 2. The logo will automatically change to match your theme color
+ * 3. Favicon updates dynamically in the browser tab
+ * 
+ * The logo appears in:
+ * - Browser tab/favicon
+ * - Login page
+ * - Register page
+ * - Landing page top bar
+ * - Owner panel sidebar
+ */
+
 * {
   margin: 0;
   padding: 0;
@@ -23,11 +46,33 @@
   
 }
 
+/* 
+ * THEME COLORS
+ * =============
+ * Uncomment ONE theme set below to change the app color scheme.
+ * Logo will automatically switch to match the theme.
+ */
+
+/* PURPLE THEME (DEFAULT) - Logo: purple.png */
 :root {
   --theme-color: #7c3aed;
   --theme-color-light: #ede9fe;
   --theme-color-dark: #5b21b6;
 }
+
+/* GREEN THEME - Logo: green.png */
+/* :root {
+  --theme-color: #22c55e;
+  --theme-color-light: #dcfce7;
+  --theme-color-dark: #16a34a;
+} */
+
+/* BLUE THEME - Logo: blue.png */
+/* :root {
+  --theme-color: #3b82f6;
+  --theme-color-light: #dbeafe;
+  --theme-color-dark: #2563eb;
+} */
 
 body {
   margin: 0;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
@@ -35,9 +35,15 @@ import TeacherTimeTablesPage from './pages/Teacher/TimeTables';
 import StudentFeedbacksPage from './pages/Student/Feedbacks';
 import StudentProfilePage from './pages/Student/Profile';
 import StudentTimeTablesPage from './pages/Student/TimeTables';
+import { initializeTheme } from './utils/theme';
 import './App.css';
 
 function App() {
+  // Initialize theme and favicon when app loads
+  useEffect(() => {
+    initializeTheme();
+  }, []);
+
   return (
     <AuthProvider>
       <Router

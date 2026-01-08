@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Button, Form, Alert } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiUrl } from '../utils/api';
+import { updateFavicon, getThemeLogo } from '../utils/theme';
 import PhoneInput from 'react-phone-number-input';
 import en from 'react-phone-number-input/locale/en.json';
 import 'react-phone-number-input/style.css';
@@ -36,6 +37,7 @@ const Register = () => {
   const [currentStep, setCurrentStep] = useState(-1);
   const [selectedCountry, setSelectedCountry] = useState('PK');
   const [selectedContactCountry, setSelectedContactCountry] = useState('PK');
+  const [showLogoPreview, setShowLogoPreview] = useState(false);
   const [formData, setFormData] = useState({
     // Step 1: Admin/User Information
     userName: '',
@@ -69,6 +71,11 @@ const Register = () => {
   const { loginWithToken } = useAuth();
   const logoInputRef = useRef(null);
   const formCardRef = useRef(null);
+
+  // Initialize theme and favicon
+  useEffect(() => {
+    updateFavicon();
+  }, []);
 
   // Get user info from Google OAuth if available
   useEffect(() => {
@@ -866,52 +873,37 @@ const Register = () => {
                   initial="hidden"
                   animate="visible"
                 >
-                  <MotionDiv 
+                  <motion.div
                     variants={rotateIn}
-                    whileHover={{ scale: 1.1, rotate: 360 }}
-                    transition={{ type: "spring", stiffness: 200 }}
+                    className="d-flex align-items-center justify-content-center mx-auto position-relative"
                     style={{
-                      width: 'clamp(80px, 18vw, 100px)',
-                      height: 'clamp(80px, 18vw, 100px)',
-                      margin: '0 auto clamp(0.75rem, 2vw, 1rem)',
-                      background: 'var(--theme-color)',
+                      width: 'clamp(140px, 28vw, 180px)',
+                      height: 'clamp(140px, 28vw, 180px)',
+                      background: 'transparent',
                       borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 10px 40px rgba(105, 65, 219, 0.5), 0 0 0 8px rgba(105, 65, 219, 0.1)',
-                      position: 'relative'
+                      padding: '0',
+                      cursor: 'pointer',
+                      marginBottom: 'clamp(0.5rem, 1.5vw, 1rem)'
                     }}
+                    whileHover={{ 
+                      scale: 1.15,
+                      transition: { duration: 0.3, ease: "easeInOut" }
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowLogoPreview(true)}
+                    title="Click to preview logo"
                   >
-                    <motion.div
-                      animate={{ rotate: -360 }}
-                      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                      style={{ position: 'absolute', inset: '-8px', borderRadius: '50%', border: '2px solid rgba(255, 255, 255, 0.3)' }}
+                    <img 
+                      src={getThemeLogo()} 
+                      alt="Schedule Hub Logo" 
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        display: 'block'
+                      }}
                     />
-                    <svg width="50" height="50" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '50%', height: '50%', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }}>
-                      <motion.circle 
-                        cx="50" 
-                        cy="50" 
-                        r="35" 
-                        stroke="white" 
-                        strokeWidth="4"
-                        initial={{ pathLength: 0, opacity: 0 }}
-                        animate={{ pathLength: 1, opacity: 1 }}
-                        transition={{ duration: 1.2, ease: "easeInOut" }}
-                      />
-                      <motion.path 
-                        d="M50 25V50L65 65" 
-                        stroke="white" 
-                        strokeWidth="5" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 0.8, delay: 0.6 }}
-                      />
-                      <circle cx="50" cy="50" r="5" fill="white"/>
-                    </svg>
-                  </MotionDiv>
+                  </motion.div>
                 </motion.div>
                 <motion.div 
                   className="welcome-header" 
@@ -1166,6 +1158,92 @@ const Register = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* Logo Preview Modal */}
+      <AnimatePresence>
+        {showLogoPreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowLogoPreview(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(0, 0, 0, 0.85)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ type: 'spring', damping: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'white',
+                borderRadius: '20px',
+                padding: '3rem',
+                width: '500px',
+                height: '500px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+                margin: 'auto'
+              }}
+            >
+              <button
+                onClick={() => setShowLogoPreview(false)}
+                style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  background: 'var(--theme-color)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                ×
+              </button>
+              <img 
+                src={getThemeLogo()} 
+                alt="Schedule Hub Logo Preview" 
+                style={{
+                  maxWidth: '400px',
+                  maxHeight: '400px',
+                  width: 'auto',
+                  height: 'auto',
+                  objectFit: 'contain'
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </MotionDiv>
   );
 };

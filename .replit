@@ -1,0 +1,14 @@
+run = "bash start.sh"
+
+hidden = [".config", "package-lock.json"]
+
+[nix]
+channel = "stable-22_11"
+
+[deployment]
+run = ["sh", "-c", "cd backend && npm install && npm start"]
+deploymentTarget = "cloudrun"
+
+[env]
+PATH = "/home/runner/$REPL_SLUG/.config/npm/node_global/bin:/home/runner/$REPL_SLUG/node_modules/.bin:$PATH"
+npm_config_prefix = "/home/runner/$REPL_SLUG/.config/npm/node_global"

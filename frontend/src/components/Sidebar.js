@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { apiUrl } from '../utils/api';
+import { getThemeLogo } from '../utils/theme';
 import {
   FaDoorOpen,
   FaBuilding,
@@ -13,8 +14,7 @@ import {
   FaCalendar,
   FaUserCog,
   FaUserShield,
-  FaBars,
-  FaClock as FaClockIcon
+  FaBars
 } from 'react-icons/fa';
 import { cascadeFade, staggerChildren } from './shared/animation_variants';
 import './Sidebar.css';
@@ -35,6 +35,7 @@ const Sidebar = ({ activeMenu }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isExpired] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
+  const [showLogoPreview, setShowLogoPreview] = useState(false);
   const role = user?.designation || 'Owner';
   const showLabels = !isCollapsed || (isMobile && isMobileOpen);
 
@@ -240,17 +241,29 @@ const Sidebar = ({ activeMenu }) => {
                     style={{
                       width: 50,
                       height: 50,
-                      borderRadius: '12px',
-                      background: 'var(--theme-color)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 4px 15px rgba(105, 65, 219, 0.3)',
-                      flexShrink: 0
+                      flexShrink: 0,
+                      padding: '0',
+                      cursor: 'pointer'
                     }}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    onClick={() => setShowLogoPreview(true)}
+                    title="Click to preview logo"
                   >
-                    <FaClockIcon style={{ fontSize: '1.5rem', color: 'white' }} />
+                    <img 
+                      src={getThemeLogo()} 
+                      alt="Schedule Hub Logo" 
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        display: 'block'
+                      }}
+                    />
                   </motion.div>
                   {showLabels && (
                     <div>
@@ -404,6 +417,90 @@ const Sidebar = ({ activeMenu }) => {
               {isCollapsed ? '→' : '←'}
             </motion.button>
           </motion.div>
+
+      {/* Logo Preview Modal */}
+      <AnimatePresence>
+        {showLogoPreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowLogoPreview(false)}
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(0, 0, 0, 0.85)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 99999,
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)'
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ type: 'spring', damping: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'white',
+                borderRadius: '20px',
+                padding: '3rem',
+                width: '500px',
+                height: '500px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+              }}
+            >
+              <button
+                onClick={() => setShowLogoPreview(false)}
+                style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  background: 'var(--theme-color)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                ×
+              </button>
+              <img 
+                src={getThemeLogo()} 
+                alt="Schedule Hub Logo Preview" 
+                style={{
+                  maxWidth: '400px',
+                  maxHeight: '400px',
+                  width: 'auto',
+                  height: 'auto',
+                  objectFit: 'contain'
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

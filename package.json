@@ -2,9 +2,13 @@
   "name": "smart-scheduler",
   "private": true,
   "workspaces": [
-    "frontend"
+    "frontend",
+    "backend"
   ],
   "scripts": {
-    "build": "npm -w frontend run build"
+    "build": "npm -w frontend run build",
+    "start": "cd backend && npm install && npm start",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install"
   }
 }

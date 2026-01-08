@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button, Card } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
+import { updateFavicon, getThemeLogo } from '../utils/theme';
 import { 
   FaCalendarAlt, 
   FaClock, 
@@ -20,6 +21,7 @@ import '../pages/Dashboard.css';
 
 const TopBar = ({ onSignIn, onSignUp }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoPreview, setShowLogoPreview] = useState(false);
   
   return (
     <motion.div 
@@ -47,20 +49,31 @@ const TopBar = ({ onSignIn, onSignUp }) => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <motion.div 
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.6 }}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              onClick={() => setShowLogoPreview(true)}
               style={{
-                width: 45,
-                height: 45,
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
+                width: 48,
+                height: 48,
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                boxShadow: '0 4px 15px rgba(126, 34, 206, 0.3)'
+                padding: '0',
+                cursor: 'pointer'
               }}
+              title="Click to preview logo"
             >
-              <FaCalendarAlt style={{ fontSize: 22, color: 'white' }} />
+              <img 
+                src={getThemeLogo()} 
+                alt="Schedule Hub Logo" 
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
             </motion.div>
             <div>
               <strong style={{ 
@@ -256,6 +269,92 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                   Get Started
                 </Button>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Logo Preview Modal */}
+        <AnimatePresence>
+          {showLogoPreview && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLogoPreview(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                height: '100vh',
+                background: 'rgba(0, 0, 0, 0.85)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 99999,
+                cursor: 'pointer',
+                backdropFilter: 'blur(8px)'
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                transition={{ type: 'spring', damping: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'white',
+                  borderRadius: '20px',
+                  padding: '3rem',
+                  width: '500px',
+                  height: '500px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+                  margin: 'auto'
+                }}
+              >
+                <button
+                  onClick={() => setShowLogoPreview(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    background: 'var(--theme-color)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '40px',
+                    height: '40px',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                >
+                  ✕
+                </button>
+                <img 
+                  src={getThemeLogo()} 
+                  alt="Schedule Hub Logo Preview" 
+                  style={{
+                    maxWidth: '400px',
+                    maxHeight: '400px',
+                    width: 'auto',
+                    height: 'auto',
+                    objectFit: 'contain'
+                  }}
+                />
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1145,6 +1244,11 @@ const Landing = () => {
   const navigate = useNavigate();
   const goSignIn = () => navigate('/login');
   const goSignUp = () => navigate('/register');
+
+  // Initialize theme and favicon
+  React.useEffect(() => {
+    updateFavicon();
+  }, []);
 
   return (
     <>
