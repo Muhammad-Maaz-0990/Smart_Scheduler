@@ -241,16 +241,14 @@ const Sidebar = ({ activeMenu }) => {
                     style={{
                       width: 50,
                       height: 50,
+                      background: 'var(--theme-color)',
+                      borderRadius: '0.75rem',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
-                      padding: '0',
                       cursor: 'pointer'
                     }}
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     onClick={() => setShowLogoPreview(true)}
                     title="Click to preview logo"
                   >
@@ -258,24 +256,25 @@ const Sidebar = ({ activeMenu }) => {
                       src={getThemeLogo()} 
                       alt="Schedule Hub Logo" 
                       style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        display: 'block'
+                        width: 50,
+                        height: 50,
+                        objectFit: 'cover',
+                        display: 'block',
+                        borderRadius: '0.75rem'
                       }}
                     />
                   </motion.div>
                   {showLabels && (
                     <div>
-                      <div style={{ 
-                        fontWeight: 800, 
+                      <div className="brand-font" style={{ 
+                        fontWeight: 700, 
                         fontSize: '18px', 
                         color: '#111827', 
                         lineHeight: '1.2',
                         margin: 0,
                         letterSpacing: '-0.5px'
                       }}>
-                        Schedule Hub
+                        SCHEDULE HUB
                       </div>
                       <div style={{
                         fontWeight: 600,
@@ -486,17 +485,26 @@ const Sidebar = ({ activeMenu }) => {
               >
                 ×
               </button>
-              <img 
-                src={getThemeLogo()} 
-                alt="Schedule Hub Logo Preview" 
-                style={{
-                  maxWidth: '400px',
-                  maxHeight: '400px',
-                  width: 'auto',
-                  height: 'auto',
-                  objectFit: 'contain'
-                }}
-              />
+              <div style={{
+                width: '400px',
+                height: '400px',
+                background: 'var(--theme-color)',
+                borderRadius: '2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <img 
+                  src={getThemeLogo()} 
+                  alt="Schedule Hub Logo Preview" 
+                  style={{
+                    width: '400px',
+                    height: '400px',
+                    objectFit: 'cover',
+                    borderRadius: '2rem'
+                  }}
+                />
+              </div>
             </motion.div>
           </motion.div>
         )}

@@ -49,17 +49,15 @@ const TopBar = ({ onSignIn, onSignUp }) => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <motion.div 
-              whileHover={{ scale: 1.2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.3 }}
               onClick={() => setShowLogoPreview(true)}
               style={{
                 width: 48,
                 height: 48,
+                background: 'var(--theme-color)',
+                borderRadius: '0.75rem',
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                padding: '0',
                 cursor: 'pointer'
               }}
               title="Click to preview logo"
@@ -68,22 +66,23 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                 src={getThemeLogo()} 
                 alt="Schedule Hub Logo" 
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                  display: 'block'
+                  width: 48,
+                  height: 48,
+                  objectFit: 'cover',
+                  display: 'block',
+                  borderRadius: '0.75rem'
                 }}
               />
             </motion.div>
             <div>
-              <strong style={{ 
+              <strong className="brand-font" style={{ 
                 fontSize: '1.3rem', 
                 background: 'linear-gradient(135deg, var(--theme-color) 0%, #3b82f6 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                fontWeight: 800
+                fontWeight: 700
               }}>
-                Schedule Hub
+                SCHEDULE HUB
               </strong>
             </div>
           </div>
@@ -343,17 +342,26 @@ const TopBar = ({ onSignIn, onSignUp }) => {
                 >
                   ✕
                 </button>
-                <img 
-                  src={getThemeLogo()} 
-                  alt="Schedule Hub Logo Preview" 
-                  style={{
-                    maxWidth: '400px',
-                    maxHeight: '400px',
-                    width: 'auto',
-                    height: 'auto',
-                    objectFit: 'contain'
-                  }}
-                />
+                <div style={{
+                  width: '400px',
+                  height: '400px',
+                  background: 'var(--theme-color)',
+                  borderRadius: '2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <img 
+                    src={getThemeLogo()} 
+                    alt="Schedule Hub Logo Preview" 
+                    style={{
+                      width: '400px',
+                      height: '400px',
+                      objectFit: 'cover',
+                      borderRadius: '2rem'
+                    }}
+                  />
+                </div>
               </motion.div>
             </motion.div>
           )}
@@ -1109,7 +1117,7 @@ const CTA = ({ onSignUp }) => (
           margin: '0 auto 40px',
           opacity: 0.95
         }}>
-          Join hundreds of institutions saving time and eliminating conflicts with Schedule Hub
+          Join hundreds of institutions saving time and eliminating conflicts with <span className="brand-font">SCHEDULE HUB</span>
         </p>
         
         <motion.div
@@ -1170,7 +1178,7 @@ const Footer = () => (
             }}>
               <FaCalendarAlt style={{ fontSize: 22, color: 'white' }} />
             </div>
-            <strong style={{ fontSize: '1.3rem', fontWeight: 800 }}>Schedule Hub</strong>
+            <strong className="brand-font" style={{ fontSize: '1.3rem', fontWeight: 700 }}>SCHEDULE HUB</strong>
           </div>
           <p style={{ color: '#9ca3af', lineHeight: 1.6 }}>
             Intelligent timetable scheduling for modern educational institutions. Save time, eliminate conflicts, and focus on what matters.
@@ -1233,7 +1241,7 @@ const Footer = () => (
         textAlign: 'center'
       }}>
         <p style={{ color: '#9ca3af', margin: 0, fontSize: '0.9rem' }}>
-          © 2025 Schedule Hub. All rights reserved.
+          © 2025 <span className="brand-font">SCHEDULE HUB</span>. All rights reserved.
         </p>
       </div>
     </Container>

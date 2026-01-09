@@ -273,18 +273,12 @@ const Login = () => {
                   variants={scaleIn}
                   className="d-flex align-items-center justify-content-center mx-auto mb-2 position-relative"
                   style={{
-                    width: 'clamp(140px, 28vw, 180px)',
-                    height: 'clamp(140px, 28vw, 180px)',
-                    background: 'transparent',
-                    borderRadius: '50%',
-                    padding: '0',
+                    width: 'clamp(80px, 18vw, 120px)',
+                    height: 'clamp(80px, 18vw, 120px)',
+                    background: 'var(--theme-color)',
+                    borderRadius: 'clamp(0.8rem, 1.5vw, 1.2rem)',
                     cursor: 'pointer'
                   }}
-                  whileHover={{ 
-                    scale: 1.15,
-                    transition: { duration: 0.3, ease: "easeInOut" }
-                  }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowLogoPreview(true)}
                   title="Click to preview logo"
                 >
@@ -292,23 +286,24 @@ const Login = () => {
                     src={getThemeLogo()} 
                     alt="Schedule Hub Logo" 
                     style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      display: 'block'
+                      width: 'clamp(80px, 18vw, 120px)',
+                      height: 'clamp(80px, 18vw, 120px)',
+                      objectFit: 'cover',
+                      display: 'block',
+                      borderRadius: 'clamp(0.8rem, 1.5vw, 1.2rem)'
                     }}
                   />
                 </motion.div>
                 <motion.h2
                   variants={fadeInUp}
-                  className="mb-2 gradient-text"
+                  className="mb-2 gradient-text brand-font"
                   style={{
                     fontSize: 'clamp(1.75rem, 5vw, 2.5rem)',
-                    fontWeight: '600',
+                    fontWeight: '700',
                     letterSpacing: '-0.5px'
                   }}
                 >
-                  Schedule Hub
+                  SCHEDULE HUB
                 </motion.h2>
                 <motion.p
                   variants={fadeInUp}
@@ -711,22 +706,27 @@ const Login = () => {
                     </Form>
 
                     <MotionButton
-                      variant="link"
+                      variant="outline-primary"
                       onClick={() => setShowManualLogin(false)}
                       className="w-100 mt-3"
                       style={{
+                        borderColor: 'var(--theme-color)',
                         color: 'var(--theme-color)',
-                        textDecoration: 'none',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.9375rem)',
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                         fontWeight: '600',
-                        padding: '0.5rem'
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                        borderRadius: '0.75rem',
+                        borderWidth: '2px'
                       }}
                       whileHover={{ 
                         scale: 1.02,
-                        x: -4
+                        background: '#6b7280',
+                        borderColor: '#6b7280',
+                        color: '#fff'
                       }}
+                      transition={{ duration: 0.2 }}
                     >
-                      ← Back to Google Sign In
+                      Back to Google Sign In
                     </MotionButton>
                   </motion.div>
                 )}
@@ -804,17 +804,26 @@ const Login = () => {
               >
                 ×
               </button>
-              <img 
-                src={getThemeLogo()} 
-                alt="Schedule Hub Logo Preview" 
-                style={{
-                  maxWidth: '400px',
-                  maxHeight: '400px',
-                  width: 'auto',
-                  height: 'auto',
-                  objectFit: 'contain'
-                }}
-              />
+              <div style={{
+                width: '400px',
+                height: '400px',
+                background: 'var(--theme-color)',
+                borderRadius: '2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <img 
+                  src={getThemeLogo()} 
+                  alt="Schedule Hub Logo Preview" 
+                  style={{
+                    width: '400px',
+                    height: '400px',
+                    objectFit: 'cover',
+                    borderRadius: '2rem'
+                  }}
+                />
+              </div>
             </motion.div>
           </motion.div>
         )}

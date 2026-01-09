@@ -1,19 +1,17 @@
 /**
  * THEME CONFIGURATION
  * ====================
- * The app now supports dynamic logo switching based on theme color.
+ * The app uses a single transparent logo (logo.png) with dynamic background colors.
+ * The logo's transparent parts will show the theme color as background.
  * 
- * Available logos in public/assets/:
- * - purple.png (default)
- * - green.png
- * - blue.png
+ * Logo file: public/assets/logo.png (transparent version)
  * 
  * To change the theme color:
  * 1. Uncomment one of the theme color sets below
- * 2. The logo will automatically change to match your theme color
+ * 2. The logo background will automatically change to match your theme color
  * 3. Favicon updates dynamically in the browser tab
  * 
- * The logo appears in:
+ * The logo appears with themed background in:
  * - Browser tab/favicon
  * - Login page
  * - Register page
@@ -50,29 +48,37 @@
  * THEME COLORS
  * =============
  * Uncomment ONE theme set below to change the app color scheme.
- * Logo will automatically switch to match the theme.
+ * Logo background will automatically match the theme color.
  */
 
-/* PURPLE THEME (DEFAULT) - Logo: purple.png */
+/* PURPLE THEME (DEFAULT) */
 :root {
   --theme-color: #7c3aed;
   --theme-color-light: #ede9fe;
   --theme-color-dark: #5b21b6;
 }
 
-/* GREEN THEME - Logo: green.png */
+/* GREEN THEME */
 /* :root {
   --theme-color: #22c55e;
   --theme-color-light: #dcfce7;
   --theme-color-dark: #16a34a;
 } */
 
-/* BLUE THEME - Logo: blue.png */
+/* BLUE THEME */
 /* :root {
   --theme-color: #3b82f6;
   --theme-color-light: #dbeafe;
   --theme-color-dark: #2563eb;
 } */
+
+/* Brand Font Override */
+.brand-font {
+  font-family: 'Agbalumo', cursive !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 400 !important;
+}
 
 body {
   margin: 0;
