@@ -160,6 +160,7 @@ const Sidebar = ({ activeMenu }) => {
 
   const teacherMenu = [
     { icon: FaCalendar, label: 'TimeTables', value: 'timetables' },
+    { icon: FaComments, label: 'Feedbacks', value: 'feedbacks' },
     { icon: FaUserCog, label: 'Profile', value: 'profile' }
   ];
   
